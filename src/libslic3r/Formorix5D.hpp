@@ -1,15 +1,15 @@
 // Formorix Slicer additions, licensed under AGPL-3.0-or-later.
 #pragma once
 
+#include "Config.hpp"
+
 #include <array>
 #include <cstddef>
+#include <functional>
 #include <string>
 #include <vector>
 
 namespace Slic3r {
-class ConfigDef;
-class ConfigOptionResolver;
-
 namespace Formorix5D {
 
 constexpr std::size_t head_count = 3;
@@ -36,7 +36,9 @@ struct Machine {
     double target_acceleration;
 };
 
-void register_options(ConfigDef& def);
+// The owning ConfigDef supplies its protected registration operation.
+using OptionRegistrar = std::function<ConfigOptionDef*(const std::string&, ConfigOptionType)>;
+void register_options(const OptionRegistrar& add);
 const std::vector<std::string>& option_keys();
 std::string head_key(std::size_t index, const std::string& suffix);
 bool enabled(const ConfigOptionResolver& config);

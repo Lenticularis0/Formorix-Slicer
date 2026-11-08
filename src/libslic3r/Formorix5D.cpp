@@ -4,10 +4,14 @@
 #include "Config.hpp"
 #include "I18N.hpp"
 
+#include <array>
 #include <cmath>
+#include <cstddef>
 #include <initializer_list>
 #include <set>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 // Extraction marker; these definitions are translated by Orca's settings UI.
 #define L(s) s
@@ -31,10 +35,10 @@ const std::array<AxisDefinition, 5> axes {{
     {"b", L("B orientation"), L("B minimum"), L("B maximum"), -75., 75.}
 }};
 
-void add_float(ConfigDef& def, const std::string& key, const char* label, const char* unit,
+void add_float(const OptionRegistrar& add, const std::string& key, const char* label, const char* unit,
                double value, double minimum, double maximum, const char* tooltip)
 {
-    auto* option = def.add(key, coFloat);
+    auto* option = add(key, coFloat);
     option->label = label;
     option->category = L("Formorix 5D");
     option->tooltip = tooltip;
@@ -97,16 +101,16 @@ const std::vector<std::string>& option_keys()
     return keys;
 }
 
-void register_options(ConfigDef& def)
+void register_options(const OptionRegistrar& add)
 {
-    auto* mode = def.add("formorix_5d_enabled", coBool);
+    auto* mode = add("formorix_5d_enabled", coBool);
     mode->label = L("Experimental Formorix 5D mode");
     mode->category = L("Formorix 5D");
     mode->tooltip = L("Configuration only for three independent heads. Slicing, G-code export and sending print jobs are disabled in this mode. Disable it to use conventional OrcaSlicer slicing.");
     mode->mode = comSimple;
     mode->set_default_value(new ConfigOptionBool(false));
 
-    auto* schema = def.add("formorix_5d_schema_version", coInt);
+    auto* schema = add("formorix_5d_schema_version", coInt);
     schema->label = L("Formorix configuration version");
     schema->mode = comDevelop;
     schema->readonly = true;
@@ -115,13 +119,13 @@ void register_options(ConfigDef& def)
 
     const char* linear_tip = L("Experimental configuration in millimeters; no movement is generated. Head Z is local travel, independent of the shared bed Z travel and printable height.");
     const char* angular_tip = L("Experimental orientation in degrees. A and B are independent axis limits; rotation order, combined tilt and collision checks are not implemented.");
-    add_float(def, "formorix_5d_bed_z", L("Shared bed Z position"), L("mm"), 0., 0., 100000., linear_tip);
-    add_float(def, "formorix_5d_bed_z_min", L("Shared bed Z minimum"), L("mm"), 0., 0., 100000., linear_tip);
-    add_float(def, "formorix_5d_bed_z_max", L("Shared bed Z maximum"), L("mm"), 350., 0., 100000., linear_tip);
-    add_float(def, "formorix_5d_max_tilt", L("Maximum axis tilt"), L("°"), 75., 0.01, 180., angular_tip);
-    add_float(def, "formorix_5d_target_speed", L("Target speed"), L("mm/s"), 500., 0.01, 100000.,
+    add_float(add, "formorix_5d_bed_z", L("Shared bed Z position"), L("mm"), 0., 0., 100000., linear_tip);
+    add_float(add, "formorix_5d_bed_z_min", L("Shared bed Z minimum"), L("mm"), 0., 0., 100000., linear_tip);
+    add_float(add, "formorix_5d_bed_z_max", L("Shared bed Z maximum"), L("mm"), 350., 0., 100000., linear_tip);
+    add_float(add, "formorix_5d_max_tilt", L("Maximum axis tilt"), L("°"), 75., 0.01, 180., angular_tip);
+    add_float(add, "formorix_5d_target_speed", L("Target speed"), L("mm/s"), 500., 0.01, 100000.,
               L("Provisional 5D target speed. This does not change conventional slicing speeds."));
-    add_float(def, "formorix_5d_target_acceleration", L("Target acceleration"), L("mm/s²"), 10000., 0.01, 1000000.,
+    add_float(add, "formorix_5d_target_acceleration", L("Target acceleration"), L("mm/s²"), 10000., 0.01, 1000000.,
               L("Provisional 5D target acceleration. This does not emit firmware commands."));
 
     for (std::size_t i = 0; i < head_count; ++i) {
@@ -131,11 +135,11 @@ void register_options(ConfigDef& def)
             const char* tip = angular ? angular_tip : linear_tip;
             const double bound = angular ? 180. : 100000.;
             const auto key = head_key(i, axis.key);
-            add_float(def, key, axis.label, unit, 0., -bound, bound, tip);
-            add_float(def, key + "_min", axis.min_label, unit, axis.minimum, -bound, bound, tip);
-            add_float(def, key + "_max", axis.max_label, unit, axis.maximum, -bound, bound, tip);
+            add_float(add, key, axis.label, unit, 0., -bound, bound, tip);
+            add_float(add, key + "_min", axis.min_label, unit, axis.minimum, -bound, bound, tip);
+            add_float(add, key + "_max", axis.max_label, unit, axis.maximum, -bound, bound, tip);
         }
-        auto* channel = def.add(head_key(i, "extrusion_channel"), coInt);
+        auto* channel = add(head_key(i, "extrusion_channel"), coInt);
         channel->label = L("Extrusion channel");
         channel->category = L("Formorix 5D");
         channel->tooltip = L("Unique zero-based logical extrusion channel for this head. This is not an OrcaSlicer extruder index or a firmware tool command.");

@@ -1001,7 +1001,7 @@ PrintConfigDef::PrintConfigDef()
     this->init_common_params();
     assign_printer_technology_to_unknown(this->options, ptAny);
     this->init_fff_params();
-    Formorix5D::register_options(*this);
+    Formorix5D::register_options([this](const std::string& key, ConfigOptionType type) { return this->add(key, type); });
     this->init_extruder_option_keys();
     assign_printer_technology_to_unknown(this->options, ptFFF);
     this->init_sla_params();
