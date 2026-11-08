@@ -1953,10 +1953,72 @@ PRINT_CONFIG_CLASS_DEFINE(
     ((ConfigOptionFloats,   filament_dev_drying_cooling_temperature))
 )
 
+// Printer-wide experimental configuration, isolated from conventional nozzle arrays.
+PRINT_CONFIG_CLASS_DEFINE(
+    Formorix5DConfig,
+    // Independent experimental heads; never resized with Orca extruder/nozzle vectors.
+    ((ConfigOptionBool, formorix_5d_enabled))
+    ((ConfigOptionInt, formorix_5d_schema_version))
+    ((ConfigOptionFloat, formorix_5d_bed_z))
+    ((ConfigOptionFloat, formorix_5d_bed_z_min))
+    ((ConfigOptionFloat, formorix_5d_bed_z_max))
+    ((ConfigOptionFloat, formorix_5d_max_tilt))
+    ((ConfigOptionFloat, formorix_5d_target_speed))
+    ((ConfigOptionFloat, formorix_5d_target_acceleration))
+    ((ConfigOptionFloat, formorix_5d_head_1_x))
+    ((ConfigOptionFloat, formorix_5d_head_1_x_min))
+    ((ConfigOptionFloat, formorix_5d_head_1_x_max))
+    ((ConfigOptionFloat, formorix_5d_head_1_y))
+    ((ConfigOptionFloat, formorix_5d_head_1_y_min))
+    ((ConfigOptionFloat, formorix_5d_head_1_y_max))
+    ((ConfigOptionFloat, formorix_5d_head_1_z))
+    ((ConfigOptionFloat, formorix_5d_head_1_z_min))
+    ((ConfigOptionFloat, formorix_5d_head_1_z_max))
+    ((ConfigOptionFloat, formorix_5d_head_1_a))
+    ((ConfigOptionFloat, formorix_5d_head_1_a_min))
+    ((ConfigOptionFloat, formorix_5d_head_1_a_max))
+    ((ConfigOptionFloat, formorix_5d_head_1_b))
+    ((ConfigOptionFloat, formorix_5d_head_1_b_min))
+    ((ConfigOptionFloat, formorix_5d_head_1_b_max))
+    ((ConfigOptionInt, formorix_5d_head_1_extrusion_channel))
+    ((ConfigOptionFloat, formorix_5d_head_2_x))
+    ((ConfigOptionFloat, formorix_5d_head_2_x_min))
+    ((ConfigOptionFloat, formorix_5d_head_2_x_max))
+    ((ConfigOptionFloat, formorix_5d_head_2_y))
+    ((ConfigOptionFloat, formorix_5d_head_2_y_min))
+    ((ConfigOptionFloat, formorix_5d_head_2_y_max))
+    ((ConfigOptionFloat, formorix_5d_head_2_z))
+    ((ConfigOptionFloat, formorix_5d_head_2_z_min))
+    ((ConfigOptionFloat, formorix_5d_head_2_z_max))
+    ((ConfigOptionFloat, formorix_5d_head_2_a))
+    ((ConfigOptionFloat, formorix_5d_head_2_a_min))
+    ((ConfigOptionFloat, formorix_5d_head_2_a_max))
+    ((ConfigOptionFloat, formorix_5d_head_2_b))
+    ((ConfigOptionFloat, formorix_5d_head_2_b_min))
+    ((ConfigOptionFloat, formorix_5d_head_2_b_max))
+    ((ConfigOptionInt, formorix_5d_head_2_extrusion_channel))
+    ((ConfigOptionFloat, formorix_5d_head_3_x))
+    ((ConfigOptionFloat, formorix_5d_head_3_x_min))
+    ((ConfigOptionFloat, formorix_5d_head_3_x_max))
+    ((ConfigOptionFloat, formorix_5d_head_3_y))
+    ((ConfigOptionFloat, formorix_5d_head_3_y_min))
+    ((ConfigOptionFloat, formorix_5d_head_3_y_max))
+    ((ConfigOptionFloat, formorix_5d_head_3_z))
+    ((ConfigOptionFloat, formorix_5d_head_3_z_min))
+    ((ConfigOptionFloat, formorix_5d_head_3_z_max))
+    ((ConfigOptionFloat, formorix_5d_head_3_a))
+    ((ConfigOptionFloat, formorix_5d_head_3_a_min))
+    ((ConfigOptionFloat, formorix_5d_head_3_a_max))
+    ((ConfigOptionFloat, formorix_5d_head_3_b))
+    ((ConfigOptionFloat, formorix_5d_head_3_b_min))
+    ((ConfigOptionFloat, formorix_5d_head_3_b_max))
+    ((ConfigOptionInt, formorix_5d_head_3_extrusion_channel))
+)
+
 // This object is mapped to Perl as Slic3r::Config::Print.
 PRINT_CONFIG_CLASS_DERIVED_DEFINE(
     PrintConfig,
-    (MachineEnvelopeConfig, GCodeConfig),
+    (MachineEnvelopeConfig, GCodeConfig, Formorix5DConfig),
 
     // Build plate tilt for off-axis gravity support generation (printer-level setting).
     ((ConfigOptionFloat,               build_plate_tilt_x))

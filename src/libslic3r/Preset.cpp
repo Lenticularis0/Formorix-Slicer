@@ -1,3 +1,4 @@
+#include "Formorix5D.hpp"
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/file_status.hpp>
@@ -1749,6 +1750,7 @@ const std::vector<std::string>& Preset::printer_options()
         std::vector<std::string> opts = s_Preset_printer_options;
         append(opts, s_Preset_machine_limits_options);
         append(opts, Preset::nozzle_options());
+        append(opts, Formorix5D::option_keys());
         return opts;
     }();
     return s_opts;

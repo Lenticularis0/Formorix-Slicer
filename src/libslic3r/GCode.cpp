@@ -1,3 +1,4 @@
+#include "Formorix5D.hpp"
 #include "ArcFitter.hpp"
 #include <tuple>
 #include "BoundingBox.hpp"
@@ -2839,6 +2840,7 @@ static void set_mass_locator(GCodeProcessor &processor, const Print &print)
 
 void GCode::do_export(Print* print, const char* path, GCodeProcessorResult* result, ThumbnailsGeneratorCallback thumbnail_cb)
 {
+    Formorix5D::require_planar_mode(print->config());
     PROFILE_CLEAR();
 
     // BBS

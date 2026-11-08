@@ -1,3 +1,5 @@
+#include "libslic3r/Formorix5D.hpp"
+#include <cstddef>
 //#include "slic3r/Utils/Serial.hpp"
 #include "Tab.hpp"
 #include "PresetHints.hpp"
@@ -5803,6 +5805,28 @@ void TabPrinter::build_fff()
     //    build_preset_description_line(optgroup.get());
 #endif
     build_unregular_pages(true);
+    build_formorix_5d_page();
+}
+
+void TabPrinter::build_formorix_5d_page()
+{
+    auto page = add_options_page(L("Formorix 5D"), "custom-gcode_motion");
+    auto group = page->new_optgroup(L("Experimental configuration only"));
+    for (const char* key : {"formorix_5d_enabled", "formorix_5d_max_tilt",
+            "formorix_5d_target_speed", "formorix_5d_target_acceleration",
+            "formorix_5d_bed_z", "formorix_5d_bed_z_min", "formorix_5d_bed_z_max"})
+        group->append_single_option_line(key);
+    const char* titles[] = {L("Independent head 1"), L("Independent head 2"), L("Independent head 3")};
+    for (std::size_t i = 0; i < Formorix5D::head_count; ++i) {
+        group = page->new_optgroup(titles[i]);
+        for (const char* axis : {"x", "y", "z", "a", "b"}) {
+            const auto key = Formorix5D::head_key(i, axis);
+            group->append_single_option_line(key);
+            group->append_single_option_line(key + "_min");
+            group->append_single_option_line(key + "_max");
+        }
+        group->append_single_option_line(Formorix5D::head_key(i, "extrusion_channel"));
+    }
 }
 
 void TabPrinter::build_sla()

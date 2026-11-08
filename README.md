@@ -1,3 +1,15 @@
+## Formorix Slicer
+
+Formorix Slicer is based on [OrcaSlicer](https://github.com/OrcaSlicer/OrcaSlicer).
+It retains the existing interface, slicing engine, printer profiles and AGPL-3.0
+license. The experimental Formorix 5D mode stores the configuration of three
+independent XYZAB heads; it **does not generate or export executable 5D jobs**.
+
+Source: <https://github.com/Lenticularis0/Formorix-Slicer>.
+See [development and verification](docs/Formorix-development.md) and the
+[5D architecture](docs/HLSD/formorix-5d.md). Upstream documentation and credits
+follow below; upstream release downloads contain OrcaSlicer, not this fork.
+
 <div align="center">
 
 <picture>

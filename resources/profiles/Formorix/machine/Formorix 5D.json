@@ -1,0 +1,12 @@
+{
+	"type": "machine_model",
+	"name": "Formorix 5D",
+	"machine_tech": "FFF",
+	"family": "Formorix",
+	"model_id": "Formorix 5D",
+	"nozzle_diameter": "0.4",
+	"bed_model": "",
+	"bed_texture": "",
+	"hotend_model": "",
+	"default_materials": "Generic PLA @System"
+}

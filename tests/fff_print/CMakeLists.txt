@@ -3,6 +3,7 @@ add_executable(${_TEST_NAME}_tests
 	${_TEST_NAME}_tests.cpp
 	test_helpers.cpp
 	test_helpers.hpp
+	test_formorix_5d.cpp
 	test_adaptive_pressure_advance.cpp
 	test_calib.cpp
 	test_cooling.cpp

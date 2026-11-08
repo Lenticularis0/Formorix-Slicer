@@ -1,3 +1,4 @@
+#include "libslic3r/Formorix5D.hpp"
 #include "../libslic3r.h"
 #include "../Exception.hpp"
 #include "../IMEXHelpers.hpp"
@@ -6336,11 +6337,20 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
 
         m_skip_static = store_params.strategy & SaveStrategy::SkipStatic;
         m_split_model = store_params.strategy & SaveStrategy::SplitModel;
+        m_from_backup_save = store_params.strategy & SaveStrategy::Backup;
         m_save_gcode = store_params.strategy & SaveStrategy::WithGcode;
+        if (m_save_gcode && store_params.config && Formorix5D::enabled(*store_params.config)) {
+            if (!m_from_backup_save) {
+                add_error(Formorix5D::export_block_reason());
+                return false;
+            }
+            // Automatic backups retain their mesh-reference semantics, but no
+            // executable G-code or slice metadata from a previous planar job.
+            m_save_gcode = false;
+        }
         m_skip_model  = store_params.strategy & SaveStrategy::SkipModel;
         m_skip_auxiliary = store_params.strategy & SaveStrategy::SkipAuxiliary;
         m_share_mesh       = store_params.strategy & SaveStrategy::ShareMesh;
-        m_from_backup_save = store_params.strategy & SaveStrategy::Backup;
         m_minimal_published = store_params.strategy & SaveStrategy::MinimalPublished;
 
         m_use_loaded_id = store_params.strategy & SaveStrategy::UseLoadedId;
