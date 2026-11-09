@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 11:18-0600\n"
+"POT-Creation-Date: 2026-11-09 04:52+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2060,20 +2060,20 @@ msgstr ""
 msgid "Draco files"
 msgstr ""
 
-msgid "OrcaSlicer will terminate because of running out of memory. It may be a bug. It will be appreciated if you report the issue to our team."
+msgid "Formorix Slicer will terminate because of running out of memory. It may be a bug. It will be appreciated if you report the issue to our team."
 msgstr ""
 
 msgid "Fatal error"
 msgstr ""
 
-msgid "OrcaSlicer will terminate because of a localization error. It will be appreciated if you report the specific scenario this issue happened."
+msgid "Formorix Slicer will terminate because of a localization error. It will be appreciated if you report the specific scenario this issue happened."
 msgstr ""
 
 msgid "Critical error"
 msgstr ""
 
 #, possible-boost-format
-msgid "OrcaSlicer got an unhandled exception: %1%"
+msgid "Formorix Slicer got an unhandled exception: %1%"
 msgstr ""
 
 msgid "Untitled"
@@ -2186,8 +2186,8 @@ msgid "Showing main window"
 msgstr ""
 
 msgid ""
-"The OrcaSlicer configuration file may be corrupted and cannot be parsed.\n"
-"OrcaSlicer has attempted to recreate the configuration file.\n"
+"The Formorix Slicer configuration file may be corrupted and cannot be parsed.\n"
+"Formorix Slicer has attempted to recreate the configuration file.\n"
 "Please note, application settings will be lost, but printer profiles will not be affected."
 msgstr ""
 
@@ -2296,6 +2296,12 @@ msgid "Fetching plugins…"
 msgstr ""
 
 msgid "Loading user presets…"
+msgstr ""
+
+msgid "Formorix Slicer updates are available from https://github.com/Lenticularis0/Formorix-Slicer. Upstream OrcaSlicer releases do not contain the Formorix extensions."
+msgstr ""
+
+msgid "Formorix Slicer updates"
 msgstr ""
 
 msgid "Retrieving printer information, please try again later."
@@ -4198,6 +4204,9 @@ msgstr ""
 msgid "Build %s"
 msgstr ""
 
+msgid "Formorix Slicer is based on OrcaSlicer and distributed under the GNU Affero General Public License v3. Formorix 5D is an experimental configuration mode; it does not generate executable five-axis print jobs."
+msgstr ""
+
 msgid "Open-source slicing stands on a tradition of collaboration and attribution. Slic3r, created by Alessandro Ranellucci and the RepRap community, laid the foundation. PrusaSlicer by Prusa Research built on that work, Bambu Studio forked from PrusaSlicer, and SuperSlicer extended it with community-driven enhancements. Each project carried the work of its predecessors forward, crediting those who came before."
 msgstr ""
 
@@ -5776,6 +5785,9 @@ msgstr ""
 msgid "Invalid format. Expected vector format: \"%1%\""
 msgstr ""
 
+msgid "The excluded bed area is invalid. It must be a simple, non-self-intersecting polygon."
+msgstr ""
+
 msgid "System agents"
 msgstr ""
 
@@ -6682,6 +6694,9 @@ msgid "Prepare"
 msgstr ""
 
 msgid "Preview"
+msgstr ""
+
+msgid "5D Surfaces"
 msgstr ""
 
 msgid "Project"
@@ -9058,6 +9073,9 @@ msgstr ""
 msgid "This project contains a model made in the Design tab and no other geometry. Enable \"CAD feature (experimental)\" in Preferences and restart to see and edit it; it is kept when the project is saved."
 msgstr ""
 
+msgid "The invalid area has been removed, so please define it again using a valid polygon."
+msgstr ""
+
 msgid "Your object appears to be too large, do you want to scale it down to fit the print bed automatically?"
 msgstr ""
 
@@ -9679,6 +9697,423 @@ msgstr ""
 msgid "rear"
 msgstr ""
 
+msgid "Edit 5D surface settings"
+msgstr ""
+
+msgid "Invalid value. Check the allowed range and select at least one head or task."
+msgstr ""
+
+#, possible-c-format, possible-boost-format
+msgid "Allowed range: %1$.4g to %2$.4g"
+msgstr ""
+
+msgid "Invalid number. The previous value is retained."
+msgstr ""
+
+msgid "5D surface regions"
+msgstr ""
+
+msgid "Model to paint"
+msgstr ""
+
+msgid "Add model…"
+msgstr ""
+
+msgid "Add region"
+msgstr ""
+
+msgid "This project already has 32 surface regions."
+msgstr ""
+
+#, possible-boost-format
+msgid "Region %1%"
+msgstr ""
+
+msgid "Region name"
+msgstr ""
+
+msgid "Enter a region name before saving."
+msgstr ""
+
+msgid "Merge selected regions"
+msgstr ""
+
+msgid "Use Ctrl-click to select at least two regions."
+msgstr ""
+
+msgid "Merge 5D surface regions"
+msgstr ""
+
+msgid "Regions merged. The active region's settings and head assignment were retained. Continuous paths are requested, not calculated."
+msgstr ""
+
+msgid "Copy settings to selected regions"
+msgstr ""
+
+msgid "Use Ctrl-click to select the source and destination regions."
+msgstr ""
+
+msgid "Show / hide selected regions"
+msgstr ""
+
+msgid "Remove selected regions"
+msgstr ""
+
+msgid "Remove 5D surface regions"
+msgstr ""
+
+msgid "The last clicked region supplies settings when merging or copying. Ctrl-click selects multiple regions."
+msgstr ""
+
+msgid "Selection tool"
+msgstr ""
+
+msgid "Connected surface"
+msgstr ""
+
+msgid "Brush: add"
+msgstr ""
+
+msgid "Brush: erase"
+msgstr ""
+
+msgid "Pick reference edge"
+msgstr ""
+
+msgid "Brush radius (mm)"
+msgstr ""
+
+msgid "Stop connected selection at geometric edges"
+msgstr ""
+
+msgid "Edge angle limit (°)"
+msgstr ""
+
+msgid "Minimum surface slope (°)"
+msgstr ""
+
+msgid "Maximum surface slope (°)"
+msgstr ""
+
+msgid "Select surfaces in slope range"
+msgstr ""
+
+msgid "Minimum slope must not exceed maximum slope."
+msgstr ""
+
+msgid "Slope is measured between the outward surface normal and global +Z. Left-click paints; Shift-click or right-click erases. Ctrl-drag rotates the view; the wheel zooms."
+msgstr ""
+
+msgid "Section position (0–1)"
+msgstr ""
+
+msgid "Reset section"
+msgstr ""
+
+msgid "Section view shows the original model. Shell depth is specified along the local normal; offset geometry is not calculated."
+msgstr ""
+
+msgid "Add a region and select a surface on the model. Experimental: no 5D paths or executable 5D output."
+msgstr ""
+
+msgid "Manufacturing intent — not calculated"
+msgstr ""
+
+msgid "5D layers"
+msgstr ""
+
+msgid "Shell definition"
+msgstr ""
+
+msgid "Number of 5D layers"
+msgstr ""
+
+msgid "5D shell thickness"
+msgstr ""
+
+msgid "Entire wall in 5D"
+msgstr ""
+
+msgid "Shell thickness along local normal (mm)"
+msgstr ""
+
+msgid "5D layer thickness (mm)"
+msgstr ""
+
+msgid "Preserve original model dimensions"
+msgstr ""
+
+msgid "The requested shell lies inside the nominal geometry. Depth follows the local surface normal, not global Z. No offset geometry has been generated."
+msgstr ""
+
+msgid "A wall printed entirely in 5D requires a suitable load-bearing structure before 5D printing. Conventional planar supports may be required first."
+msgstr ""
+
+msgid "Restrict region to one print head"
+msgstr ""
+
+msgid "A physically continuous extrusion path requires the same head. Different heads use the transition settings. Connectivity and paths are not yet checked."
+msgstr ""
+
+msgid "Nozzle orientation"
+msgstr ""
+
+msgid "Normal to the local surface"
+msgstr ""
+
+msgid "Allow deviation from the normal"
+msgstr ""
+
+msgid "Maximum deviation (°)"
+msgstr ""
+
+msgid "Allow vertical surfaces"
+msgstr ""
+
+msgid "Reachability: not checked. A vertical wall normally requires 90° nozzle tilt; the provisional mechanism allows 75°. Up to 15° deviation may help, but only future kinematic checks can confirm this."
+msgstr ""
+
+msgid "Underlay and supports"
+msgstr ""
+
+msgid "Use normal infill as underlay"
+msgstr ""
+
+msgid "Inherit Infill first"
+msgstr ""
+
+msgid "Denser underlay / transition structure"
+msgstr ""
+
+msgid "Requested underlay density (%)"
+msgstr ""
+
+msgid "Additional supports requested"
+msgstr ""
+
+msgid "Support material strategy"
+msgstr ""
+
+msgid "Normal breakaway supports"
+msgstr ""
+
+msgid "Water-soluble supports (e.g. PVA)"
+msgstr ""
+
+msgid "Automatic from configured materials"
+msgstr ""
+
+msgid "5D support structures are not calculated. The following settings are the existing Orca process settings and also affect normal planar printing."
+msgstr ""
+
+msgid "Surface properties"
+msgstr ""
+
+msgid "Path direction"
+msgstr ""
+
+msgid "Along selected edge"
+msgstr ""
+
+msgid "Custom direction"
+msgstr ""
+
+msgid "Select reference edge on model"
+msgstr ""
+
+msgid "Click near a mesh edge on the model to store its endpoints."
+msgstr ""
+
+msgid "Direction X"
+msgstr ""
+
+msgid "Direction Y"
+msgstr ""
+
+msgid "Direction Z"
+msgstr ""
+
+msgid "Alternate directions between layers"
+msgstr ""
+
+msgid "Finer final layers (0 disables)"
+msgstr ""
+
+msgid "Final layer thickness (mm)"
+msgstr ""
+
+msgid "Distance from region boundary (mm)"
+msgstr ""
+
+msgid "Surface quality"
+msgstr ""
+
+msgctxt "Surface quality"
+msgid "Draft"
+msgstr ""
+
+msgctxt "Surface quality"
+msgid "Fine"
+msgstr ""
+
+msgid "Request 5D ironing (future function)"
+msgstr ""
+
+msgid "Speed, line width, flow, temperature and cooling are inherited from the assigned Orca material and process profiles. Surface paths and ironing are not calculated."
+msgstr ""
+
+msgid "Transitions between regions"
+msgstr ""
+
+msgid "Other region"
+msgstr ""
+
+msgid "Transition type"
+msgstr ""
+
+msgid "Fixed boundary"
+msgstr ""
+
+msgid "Interwoven transition"
+msgstr ""
+
+msgid "Parallel paths"
+msgstr ""
+
+msgid "Interwoven zone width (mm)"
+msgstr ""
+
+msgid "Desired overlap (%)"
+msgstr ""
+
+msgid "Interwoven pattern"
+msgstr ""
+
+msgid "Toothed"
+msgstr ""
+
+msgid "Alternating between layers"
+msgstr ""
+
+msgid "Fixed: each head stays in its assigned region. Interwoven: the regions interlock in the requested zone. Parallel: two heads travel close together over the complete region. These are intentions only; no paths, spacing or collision safety have been calculated."
+msgstr ""
+
+msgid "Adjacency and material compatibility: not checked. Some materials do not bond reliably. A later technical check is required before any manufacturing strategy can be released."
+msgstr ""
+
+msgid "Head assignment"
+msgstr ""
+
+#, possible-boost-format
+msgid "Assign to head %1%"
+msgstr ""
+
+msgid "Head assignments describe future 5D work. They do not change Orca's normal extruder or support-material assignments."
+msgstr ""
+
+msgid "Multi-head operation"
+msgstr ""
+
+msgid "Orca support settings"
+msgstr ""
+
+msgid "Orca could not apply this support setting. The current process values have been restored."
+msgstr ""
+
+msgid "Operating strategy"
+msgstr ""
+
+msgid "Automatic parallel operation"
+msgstr ""
+
+msgid "Material-dependent task allocation"
+msgstr ""
+
+msgid "High-speed mode"
+msgstr ""
+
+msgid "High-speed mode requires three enabled heads with compatible PETG profiles. Check the multi-head group."
+msgstr ""
+
+msgid "Automatic parallel operation requests simultaneous work when possible; unavailable heads wait. Allocation, timing and collisions are not calculated."
+msgstr ""
+
+msgid "Normal part construction"
+msgstr ""
+
+msgid "5D surfaces"
+msgstr ""
+
+msgid "Support structures"
+msgstr ""
+
+msgid "Reinforcement regions (e.g. CF)"
+msgstr ""
+
+msgid "Automatic task allocation"
+msgstr ""
+
+#, possible-boost-format
+msgid "Head %1%"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
+msgid "Orca material profile"
+msgstr ""
+
+msgid "Example: head 1 PETG for the part, head 2 PVA for supports, head 3 PETG-CF for reinforcement. Material suitability and bonding remain unverified."
+msgstr ""
+
+#, possible-boost-format
+msgid "%1% · %2%"
+msgstr ""
+
+#, possible-boost-format
+msgid "%1% · %2% (hidden)"
+msgstr ""
+
+msgid "Cross-surface paths: continuous"
+msgstr ""
+
+msgid "Merge regions to request continuous cross-surface paths."
+msgstr ""
+
+msgid "Reference edge stored. Path direction not calculated."
+msgstr ""
+
+msgid "No reference edge selected."
+msgstr ""
+
+#, possible-boost-format
+msgid "Assigned regions: %1%"
+msgstr ""
+
+msgid "High-speed prerequisite: three enabled heads with the same PETG profile. Technical approval, collisions and scheduling: not checked."
+msgstr ""
+
+msgid "Three compatible PETG profiles with overlapping temperature ranges selected. Calibration, collisions and scheduling are not checked; high-speed remains a requested strategy without technical approval."
+msgstr ""
+
+msgid "High-speed prerequisite not met: assign compatible PETG profiles to all three enabled heads. The selected strategy is only a request."
+msgstr ""
+
+msgid "Reference edge stored for this region. No path direction has been calculated."
+msgstr ""
+
+msgid "This project's 5D data is unsupported or invalid. It is preserved unchanged; editing is disabled."
+msgstr ""
+
+msgid "Not assigned"
+msgstr ""
+
+msgid "Edit 5D surface selection"
+msgstr ""
+
+msgid "Select 5D surfaces by slope"
+msgstr ""
+
 msgid "Switching languages requires the application to restart.\n"
 msgstr ""
 
@@ -9771,7 +10206,7 @@ msgstr ""
 
 #. TRN The first %s is a URL scheme, for example "prusaslicer"; the second is a website name.
 #, possible-c-format, possible-boost-format
-msgid "Associate %s:// with OrcaSlicer so that Orca can open models from %s"
+msgid "Associate %s:// with Formorix Slicer so that Formorix Slicer can open models from %s"
 msgstr ""
 
 msgid "Current Association: "
@@ -9810,13 +10245,13 @@ msgstr ""
 msgid "Enable dark Mode"
 msgstr ""
 
-msgid "Allow only one OrcaSlicer instance"
+msgid "Allow only one Formorix Slicer instance"
 msgstr ""
 
 msgid "On OSX there is always only one instance of app running by default. However it is allowed to run multiple instances of same app from the command line. In such case this settings will allow only one instance."
 msgstr ""
 
-msgid "If this is enabled, when starting OrcaSlicer and another instance of the same OrcaSlicer is already running, that instance will be reactivated instead."
+msgid "If this is enabled, when starting Formorix Slicer and another instance of the same Formorix Slicer is already running, that instance will be reactivated instead."
 msgstr ""
 
 msgid "Show splash screen"
@@ -9836,7 +10271,7 @@ msgid "Render on the discrete GPU"
 msgstr ""
 
 #. TRN DRI_PRIME is an environment variable name and must stay as it is.
-msgid "On a computer with two GPUs, run OrcaSlicer on the discrete GPU instead of the one that drives the display. Some Wayland systems cannot show frames rendered on the other GPU, or fail to open the window at all. Turn this off if the 3D view stays empty; if OrcaSlicer no longer starts, start it once with DRI_PRIME=0 in the environment to get back here."
+msgid "On a computer with two GPUs, run Formorix Slicer on the discrete GPU instead of the one that drives the display. Some Wayland systems cannot show frames rendered on the other GPU, or fail to open the window at all. Turn this off if the 3D view stays empty; if Formorix Slicer no longer starts, start it once with DRI_PRIME=0 in the environment to get back here."
 msgstr ""
 
 msgid "Features"
@@ -10012,7 +10447,7 @@ msgid ""
 "Lower values produce smaller files but lose more geometric detail; higher values preserve more detail at the cost of larger files."
 msgstr ""
 
-msgid "Associate files to OrcaSlicer"
+msgid "Associate files to Formorix Slicer"
 msgstr ""
 
 msgid "File associations for the Microsoft Store version are managed by Windows Settings."
@@ -10021,31 +10456,31 @@ msgstr ""
 msgid "Open Windows Default Apps Settings"
 msgstr ""
 
-msgid "Associate 3MF files to OrcaSlicer"
+msgid "Associate 3MF files to Formorix Slicer"
 msgstr ""
 
-msgid "If enabled, this sets OrcaSlicer as the default application to open 3MF files."
+msgid "If enabled, this sets Formorix Slicer as the default application to open 3MF files."
 msgstr ""
 
-msgid "Associate DRC files to OrcaSlicer"
+msgid "Associate DRC files to Formorix Slicer"
 msgstr ""
 
-msgid "If enabled, sets OrcaSlicer as default application to open DRC files."
+msgid "If enabled, sets Formorix Slicer as default application to open DRC files."
 msgstr ""
 
-msgid "Associate STL files to OrcaSlicer"
+msgid "Associate STL files to Formorix Slicer"
 msgstr ""
 
-msgid "If enabled, this sets OrcaSlicer as the default application to open STL files."
+msgid "If enabled, this sets Formorix Slicer as the default application to open STL files."
 msgstr ""
 
-msgid "Associate STEP files to OrcaSlicer"
+msgid "Associate STEP files to Formorix Slicer"
 msgstr ""
 
-msgid "If enabled, this sets OrcaSlicer as the default application to open STEP files."
+msgid "If enabled, this sets Formorix Slicer as the default application to open STEP files."
 msgstr ""
 
-msgid "Associate web links to OrcaSlicer"
+msgid "Associate web links to Formorix Slicer"
 msgstr ""
 
 msgid "Behaviour"
@@ -10063,7 +10498,7 @@ msgstr ""
 msgid "Auto slice after changes"
 msgstr ""
 
-msgid "If enabled, OrcaSlicer will re-slice automatically whenever slicing-related settings change."
+msgid "If enabled, Formorix Slicer will re-slice automatically whenever slicing-related settings change."
 msgstr ""
 
 msgid "Delay in seconds before auto slicing starts, allowing multiple edits to be grouped. Use 0 to slice immediately."
@@ -10084,7 +10519,7 @@ msgstr ""
 msgid "Remember last print action"
 msgstr ""
 
-msgid "If enabled, OrcaSlicer will remember the last selected option in the print button's dropdown (e.g. Print, Export plate sliced file, Export G-code file) and use it as the default on next startup."
+msgid "If enabled, Formorix Slicer will remember the last selected option in the print button's dropdown (e.g. Print, Export plate sliced file, Export G-code file) and use it as the default on next startup."
 msgstr ""
 
 msgid "Default view type"
@@ -10320,6 +10755,27 @@ msgid ""
 "Off, a translucent filament is matte and an opaque one keeps the highlight of the plain view."
 msgstr ""
 
+msgid "Persistent"
+msgstr ""
+
+msgid "When Outline is enabled in the 3D canvas menu, outlines visible objects even when they are not selected."
+msgstr ""
+
+msgid "The configured outline color is invalid."
+msgstr ""
+
+msgid "Persistent color"
+msgstr ""
+
+msgid "Choose the color of the persistent outlines of unselected objects."
+msgstr ""
+
+msgid "Selection color"
+msgstr ""
+
+msgid "Choose the color of the outlines of selected objects."
+msgstr ""
+
 msgid "Anti-aliasing"
 msgstr ""
 
@@ -10528,7 +10984,7 @@ msgstr ""
 
 msgid ""
 "Route print jobs for non-Bambu printers through printer plug-in agents instead of the classic print-host upload flow.\n"
-"When disabled, OrcaSlicer uses the legacy print-host behavior."
+"When disabled, Formorix Slicer uses the legacy print-host behavior."
 msgstr ""
 
 msgid "Allow Abnormal Storage"
@@ -12186,6 +12642,21 @@ msgstr ""
 msgid "Template Custom G-code"
 msgstr ""
 
+msgid "Formorix 5D"
+msgstr ""
+
+msgid "Experimental configuration only"
+msgstr ""
+
+msgid "Independent head 1"
+msgstr ""
+
+msgid "Independent head 2"
+msgstr ""
+
+msgid "Independent head 3"
+msgstr ""
+
 msgid "Motion ability"
 msgstr ""
 
@@ -12991,10 +13462,10 @@ msgctxt "Printer vendor"
 msgid "Custom"
 msgstr ""
 
-msgid "Welcome to Orca Slicer"
+msgid "Welcome to Formorix Slicer"
 msgstr ""
 
-msgid "Orca Slicer will be set up in several steps. Let's start!"
+msgid "Formorix Slicer will be set up in several steps. Let's start!"
 msgstr ""
 
 msgid "Get Started"
@@ -13857,6 +14328,24 @@ msgstr ""
 msgid "If you still want to print, you can enable the option in Preferences / Control / Slicing / Remove mixed temperature restriction."
 msgstr ""
 
+msgid "A prime tower requires that all objects have the same layer height."
+msgstr ""
+
+msgid "A prime tower requires that all objects are printed over the same number of raft layers."
+msgstr ""
+
+msgid "The prime tower is only supported for multiple objects if they are printed with the same support_top_z_distance."
+msgstr ""
+
+msgid "A prime tower requires that all objects are sliced with the same layer height."
+msgstr ""
+
+msgid "The prime tower is only supported if all objects have the same variable layer height."
+msgstr ""
+
+msgid "Formorix 5D configuration is incomplete or uses an unsupported schema."
+msgstr ""
+
 msgid "No extrusions under current settings."
 msgstr ""
 
@@ -13980,21 +14469,6 @@ msgid "A prime tower is not supported when adaptive layer height is on. It requi
 msgstr ""
 
 msgid "A prime tower requires any “support gap” to be a multiple of layer height."
-msgstr ""
-
-msgid "A prime tower requires that all objects have the same layer height."
-msgstr ""
-
-msgid "A prime tower requires that all objects are printed over the same number of raft layers."
-msgstr ""
-
-msgid "The prime tower is only supported for multiple objects if they are printed with the same support_top_z_distance."
-msgstr ""
-
-msgid "A prime tower requires that all objects are sliced with the same layer height."
-msgstr ""
-
-msgid "The prime tower is only supported if all objects have the same variable layer height."
 msgstr ""
 
 msgid "One or more object were assigned an extruder that the printer does not have."
@@ -14130,6 +14604,117 @@ msgid "The belt purge tower cannot absorb the full purge volume: %1% mm³ in tot
 msgstr ""
 
 msgid "Processing of the filename_format template failed."
+msgstr ""
+
+msgid "X position"
+msgstr ""
+
+msgid "X minimum"
+msgstr ""
+
+msgid "X maximum"
+msgstr ""
+
+msgid "Y position"
+msgstr ""
+
+msgid "Y minimum"
+msgstr ""
+
+msgid "Y maximum"
+msgstr ""
+
+msgid "Local head Z position"
+msgstr ""
+
+msgid "Local head Z minimum"
+msgstr ""
+
+msgid "Local head Z maximum"
+msgstr ""
+
+msgid "A orientation"
+msgstr ""
+
+msgid "A minimum"
+msgstr ""
+
+msgid "A maximum"
+msgstr ""
+
+msgid "B orientation"
+msgstr ""
+
+msgid "B minimum"
+msgstr ""
+
+msgid "B maximum"
+msgstr ""
+
+msgid "Experimental Formorix 5D mode"
+msgstr ""
+
+msgid "Configuration only for three independent heads. Slicing, G-code export and sending print jobs are disabled in this mode. Disable it to use conventional OrcaSlicer slicing."
+msgstr ""
+
+msgid "Formorix configuration version"
+msgstr ""
+
+msgid "Experimental configuration in millimeters; no movement is generated. Head Z is local travel, independent of the shared bed Z travel and printable height."
+msgstr ""
+
+msgid "Experimental orientation in degrees. A and B are independent axis limits; rotation order, combined tilt and collision checks are not implemented."
+msgstr ""
+
+msgid "Shared bed Z position"
+msgstr ""
+
+msgid "Shared bed Z minimum"
+msgstr ""
+
+msgid "Shared bed Z maximum"
+msgstr ""
+
+msgid "Maximum axis tilt"
+msgstr ""
+
+msgid "°"
+msgstr ""
+
+msgid "Target speed"
+msgstr ""
+
+msgid "Provisional 5D target speed. This does not change conventional slicing speeds."
+msgstr ""
+
+msgid "Target acceleration"
+msgstr ""
+
+msgid "Provisional 5D target acceleration. This does not emit firmware commands."
+msgstr ""
+
+msgid "Extrusion channel"
+msgstr ""
+
+msgid "Unique zero-based logical extrusion channel for this head. This is not an OrcaSlicer extruder index or a firmware tool command."
+msgstr ""
+
+msgid "Formorix 5D: the shared bed Z position must be within valid non-negative travel limits."
+msgstr ""
+
+msgid "Formorix 5D: tilt, target speed and target acceleration must be finite positive values; tilt cannot exceed 180 degrees."
+msgstr ""
+
+msgid "Formorix 5D: every head position must be within finite limits, with minimum less than maximum."
+msgstr ""
+
+msgid "Formorix 5D: head orientation limits exceed the maximum axis tilt."
+msgstr ""
+
+msgid "Formorix 5D: each head needs a distinct extrusion channel between 0 and 255."
+msgstr ""
+
+msgid "Formorix 5D is experimental and configuration-only. Slicing, executable G-code export and sending print jobs are disabled. Save a project or printer preset instead, or disable Formorix 5D mode for conventional slicing."
 msgstr ""
 
 msgid "Printer technology"
@@ -16367,9 +16952,6 @@ msgid ""
 "Note: For Klipper machines, Disabled is recommended. Klipper splits arcs back into line segments, which lowers the surface quality and can increase the print time."
 msgstr ""
 
-msgid "Enabled"
-msgstr ""
-
 msgid "Sparse infill only"
 msgstr ""
 
@@ -18497,9 +19079,6 @@ msgid "Belt tilt angle"
 msgstr ""
 
 msgid "Tilt angle of the belt surface, in degrees. Most belt printers use 45°. Positive values rotate counter-clockwise looking down the positive tilt axis; the magnitude is also the physical belt tilt used for bed rendering and support gravity."
-msgstr ""
-
-msgid "°"
 msgstr ""
 
 msgid "Decouple machine-frame tilt"

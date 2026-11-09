@@ -1,5 +1,6 @@
 #include "libslic3r/Formorix5D.hpp"
 #include "Plater.hpp"
+#include "FormorixSurfaceEditor.hpp"
 #include "../Utils/NetworkAgent.hpp"
 #include "IPrinterAgent.hpp"
 #include "CalibUtils.hpp"
@@ -7244,6 +7245,8 @@ struct Plater::priv
 
     // GUI elements
     AuiMgr m_aui_mgr;
+    std::unique_ptr<FormorixSurfaceEditor> formorix_editor;
+    bool formorix_mode = false;
     // Live dock panes. `on_close` runs when the user closes one from its close button; `shown` is
     // what the owner asked for.
     struct DockPane
@@ -8673,7 +8676,7 @@ void Plater::priv::update_sidebar(bool force_update) {
     }
     bool  needs_update = force_update;
 
-    if (!sidebar_layout.is_enabled) {
+    if (!sidebar_layout.is_enabled || formorix_mode) {
         if (sidebar.IsShown()) {
             sidebar.Hide();
             needs_update = true;
@@ -8711,6 +8714,10 @@ void Plater::priv::reset_window_layout()
         if (wxAuiPaneInfo& pane = m_aui_mgr.GetPane(window); pane.IsOk())
             pane.Show(dock_pane_visible(dock_pane, pane));
     sidebar_layout.is_collapsed = false;
+    if (formorix_editor) {
+        m_aui_mgr.GetPane(formorix_editor->left()).Show(formorix_mode);
+        m_aui_mgr.GetPane(formorix_editor->right()).Show(formorix_mode);
+    }
     update_sidebar(true);
 }
 
@@ -10304,6 +10311,14 @@ std::vector<size_t> Plater::priv::load_files(const std::vector<fs::path>& input_
             }
 
             BOOST_LOG_TRIVIAL(info) << __FUNCTION__ << ":" << __LINE__ << boost::format(", before load_model_objects, count %1%")%model.objects.size();
+            // Import-as-geometry deliberately omits project settings. Do not interpret an
+            // incoming file's region numbers as regions of the already open project.
+            if (!is_project_file && !model.formorix_surfaces.empty())
+                for (ModelObject *object : model.objects)
+                    for (ModelVolume *volume : object->volumes) {
+                        volume->formorix_facets.reset();
+                        volume->formorix_topology = 0;
+                    }
             auto loaded_idxs = load_model_objects(model.objects, is_project_file, false, true,
                 stage_geometry ? &import_display_options : nullptr);
             obj_idxs.insert(obj_idxs.end(), loaded_idxs.begin(), loaded_idxs.end());
@@ -10315,6 +10330,7 @@ std::vector<size_t> Plater::priv::load_files(const std::vector<fs::path>& input_
             // plain model into the open project leaves the current recipe alone.
             if (is_project_file) {
                 q->model().cad_recipe = model.cad_recipe;
+                q->model().formorix_surfaces = model.formorix_surfaces;
                 loaded_cad_recipe     = !model.cad_recipe.empty();
             }
 
@@ -11167,6 +11183,7 @@ void Plater::priv::reset(bool apply_presets_change, bool reload_presets)
     // clear_objects() only drops the ModelObjects; the CAD recipe is Model-level state and would
     // otherwise be written into every project saved for the rest of the session.
     model.cad_recipe.clear();
+    model.formorix_surfaces.clear();
     assemble_view->get_canvas3d()->reset_explosion_ratio();
     update();
 
@@ -16659,6 +16676,7 @@ void Plater::load_project(wxString const& filename2,
 // BBS: save logic
 int Plater::save_project(bool saveAs)
 {
+    if (!commit_formorix_surface_edit()) return wxID_CANCEL;
     //if (up_to_date(false, false)) // should we always save
     //    return;
     auto filename = get_project_filename(".3mf");
@@ -19545,6 +19563,36 @@ void Plater::select_view(const std::string& direction) { p->select_view(directio
 
 //BBS: add no_slice logic
 void Plater::select_view_3D(const std::string& name, bool no_slice) { p->select_view_3D(name, no_slice); }
+
+void Plater::show_formorix_surfaces(bool show)
+{
+    if (p->formorix_mode == show) return;
+    if (show && (only_gcode_mode() || using_exported_file())) return;
+    p->formorix_mode = show;
+    if (show) {
+        p->select_view_3D("3D");
+        if (!p->formorix_editor) {
+            p->formorix_editor = std::make_unique<FormorixSurfaceEditor>(*this);
+            p->m_aui_mgr.AddPane(p->formorix_editor->left(), wxAuiPaneInfo().Name("formorix_regions")
+                .Left().CaptionVisible(false).CloseButton(false).Floatable(false).Movable(false)
+                .BestSize(FromDIP(wxSize(260, 600))).MinSize(FromDIP(wxSize(220, 180))));
+            p->m_aui_mgr.AddPane(p->formorix_editor->right(), wxAuiPaneInfo().Name("formorix_settings")
+                .Right().CaptionVisible(false).CloseButton(false).Floatable(false).Movable(false)
+                .BestSize(FromDIP(wxSize(355, 600))).MinSize(FromDIP(wxSize(280, 180))));
+        }
+    }
+    if (p->formorix_editor) {
+        p->m_aui_mgr.GetPane(p->formorix_editor->left()).Show(show);
+        p->m_aui_mgr.GetPane(p->formorix_editor->right()).Show(show);
+        p->formorix_editor->show(show);
+    }
+    p->update_sidebar(true);
+}
+
+bool Plater::commit_formorix_surface_edit()
+{
+    return !p->formorix_editor || p->formorix_editor->commit_pending_edit();
+}
 
 void Plater::reload_paint_after_background_process_apply() {
     p->preview->set_reload_paint_after_background_process_apply(true);
@@ -23060,6 +23108,7 @@ void Plater::search(bool plater_is_active, Preset::Type type, wxWindow *tag, Tex
 
 void Plater::msw_rescale()
 {
+    if (p->formorix_editor) p->formorix_editor->rescale();
     p->preview->msw_rescale();
 
     p->view3D->get_canvas3d()->msw_rescale();
@@ -23074,6 +23123,7 @@ void Plater::msw_rescale()
 
 void Plater::sys_color_changed()
 {
+    if (p->formorix_editor) p->formorix_editor->sys_color_changed();
     p->preview->sys_color_changed();
     p->sidebar->sys_color_changed();
     p->menus.sys_color_changed();

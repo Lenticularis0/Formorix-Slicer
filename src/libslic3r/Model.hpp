@@ -36,6 +36,7 @@
 #include <cereal/types/base_class.hpp>
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <iterator>
 #include <initializer_list>
 #include <cereal/specialize.hpp>
@@ -925,6 +926,10 @@ public:
     // List of mesh facets painted for fuzzy skin.
     FacetsAnnotation    fuzzy_skin_facets;
 
+    // GUI-only Formorix region mask, independent of filament and support paint.
+    FacetsAnnotation formorix_facets;
+    std::uint64_t formorix_topology = 0;
+
     // One independent paint mask per texture-displacement layer slot (see texture_displacement_layers
     // below). Unlike the other facets fields above, a triangle may be painted (ENFORCER) in more
     // than one of these simultaneously -- that overlap is what makes the layers "blend".
@@ -1156,6 +1161,7 @@ public:
         this->seam_facets.set_new_unique_id();
         this->mmu_segmentation_facets.set_new_unique_id();
         this->fuzzy_skin_facets.set_new_unique_id();
+        this->formorix_facets.set_new_unique_id();
         for (int i = 0; i < int(TEXTURE_DISPLACEMENT_MAX_LAYERS); ++i)
             this->texture_displacement_facet(i).set_new_unique_id();
     }
@@ -1267,6 +1273,7 @@ private:
         config(other.config), m_type(other.m_type), object(object), m_transformation(other.m_transformation),
         supported_facets(other.supported_facets), seam_facets(other.seam_facets), mmu_segmentation_facets(other.mmu_segmentation_facets),
         fuzzy_skin_facets(other.fuzzy_skin_facets),
+        formorix_facets(other.formorix_facets), formorix_topology(other.formorix_topology),
         texture_displacement_facets_0(other.texture_displacement_facets_0), texture_displacement_facets_1(other.texture_displacement_facets_1),
         texture_displacement_facets_2(other.texture_displacement_facets_2), texture_displacement_facets_3(other.texture_displacement_facets_3),
         texture_displacement_facets_4(other.texture_displacement_facets_4), texture_displacement_facets_5(other.texture_displacement_facets_5),
@@ -1336,7 +1343,7 @@ private:
 	friend class cereal::access;
 	friend class UndoRedo::StackImpl;
 	// Used for deserialization, therefore no IDs are allocated.
-	ModelVolume() : ObjectBase(-1), config(-1), supported_facets(-1), seam_facets(-1), mmu_segmentation_facets(-1), fuzzy_skin_facets(-1),
+	ModelVolume() : ObjectBase(-1), config(-1), supported_facets(-1), seam_facets(-1), mmu_segmentation_facets(-1), fuzzy_skin_facets(-1), formorix_facets(-1),
 		texture_displacement_facets_0(-1), texture_displacement_facets_1(-1), texture_displacement_facets_2(-1), texture_displacement_facets_3(-1),
 		texture_displacement_facets_4(-1), texture_displacement_facets_5(-1), texture_displacement_facets_6(-1), texture_displacement_facets_7(-1),
 		object(nullptr) {
@@ -1366,6 +1373,10 @@ private:
         mesh_changed |= t != mmu_segmentation_facets.timestamp();
         cereal::load_by_value(ar, fuzzy_skin_facets);
         mesh_changed |= t != fuzzy_skin_facets.timestamp();
+        t = formorix_facets.timestamp();
+        cereal::load_by_value(ar, formorix_facets);
+        ar(formorix_topology);
+        mesh_changed |= t != formorix_facets.timestamp();
         for (int i = 0; i < int(TEXTURE_DISPLACEMENT_MAX_LAYERS); ++i) {
             FacetsAnnotation &f  = texture_displacement_facet(i);
             Timestamp         tf = f.timestamp();
@@ -1394,6 +1405,8 @@ private:
         cereal::save_by_value(ar, seam_facets);
         cereal::save_by_value(ar, mmu_segmentation_facets);
         cereal::save_by_value(ar, fuzzy_skin_facets);
+        cereal::save_by_value(ar, formorix_facets);
+        ar(formorix_topology);
         for (int i = 0; i < int(TEXTURE_DISPLACEMENT_MAX_LAYERS); ++i)
             cereal::save_by_value(ar, texture_displacement_facet(i));
         ar(texture_displacement_layers, texture_displacement_options, texture_uv);
@@ -1737,6 +1750,10 @@ public:
     // the 3MF as Metadata/orca_cad.bin. Empty for non-CAD projects.
     std::string cad_recipe;
 
+    // Versioned annotations in Metadata/formorix_surfaces.json. Unsupported schemas
+    // remain opaque so opening/saving a project does not discard their data.
+    std::string formorix_surfaces;
+
     void SetDesigner(std::string designer, std::string designer_user_id) {
         if (design_info == nullptr) {
             design_info = std::make_shared<ModelDesignInfo>();
@@ -1906,11 +1923,11 @@ private:
 	friend class UndoRedo::StackImpl;
     template<class Archive> void load(Archive& ar) {
         Internal::StaticSerializationWrapper<ModelWipeTower> wipe_tower_wrapper(wipe_tower);
-        ar(materials, objects, wipe_tower_wrapper);
+        ar(materials, objects, wipe_tower_wrapper, formorix_surfaces);
     }
     template<class Archive> void save(Archive& ar) const {
         Internal::StaticSerializationWrapper<ModelWipeTower const> wipe_tower_wrapper(wipe_tower);
-        ar(materials, objects, wipe_tower_wrapper);
+        ar(materials, objects, wipe_tower_wrapper, formorix_surfaces);
     }
 
     //BBS: add aux temp directory

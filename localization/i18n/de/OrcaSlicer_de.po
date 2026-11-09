@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orca Slicer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 11:06-0600\n"
+"POT-Creation-Date: 2026-11-09 04:52+0100\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Heiko Liebscher <hliebschergmail.com>\n"
 "Language-Team: \n"
@@ -2186,21 +2186,21 @@ msgstr "Maskierte SLA Dateien"
 msgid "Draco files"
 msgstr "Draco Dateien"
 
-msgid "OrcaSlicer will terminate because of running out of memory. It may be a bug. It will be appreciated if you report the issue to our team."
-msgstr "OrcaSlicer wird wegen Arbeitsspeichermangels beendet, was ein Bug sein kann. Bitte melden Sie diesen Fehler dem technischen Support."
+msgid "Formorix Slicer will terminate because of running out of memory. It may be a bug. It will be appreciated if you report the issue to our team."
+msgstr ""
 
 msgid "Fatal error"
 msgstr "Schwerwiegender Fehler"
 
-msgid "OrcaSlicer will terminate because of a localization error. It will be appreciated if you report the specific scenario this issue happened."
-msgstr "OrcaSlicer wird aufgrund eines Lokalisierungsfehlers beendet.Bitte melden Sie diesen Fehler dem technischen Support."
+msgid "Formorix Slicer will terminate because of a localization error. It will be appreciated if you report the specific scenario this issue happened."
+msgstr ""
 
 msgid "Critical error"
 msgstr "Kritischer Fehler"
 
 #, boost-format
-msgid "OrcaSlicer got an unhandled exception: %1%"
-msgstr "OrcaSlicer hat eine unbehandelte Ausnahme erzeugt: %1%"
+msgid "Formorix Slicer got an unhandled exception: %1%"
+msgstr ""
 
 msgid "Untitled"
 msgstr "Unbenannt"
@@ -2331,13 +2331,10 @@ msgid "Showing main window"
 msgstr "Zeige Hauptfenster"
 
 msgid ""
-"The OrcaSlicer configuration file may be corrupted and cannot be parsed.\n"
-"OrcaSlicer has attempted to recreate the configuration file.\n"
+"The Formorix Slicer configuration file may be corrupted and cannot be parsed.\n"
+"Formorix Slicer has attempted to recreate the configuration file.\n"
 "Please note, application settings will be lost, but printer profiles will not be affected."
 msgstr ""
-"Die OrcaSlicer-Konfigurationsdatei ist möglicherweise beschädigt und kann nicht analysiert werden.\n"
-"OrcaSlicer hat versucht, die Konfigurationsdatei neu zu erstellen.\n"
-"Bitte beachten Sie, dass die Anwendungseinstellungen verloren gehen, die Druckerprofile jedoch nicht betroffen sind."
 
 msgid "Rebuild"
 msgstr "Wiederaufbau"
@@ -2468,6 +2465,12 @@ msgstr "Plugins werden abgerufen…"
 # AI Translated
 msgid "Loading user presets…"
 msgstr "Benutzerprofile werden geladen…"
+
+msgid "Formorix Slicer updates are available from https://github.com/Lenticularis0/Formorix-Slicer. Upstream OrcaSlicer releases do not contain the Formorix extensions."
+msgstr ""
+
+msgid "Formorix Slicer updates"
+msgstr ""
 
 msgid "Retrieving printer information, please try again later."
 msgstr "Empfange Druckerinformationen, bitte später erneut versuchen."
@@ -4534,6 +4537,9 @@ msgstr "Über %s"
 msgid "Build %s"
 msgstr "Build %s"
 
+msgid "Formorix Slicer is based on OrcaSlicer and distributed under the GNU Affero General Public License v3. Formorix 5D is an experimental configuration mode; it does not generate executable five-axis print jobs."
+msgstr ""
+
 msgid "Open-source slicing stands on a tradition of collaboration and attribution. Slic3r, created by Alessandro Ranellucci and the RepRap community, laid the foundation. PrusaSlicer by Prusa Research built on that work, Bambu Studio forked from PrusaSlicer, and SuperSlicer extended it with community-driven enhancements. Each project carried the work of its predecessors forward, crediting those who came before."
 msgstr "Die Open-Source-Slicing-Software steht auf einer Tradition der Zusammenarbeit und Anerkennung. Slic3r, erstellt von Alessandro Ranellucci und der RepRap-Gemeinschaft, legte den Grundstein. PrusaSlicer von Prusa Research baute auf dieser Arbeit auf, Bambu Studio wurde von PrusaSlicer verzweigt und SuperSlicer erweiterte es mit gemeinschaftsgetriebenen Verbesserungen. Jedes Projekt trug die Arbeit seiner Vorgänger weiter und würdigte diejenigen, die das zuvor erbracht haben."
 
@@ -6366,6 +6372,9 @@ msgstr "Ungültiges Muster. Verwenden Sie N, N#K oder eine durch Kommas getrennt
 msgid "Invalid format. Expected vector format: \"%1%\""
 msgstr "Ungültiges Format. Erwartetes Vektorformat: \"%1%\""
 
+msgid "The excluded bed area is invalid. It must be a simple, non-self-intersecting polygon."
+msgstr ""
+
 # AI Translated
 msgid "System agents"
 msgstr "Systemagenten"
@@ -7347,6 +7356,10 @@ msgstr "Vorbereiten"
 
 msgid "Preview"
 msgstr "Vorschau"
+
+# AI Translated
+msgid "5D Surfaces"
+msgstr "5D-Oberflächen"
 
 msgid "Project"
 msgstr "Projekt"
@@ -9974,6 +9987,9 @@ msgstr "Möchten Sie die Druckerinformationen synchronisieren und das Profil aut
 msgid "This project contains a model made in the Design tab and no other geometry. Enable \"CAD feature (experimental)\" in Preferences and restart to see and edit it; it is kept when the project is saved."
 msgstr "Dieses Projekt enthält ein im Tab Konstruktion erstelltes Modell und keine andere Geometrie. Aktivieren Sie \"CAD-Funktion (experimentell)\" in den Einstellungen und starten Sie neu, um es anzuzeigen und zu bearbeiten; es bleibt beim Speichern des Projekts erhalten."
 
+msgid "The invalid area has been removed, so please define it again using a valid polygon."
+msgstr ""
+
 msgid "Your object appears to be too large, do you want to scale it down to fit the print bed automatically?"
 msgstr "Ihr Objekt scheint zu groß zu sein. Möchten Sie es verkleinern, um es automatisch an das Druckbett anzupassen?"
 
@@ -10683,6 +10699,560 @@ msgstr "vorn"
 msgid "rear"
 msgstr "hinten"
 
+# AI Translated
+msgid "Edit 5D surface settings"
+msgstr "5D-Oberflächeneinstellungen bearbeiten"
+
+# AI Translated
+msgid "Invalid value. Check the allowed range and select at least one head or task."
+msgstr "Ungültiger Wert. Prüfen Sie den zulässigen Bereich und wählen Sie mindestens einen Kopf beziehungsweise eine Aufgabe."
+
+# AI Translated
+#, c-format, boost-format
+msgid "Allowed range: %1$.4g to %2$.4g"
+msgstr "Zulässiger Bereich: %1$.4g bis %2$.4g"
+
+# AI Translated
+msgid "Invalid number. The previous value is retained."
+msgstr "Ungültige Zahl. Der bisherige Wert bleibt erhalten."
+
+# AI Translated
+msgid "5D surface regions"
+msgstr "5D-Oberflächenbereiche"
+
+# AI Translated
+msgid "Model to paint"
+msgstr "Modell zum Markieren"
+
+# AI Translated
+msgid "Add model…"
+msgstr "Modell hinzufügen…"
+
+# AI Translated
+msgid "Add region"
+msgstr "Bereich hinzufügen"
+
+# AI Translated
+msgid "This project already has 32 surface regions."
+msgstr "Dieses Projekt enthält bereits 32 Oberflächenbereiche."
+
+# AI Translated
+#, boost-format
+msgid "Region %1%"
+msgstr "Bereich %1%"
+
+# AI Translated
+msgid "Region name"
+msgstr "Bereichsname"
+
+# AI Translated
+msgid "Enter a region name before saving."
+msgstr "Geben Sie vor dem Speichern einen Bereichsnamen ein."
+
+# AI Translated
+msgid "Merge selected regions"
+msgstr "Ausgewählte Bereiche zusammenfassen"
+
+# AI Translated
+msgid "Use Ctrl-click to select at least two regions."
+msgstr "Wählen Sie mit Strg-Klick mindestens zwei Bereiche aus."
+
+# AI Translated
+msgid "Merge 5D surface regions"
+msgstr "5D-Oberflächenbereiche zusammenfassen"
+
+# AI Translated
+msgid "Regions merged. The active region's settings and head assignment were retained. Continuous paths are requested, not calculated."
+msgstr "Bereiche zusammengefasst. Einstellungen und Kopfzuordnung des aktiven Bereichs wurden übernommen. Durchgehende Bahnen sind vorgemerkt, noch nicht berechnet."
+
+# AI Translated
+msgid "Copy settings to selected regions"
+msgstr "Einstellungen auf ausgewählte Bereiche übertragen"
+
+# AI Translated
+msgid "Use Ctrl-click to select the source and destination regions."
+msgstr "Wählen Sie mit Strg-Klick die Quell- und Zielbereiche aus."
+
+# AI Translated
+msgid "Show / hide selected regions"
+msgstr "Ausgewählte Bereiche ein-/ausblenden"
+
+# AI Translated
+msgid "Remove selected regions"
+msgstr "Ausgewählte Bereiche entfernen"
+
+# AI Translated
+msgid "Remove 5D surface regions"
+msgstr "5D-Oberflächenbereiche entfernen"
+
+# AI Translated
+msgid "The last clicked region supplies settings when merging or copying. Ctrl-click selects multiple regions."
+msgstr "Beim Zusammenfassen oder Übertragen gelten die Einstellungen des zuletzt angeklickten Bereichs. Strg-Klick wählt mehrere Bereiche aus."
+
+# AI Translated
+msgid "Selection tool"
+msgstr "Auswahlwerkzeug"
+
+# AI Translated
+msgid "Connected surface"
+msgstr "Zusammenhängende Oberfläche"
+
+# AI Translated
+msgid "Brush: add"
+msgstr "Pinsel: hinzufügen"
+
+# AI Translated
+msgid "Brush: erase"
+msgstr "Pinsel: entfernen"
+
+# AI Translated
+msgid "Pick reference edge"
+msgstr "Referenzkante auswählen"
+
+# AI Translated
+msgid "Brush radius (mm)"
+msgstr "Pinselradius (mm)"
+
+# AI Translated
+msgid "Stop connected selection at geometric edges"
+msgstr "Zusammenhängende Auswahl an geometrischen Kanten begrenzen"
+
+# AI Translated
+msgid "Edge angle limit (°)"
+msgstr "Grenzwinkel an Kanten (°)"
+
+# AI Translated
+msgid "Minimum surface slope (°)"
+msgstr "Kleinste Flächenneigung (°)"
+
+# AI Translated
+msgid "Maximum surface slope (°)"
+msgstr "Grösste Flächenneigung (°)"
+
+# AI Translated
+msgid "Select surfaces in slope range"
+msgstr "Flächen im Neigungsbereich auswählen"
+
+# AI Translated
+msgid "Minimum slope must not exceed maximum slope."
+msgstr "Die kleinste Neigung darf die grösste Neigung nicht überschreiten."
+
+# AI Translated
+msgid "Slope is measured between the outward surface normal and global +Z. Left-click paints; Shift-click or right-click erases. Ctrl-drag rotates the view; the wheel zooms."
+msgstr "Die Neigung wird zwischen der äusseren Oberflächennormalen und global +Z gemessen. Linksklick markiert; Umschalt-Klick oder Rechtsklick entfernt. Strg-Ziehen dreht die Ansicht; das Mausrad zoomt."
+
+# AI Translated
+msgid "Section position (0–1)"
+msgstr "Schnittposition (0–1)"
+
+# AI Translated
+# Needs human review: Rewrote a person's translation: New Formorix setting: Section means Schnittansicht; Schalendicke is the explicit user-specified term.
+msgid "Reset section"
+msgstr "Schnittansicht zurücksetzen"
+
+# AI Translated
+msgid "Section view shows the original model. Shell depth is specified along the local normal; offset geometry is not calculated."
+msgstr "Die Schnittansicht zeigt das Originalmodell. Die Schalentiefe gilt entlang der lokalen Normalen; eine versetzte Geometrie wird noch nicht berechnet."
+
+# AI Translated
+msgid "Add a region and select a surface on the model. Experimental: no 5D paths or executable 5D output."
+msgstr "Fügen Sie einen Bereich hinzu und wählen Sie eine Fläche am Modell. Experimentell: keine 5D-Bahnen und keine ausführbaren 5D-Druckdateien."
+
+# AI Translated
+msgid "Manufacturing intent — not calculated"
+msgstr "Fertigungsvorgaben – noch nicht berechnet"
+
+# AI Translated
+msgid "5D layers"
+msgstr "5D-Schichten"
+
+# AI Translated
+msgid "Shell definition"
+msgstr "Definition der 5D-Schale"
+
+# AI Translated
+msgid "Number of 5D layers"
+msgstr "Anzahl der 5D-Schichten"
+
+# AI Translated
+# Needs human review: Rewrote a person's translation: New Formorix setting: Section means Schnittansicht; Schalendicke is the explicit user-specified term.
+msgid "5D shell thickness"
+msgstr "5D-Schalendicke"
+
+# AI Translated
+msgid "Entire wall in 5D"
+msgstr "Gesamte Wandstärke in 5D fertigen"
+
+# AI Translated
+msgid "Shell thickness along local normal (mm)"
+msgstr "Schalendicke entlang der lokalen Normalen (mm)"
+
+# AI Translated
+msgid "5D layer thickness (mm)"
+msgstr "5D-Schichtdicke (mm)"
+
+# AI Translated
+msgid "Preserve original model dimensions"
+msgstr "Originalabmessungen des Modells beibehalten"
+
+# AI Translated
+msgid "The requested shell lies inside the nominal geometry. Depth follows the local surface normal, not global Z. No offset geometry has been generated."
+msgstr "Die vorgesehene Schale liegt innerhalb der Sollgeometrie. Ihre Tiefe folgt der lokalen Oberflächennormalen, nicht global Z. Es wurde noch keine versetzte Geometrie erzeugt."
+
+# AI Translated
+msgid "A wall printed entirely in 5D requires a suitable load-bearing structure before 5D printing. Conventional planar supports may be required first."
+msgstr "Für die Herstellung einer vollständig in 5D gedruckten Wand muss vor dem 5D-Druck eine geeignete Tragstruktur vorhanden sein. Gegebenenfalls sind zunächst normale planare Stützstrukturen erforderlich."
+
+# AI Translated
+msgid "Restrict region to one print head"
+msgstr "Bereich auf einen Druckkopf beschränken"
+
+# AI Translated
+msgid "A physically continuous extrusion path requires the same head. Different heads use the transition settings. Connectivity and paths are not yet checked."
+msgstr "Eine physisch durchgehende Extrusionsbahn erfordert denselben Druckkopf. Bei unterschiedlichen Köpfen gelten die Übergangseinstellungen. Zusammenhang und Bahnen sind noch nicht geprüft."
+
+# AI Translated
+msgid "Nozzle orientation"
+msgstr "Düsenausrichtung"
+
+# AI Translated
+msgid "Normal to the local surface"
+msgstr "Senkrecht zur lokalen Oberfläche"
+
+# AI Translated
+msgid "Allow deviation from the normal"
+msgstr "Abweichung von der Oberflächennormalen erlauben"
+
+# AI Translated
+msgid "Maximum deviation (°)"
+msgstr "Maximale Abweichung (°)"
+
+# AI Translated
+msgid "Allow vertical surfaces"
+msgstr "Senkrechte Flächen zulassen"
+
+# AI Translated
+msgid "Reachability: not checked. A vertical wall normally requires 90° nozzle tilt; the provisional mechanism allows 75°. Up to 15° deviation may help, but only future kinematic checks can confirm this."
+msgstr "Erreichbarkeit: noch nicht geprüft. Eine senkrechte Wand erfordert normalerweise 90° Düsenneigung; die vorläufige Mechanik erlaubt 75°. Bis zu 15° Abweichung können helfen. Die spätere Kinematikprüfung muss dies bestätigen."
+
+# AI Translated
+msgid "Underlay and supports"
+msgstr "Unterbau und Stützstrukturen"
+
+# AI Translated
+msgid "Use normal infill as underlay"
+msgstr "Vorhandenen normalen Infill als Unterbau verwenden"
+
+# AI Translated
+msgid "Inherit Infill first"
+msgstr "„Infill first“ übernehmen"
+
+# AI Translated
+msgid "Denser underlay / transition structure"
+msgstr "Dichterer Infill beziehungsweise Übergangsstruktur"
+
+# AI Translated
+msgid "Requested underlay density (%)"
+msgstr "Gewünschte Unterbaudichte (%)"
+
+# AI Translated
+msgid "Additional supports requested"
+msgstr "Zusätzliche Stützstrukturen vorsehen"
+
+# AI Translated
+msgid "Support material strategy"
+msgstr "Strategie für Stützmaterial"
+
+# AI Translated
+msgid "Normal breakaway supports"
+msgstr "Normale, wegbrechbare Stützen"
+
+# AI Translated
+msgid "Water-soluble supports (e.g. PVA)"
+msgstr "Wasserlösliche Stützen (z. B. PVA)"
+
+# AI Translated
+msgid "Automatic from configured materials"
+msgstr "Automatisch anhand der konfigurierten Materialien"
+
+# AI Translated
+msgid "5D support structures are not calculated. The following settings are the existing Orca process settings and also affect normal planar printing."
+msgstr "5D-Stützstrukturen werden noch nicht berechnet. Die folgenden Einstellungen sind die bestehenden Orca-Prozesseinstellungen und gelten auch für den normalen planaren Druck."
+
+# AI Translated
+msgid "Surface properties"
+msgstr "Oberflächeneigenschaften"
+
+# AI Translated
+msgid "Path direction"
+msgstr "Bahnausrichtung"
+
+# AI Translated
+msgid "Along selected edge"
+msgstr "Entlang ausgewählter Kante"
+
+# AI Translated
+msgid "Custom direction"
+msgstr "Benutzerdefinierte Richtung"
+
+# AI Translated
+msgid "Select reference edge on model"
+msgstr "Referenzkante am Modell auswählen"
+
+# AI Translated
+msgid "Click near a mesh edge on the model to store its endpoints."
+msgstr "Klicken Sie nahe einer Netzkante am Modell, um deren Endpunkte zu speichern."
+
+# AI Translated
+msgid "Direction X"
+msgstr "Richtung X"
+
+# AI Translated
+msgid "Direction Y"
+msgstr "Richtung Y"
+
+# AI Translated
+msgid "Direction Z"
+msgstr "Richtung Z"
+
+# AI Translated
+msgid "Alternate directions between layers"
+msgstr "Abwechselnde Bahnrichtungen zwischen Schichten"
+
+# AI Translated
+msgid "Finer final layers (0 disables)"
+msgstr "Feinere letzte Schichten (0 deaktiviert)"
+
+# AI Translated
+msgid "Final layer thickness (mm)"
+msgstr "Dicke der letzten Schichten (mm)"
+
+# AI Translated
+msgid "Distance from region boundary (mm)"
+msgstr "Abstand zur Bereichsgrenze (mm)"
+
+# AI Translated
+msgid "Surface quality"
+msgstr "Oberflächenqualität"
+
+# AI Translated
+msgctxt "Surface quality"
+msgid "Draft"
+msgstr "Grob"
+
+# AI Translated
+msgctxt "Surface quality"
+msgid "Fine"
+msgstr "Fein"
+
+# AI Translated
+msgid "Request 5D ironing (future function)"
+msgstr "5D-Ironing vorsehen (zukünftige Funktion)"
+
+# AI Translated
+msgid "Speed, line width, flow, temperature and cooling are inherited from the assigned Orca material and process profiles. Surface paths and ironing are not calculated."
+msgstr "Geschwindigkeit, Linienbreite, Flow, Temperatur und Kühlung werden aus den zugeordneten Orca-Material- und Prozessprofilen übernommen. Oberflächenbahnen und Ironing sind noch nicht berechnet."
+
+# AI Translated
+msgid "Transitions between regions"
+msgstr "Übergänge zwischen Druckbereichen"
+
+# AI Translated
+msgid "Other region"
+msgstr "Anderer Bereich"
+
+# AI Translated
+msgid "Transition type"
+msgstr "Übergangsart"
+
+# AI Translated
+msgid "Fixed boundary"
+msgstr "Feste Grenze"
+
+# AI Translated
+msgid "Interwoven transition"
+msgstr "Verwobener Übergang"
+
+# AI Translated
+msgid "Parallel paths"
+msgstr "Parallele Bahnen"
+
+# AI Translated
+msgid "Interwoven zone width (mm)"
+msgstr "Breite der Übergangszone (mm)"
+
+# AI Translated
+msgid "Desired overlap (%)"
+msgstr "Gewünschter Überlappungsgrad (%)"
+
+# AI Translated
+msgid "Interwoven pattern"
+msgstr "Übergangsmuster"
+
+# AI Translated
+msgid "Toothed"
+msgstr "Verzahnt"
+
+# AI Translated
+msgid "Alternating between layers"
+msgstr "Wechselnd zwischen Schichten"
+
+# AI Translated
+msgid "Fixed: each head stays in its assigned region. Interwoven: the regions interlock in the requested zone. Parallel: two heads travel close together over the complete region. These are intentions only; no paths, spacing or collision safety have been calculated."
+msgstr "Fest: Jeder Kopf bleibt in seinem Bereich. Verwoben: Die Bereiche greifen in der gewünschten Zone ineinander. Parallel: Zwei Köpfe fahren dicht beieinander den gesamten Bereich ab. Dies sind nur Vorgaben; Bahnen, Abstände und Kollisionssicherheit wurden nicht berechnet."
+
+# AI Translated
+msgid "Adjacency and material compatibility: not checked. Some materials do not bond reliably. A later technical check is required before any manufacturing strategy can be released."
+msgstr "Nachbarschaft und Materialverträglichkeit: noch nicht geprüft. Manche Materialien verbinden sich nicht zuverlässig. Jede Fertigungsstrategie erfordert eine spätere technische Freigabe."
+
+# AI Translated
+msgid "Head assignment"
+msgstr "Kopf- und Materialzuordnung"
+
+# AI Translated
+#, boost-format
+msgid "Assign to head %1%"
+msgstr "Kopf %1% zuweisen"
+
+# AI Translated
+msgid "Head assignments describe future 5D work. They do not change Orca's normal extruder or support-material assignments."
+msgstr "Die Kopfzuordnungen beschreiben zukünftige 5D-Aufgaben. Orcas normale Extruder- und Stützmaterialzuordnungen bleiben davon unabhängig."
+
+# AI Translated
+msgid "Multi-head operation"
+msgstr "Mehrkopf-Betrieb"
+
+# AI Translated
+msgid "Orca support settings"
+msgstr "Orca-Stützeinstellungen"
+
+# AI Translated
+msgid "Orca could not apply this support setting. The current process values have been restored."
+msgstr "Orca konnte diese Stützeinstellung nicht übernehmen. Die aktuellen Prozesswerte wurden wiederhergestellt."
+
+# AI Translated
+msgid "Operating strategy"
+msgstr "Betriebsstrategie"
+
+# AI Translated
+msgid "Automatic parallel operation"
+msgstr "Automatischer Parallelbetrieb"
+
+# AI Translated
+msgid "Material-dependent task allocation"
+msgstr "Materialabhängige Aufgabenteilung"
+
+# AI Translated
+msgid "High-speed mode"
+msgstr "High-Speed-Modus"
+
+# AI Translated
+msgid "High-speed mode requires three enabled heads with compatible PETG profiles. Check the multi-head group."
+msgstr "Der High-Speed-Modus erfordert drei aktivierte Köpfe mit kompatiblen PETG-Profilen. Prüfen Sie die Gruppe Mehrkopf-Betrieb."
+
+# AI Translated
+msgid "Automatic parallel operation requests simultaneous work when possible; unavailable heads wait. Allocation, timing and collisions are not calculated."
+msgstr "Der automatische Parallelbetrieb sieht möglichst gleichzeitiges Arbeiten vor; nicht einsetzbare Köpfe warten. Aufteilung, Zeitplanung und Kollisionen sind noch nicht berechnet."
+
+# AI Translated
+msgid "Normal part construction"
+msgstr "Normaler Bauteilaufbau"
+
+# AI Translated
+msgid "5D surfaces"
+msgstr "5D-Oberflächen"
+
+# AI Translated
+msgid "Support structures"
+msgstr "Stützstrukturen"
+
+# AI Translated
+msgid "Reinforcement regions (e.g. CF)"
+msgstr "Verstärkungsbereiche (z. B. CF)"
+
+# AI Translated
+msgid "Automatic task allocation"
+msgstr "Automatische Aufgabenverteilung"
+
+# AI Translated
+#, boost-format
+msgid "Head %1%"
+msgstr "Kopf %1%"
+
+msgid "Enabled"
+msgstr "Aktiviert"
+
+# AI Translated
+msgid "Orca material profile"
+msgstr "Orca-Materialprofil"
+
+# AI Translated
+msgid "Example: head 1 PETG for the part, head 2 PVA for supports, head 3 PETG-CF for reinforcement. Material suitability and bonding remain unverified."
+msgstr "Beispiel: Kopf 1 PETG für das Bauteil, Kopf 2 PVA für Stützen, Kopf 3 PETG-CF für Verstärkungen. Materialeignung und Haftung sind noch nicht geprüft."
+
+# AI Translated
+#, boost-format
+msgid "%1% · %2%"
+msgstr "%1% · %2%"
+
+# AI Translated
+#, boost-format
+msgid "%1% · %2% (hidden)"
+msgstr "%1% · %2% (ausgeblendet)"
+
+# AI Translated
+msgid "Cross-surface paths: continuous"
+msgstr "Oberflächenübergreifende Bahnen: durchgehend"
+
+# AI Translated
+msgid "Merge regions to request continuous cross-surface paths."
+msgstr "Fassen Sie Bereiche zusammen, um durchgehende oberflächenübergreifende Bahnen vorzusehen."
+
+# AI Translated
+msgid "Reference edge stored. Path direction not calculated."
+msgstr "Referenzkante gespeichert. Bahnausrichtung noch nicht berechnet."
+
+# AI Translated
+msgid "No reference edge selected."
+msgstr "Keine Referenzkante ausgewählt."
+
+# AI Translated
+#, boost-format
+msgid "Assigned regions: %1%"
+msgstr "Zugewiesene Oberflächenbereiche: %1%"
+
+# AI Translated
+msgid "High-speed prerequisite: three enabled heads with the same PETG profile. Technical approval, collisions and scheduling: not checked."
+msgstr "High-Speed-Voraussetzung: drei aktivierte Köpfe mit demselben PETG-Profil. Technische Freigabe, Kollisionen und Zeitplanung: noch nicht geprüft."
+
+# AI Translated
+msgid "Three compatible PETG profiles with overlapping temperature ranges selected. Calibration, collisions and scheduling are not checked; high-speed remains a requested strategy without technical approval."
+msgstr "Drei kompatible PETG-Profile mit überlappenden Temperaturbereichen gewählt. Abstimmung, Kollisionen und Zeitplanung sind noch nicht geprüft; High-Speed bleibt eine gewünschte Strategie ohne technische Freigabe."
+
+# AI Translated
+msgid "High-speed prerequisite not met: assign compatible PETG profiles to all three enabled heads. The selected strategy is only a request."
+msgstr "High-Speed-Voraussetzung nicht erfüllt: Weisen Sie allen drei aktivierten Köpfen kompatible PETG-Profile zu. Die ausgewählte Strategie ist lediglich eine Vorgabe."
+
+# AI Translated
+msgid "Reference edge stored for this region. No path direction has been calculated."
+msgstr "Referenzkante für diesen Bereich gespeichert. Es wurde noch keine Bahnausrichtung berechnet."
+
+# AI Translated
+msgid "This project's 5D data is unsupported or invalid. It is preserved unchanged; editing is disabled."
+msgstr "Die 5D-Daten dieses Projekts werden nicht unterstützt oder sind ungültig. Sie bleiben unverändert erhalten; die Bearbeitung ist gesperrt."
+
+# AI Translated
+msgid "Not assigned"
+msgstr "Nicht zugewiesen"
+
+# AI Translated
+msgid "Edit 5D surface selection"
+msgstr "5D-Flächenauswahl bearbeiten"
+
+# AI Translated
+msgid "Select 5D surfaces by slope"
+msgstr "5D-Oberflächen nach Neigung auswählen"
+
 msgid "Switching languages requires the application to restart.\n"
 msgstr "Der Wechsel der Sprache erfordert einen Neustart der Anwendung.\n"
 
@@ -10786,11 +11356,10 @@ msgstr "Neuladen fehlgeschlagen"
 msgid "Associate %s://"
 msgstr "%s:// verknüpfen"
 
-# AI Translated
 #. TRN The first %s is a URL scheme, for example "prusaslicer"; the second is a website name.
 #, c-format, boost-format
-msgid "Associate %s:// with OrcaSlicer so that Orca can open models from %s"
-msgstr "%s:// mit OrcaSlicer verknüpfen, damit Orca Modelle von %s öffnen kann"
+msgid "Associate %s:// with Formorix Slicer so that Formorix Slicer can open models from %s"
+msgstr ""
 
 msgid "Current Association: "
 msgstr "Aktuelle Zuordnung: "
@@ -10828,14 +11397,14 @@ msgstr "Legen Sie die Seite fest, die beim Start geöffnet wird."
 msgid "Enable dark Mode"
 msgstr "Dunklen Modus aktivieren"
 
-msgid "Allow only one OrcaSlicer instance"
-msgstr "Nur eine OrcaSlicer-Instanz zulassen"
+msgid "Allow only one Formorix Slicer instance"
+msgstr ""
 
 msgid "On OSX there is always only one instance of app running by default. However it is allowed to run multiple instances of same app from the command line. In such case this settings will allow only one instance."
 msgstr "Auf OSX läuft standardmäßig immer nur eine Instanz der App. Es ist jedoch möglich, mehrere Instanzen derselben App von der Befehlszeile aus zu starten. In diesem Fall erlaubt diese Einstellung nur eine Instanz."
 
-msgid "If this is enabled, when starting OrcaSlicer and another instance of the same OrcaSlicer is already running, that instance will be reactivated instead."
-msgstr "Wenn dies aktiviert ist und OrcaSlicer gestartet wird, während bereits eine andere Instanz von OrcaSlicer läuft, wird diese Instanz stattdessen reaktiviert."
+msgid "If this is enabled, when starting Formorix Slicer and another instance of the same Formorix Slicer is already running, that instance will be reactivated instead."
+msgstr ""
 
 msgid "Show splash screen"
 msgstr "Splash-Screen anzeigen"
@@ -10854,10 +11423,9 @@ msgstr "(Erfordert Neustart)"
 msgid "Render on the discrete GPU"
 msgstr "Auf der dedizierten GPU rendern"
 
-# AI Translated
 #. TRN DRI_PRIME is an environment variable name and must stay as it is.
-msgid "On a computer with two GPUs, run OrcaSlicer on the discrete GPU instead of the one that drives the display. Some Wayland systems cannot show frames rendered on the other GPU, or fail to open the window at all. Turn this off if the 3D view stays empty; if OrcaSlicer no longer starts, start it once with DRI_PRIME=0 in the environment to get back here."
-msgstr "Führt OrcaSlicer auf einem Computer mit zwei GPUs auf der dedizierten GPU aus statt auf der GPU, die den Bildschirm ansteuert. Manche Wayland-Systeme können auf der anderen GPU gerenderte Bilder nicht anzeigen oder öffnen das Fenster gar nicht. Deaktivieren Sie diese Option, wenn die 3D-Ansicht leer bleibt; startet OrcaSlicer nicht mehr, starten Sie es einmal mit DRI_PRIME=0 in der Umgebung, um hierher zurückzukehren."
+msgid "On a computer with two GPUs, run Formorix Slicer on the discrete GPU instead of the one that drives the display. Some Wayland systems cannot show frames rendered on the other GPU, or fail to open the window at all. Turn this off if the 3D view stays empty; if Formorix Slicer no longer starts, start it once with DRI_PRIME=0 in the environment to get back here."
+msgstr ""
 
 msgid "Features"
 msgstr "Funktionen"
@@ -11072,8 +11640,8 @@ msgstr ""
 "0 = verlustfreie Kompression (Geometrie wird mit voller Präzision beibehalten). Gültige verlustbehaftete Werte liegen zwischen 8 und 30.\n"
 "Niedrigere Werte erzeugen kleinere Dateien, verlieren jedoch mehr geometrische Details; höhere Werte bewahren mehr Details auf Kosten größerer Dateien."
 
-msgid "Associate files to OrcaSlicer"
-msgstr "Dateien mit OrcaSlicer verknüpfen"
+msgid "Associate files to Formorix Slicer"
+msgstr ""
 
 msgid "File associations for the Microsoft Store version are managed by Windows Settings."
 msgstr "Dateizuordnungen für die Microsoft Store-Version werden über die Windows-Einstellungen verwaltet."
@@ -11081,33 +11649,32 @@ msgstr "Dateizuordnungen für die Microsoft Store-Version werden über die Windo
 msgid "Open Windows Default Apps Settings"
 msgstr "Windows-Standardanwendungen öffnen"
 
-msgid "Associate 3MF files to OrcaSlicer"
-msgstr "Dateiendung .3mf mit OrcaSlicer verknüpfen"
+msgid "Associate 3MF files to Formorix Slicer"
+msgstr ""
 
-msgid "If enabled, this sets OrcaSlicer as the default application to open 3MF files."
-msgstr "Wenn aktiviert, wird OrcaSlicer als Standardanwendung zum Öffnen von .3mf-Dateien festgelegt"
+msgid "If enabled, this sets Formorix Slicer as the default application to open 3MF files."
+msgstr ""
 
-msgid "Associate DRC files to OrcaSlicer"
-msgstr "Dateiendung .drc mit OrcaSlicer verknüpfen"
+msgid "Associate DRC files to Formorix Slicer"
+msgstr ""
 
-# AI Translated
-msgid "If enabled, sets OrcaSlicer as default application to open DRC files."
-msgstr "Wenn aktiviert, wird OrcaSlicer als Standardanwendung zum Öffnen von DRC-Dateien festgelegt."
+msgid "If enabled, sets Formorix Slicer as default application to open DRC files."
+msgstr ""
 
-msgid "Associate STL files to OrcaSlicer"
-msgstr "Dateiendung .stl mit OrcaSlicer verknüpfen"
+msgid "Associate STL files to Formorix Slicer"
+msgstr ""
 
-msgid "If enabled, this sets OrcaSlicer as the default application to open STL files."
-msgstr "Wenn aktiviert, wird OrcaSlicer als Standardanwendung zum Öffnen von .stl-Dateien festgelegt"
+msgid "If enabled, this sets Formorix Slicer as the default application to open STL files."
+msgstr ""
 
-msgid "Associate STEP files to OrcaSlicer"
-msgstr "Dateiendung .step/.stp mit OrcaSlicer verknüpfen"
+msgid "Associate STEP files to Formorix Slicer"
+msgstr ""
 
-msgid "If enabled, this sets OrcaSlicer as the default application to open STEP files."
-msgstr "Wenn aktiviert, wird OrcaSlicer als Standardanwendung zum Öffnen von .step-Dateien festgelegt"
+msgid "If enabled, this sets Formorix Slicer as the default application to open STEP files."
+msgstr ""
 
-msgid "Associate web links to OrcaSlicer"
-msgstr "Web-Links mit OrcaSlicer verknüpfen"
+msgid "Associate web links to Formorix Slicer"
+msgstr ""
 
 msgid "Behaviour"
 msgstr "Verhalten"
@@ -11124,8 +11691,8 @@ msgstr "Druckplatte nach dem Klonen automatisch anordnen"
 msgid "Auto slice after changes"
 msgstr "Automatisches Schneiden nach Änderungen"
 
-msgid "If enabled, OrcaSlicer will re-slice automatically whenever slicing-related settings change."
-msgstr "Wenn aktiviert, wird OrcaSlicer automatisch neu geschnitten, sobald sich einstellungen zum Schneiden ändern."
+msgid "If enabled, Formorix Slicer will re-slice automatically whenever slicing-related settings change."
+msgstr ""
 
 msgid "Delay in seconds before auto slicing starts, allowing multiple edits to be grouped. Use 0 to slice immediately."
 msgstr "Verzögerung in Sekunden, bevor das automatische Schneiden beginnt, um mehrere Änderungen zu gruppieren. Verwenden Sie 0, um sofort zu schneiden."
@@ -11148,9 +11715,8 @@ msgstr "Mit dieser Option können Sie Materialien mit großen Temperaturuntersch
 msgid "Remember last print action"
 msgstr "Letzte Druckaktion merken"
 
-# AI Translated
-msgid "If enabled, OrcaSlicer will remember the last selected option in the print button's dropdown (e.g. Print, Export plate sliced file, Export G-code file) and use it as the default on next startup."
-msgstr "Wenn aktiviert, merkt sich OrcaSlicer die zuletzt gewählte Option im Dropdown-Menü der Druckschaltfläche (z. B. Drucken, Geslicte Datei der Druckplatte exportieren, G-Code-Datei exportieren) und verwendet sie beim nächsten Start als Standard."
+msgid "If enabled, Formorix Slicer will remember the last selected option in the print button's dropdown (e.g. Print, Export plate sliced file, Export G-code file) and use it as the default on next startup."
+msgstr ""
 
 # AI Translated
 msgid "Default view type"
@@ -11437,6 +12003,27 @@ msgstr ""
 "Versieht die Werkzeugwege in der Vorschau in der realistischen Ansicht mit Glanzlichtern wie bei glänzendem Kunststoff.\n"
 "Wenn deaktiviert, ist ein durchscheinendes Filament matt, und ein undurchsichtiges behält das Glanzlicht der normalen Ansicht."
 
+msgid "Persistent"
+msgstr ""
+
+msgid "When Outline is enabled in the 3D canvas menu, outlines visible objects even when they are not selected."
+msgstr ""
+
+msgid "The configured outline color is invalid."
+msgstr ""
+
+msgid "Persistent color"
+msgstr ""
+
+msgid "Choose the color of the persistent outlines of unselected objects."
+msgstr ""
+
+msgid "Selection color"
+msgstr ""
+
+msgid "Choose the color of the outlines of selected objects."
+msgstr ""
+
 msgid "Anti-aliasing"
 msgstr "Kantenglättung"
 
@@ -11687,13 +12274,10 @@ msgstr ""
 msgid "Use printer agents instead of print hosts"
 msgstr "Drucker-Agenten anstelle von Druck-Hosts verwenden"
 
-# AI Translated
 msgid ""
 "Route print jobs for non-Bambu printers through printer plug-in agents instead of the classic print-host upload flow.\n"
-"When disabled, OrcaSlicer uses the legacy print-host behavior."
+"When disabled, Formorix Slicer uses the legacy print-host behavior."
 msgstr ""
-"Leitet Druckaufträge für Nicht-Bambu-Drucker über Drucker-Plugin-Agenten statt über den klassischen Druck-Host-Upload.\n"
-"Wenn deaktiviert, verwendet OrcaSlicer das bisherige Druck-Host-Verhalten."
 
 msgid "Allow Abnormal Storage"
 msgstr "Fehlerhaften Speicher zulassen"
@@ -13552,6 +14136,21 @@ msgstr "Pausen G-Code"
 msgid "Template Custom G-code"
 msgstr "Vorlage Benutzerdefinierter G-Code"
 
+msgid "Formorix 5D"
+msgstr ""
+
+msgid "Experimental configuration only"
+msgstr ""
+
+msgid "Independent head 1"
+msgstr ""
+
+msgid "Independent head 2"
+msgstr ""
+
+msgid "Independent head 3"
+msgstr ""
+
 msgid "Motion ability"
 msgstr "Bewegungseinstellung"
 
@@ -14491,11 +15090,11 @@ msgctxt "Printer vendor"
 msgid "Custom"
 msgstr "Benutzerdefiniert"
 
-msgid "Welcome to Orca Slicer"
-msgstr "Willkommen im Orca Slicer"
+msgid "Welcome to Formorix Slicer"
+msgstr ""
 
-msgid "Orca Slicer will be set up in several steps. Let's start!"
-msgstr "Das Orca Slicer wird in mehreren Schritten eingerichtet. Lass uns anfangen!"
+msgid "Formorix Slicer will be set up in several steps. Let's start!"
+msgstr ""
 
 msgid "Get Started"
 msgstr "Loslegen"
@@ -15486,6 +16085,25 @@ msgstr "Ungültiger empfohlener Düsentemperaturbereich. Die untere Grenze muss 
 msgid "If you still want to print, you can enable the option in Preferences / Control / Slicing / Remove mixed temperature restriction."
 msgstr "Wenn Sie trotzdem drucken möchten, können Sie die Option in Einstellungen / Steuerung / Schneiden / Entfernen der gemischten Temperaturbeschränkung aktivieren."
 
+msgid "A prime tower requires that all objects have the same layer height."
+msgstr "Der Reinigungsturm setzt voraus, dass alle Objekte die gleiche Schichthöhe haben."
+
+# AI Translated
+msgid "A prime tower requires that all objects are printed over the same number of raft layers."
+msgstr "Der Reinigungsturm erfordert, dass alle Objekte über der gleichen Anzahl von Druckbasisschichten gedruckt werden."
+
+msgid "The prime tower is only supported for multiple objects if they are printed with the same support_top_z_distance."
+msgstr "Der Reinigungsturm wird nur für mehrere Objekte unterstützt, wenn sie mit dem gleichen support_top_z_distance gedruckt werden."
+
+msgid "A prime tower requires that all objects are sliced with the same layer height."
+msgstr "Der Reinigungsturm setzt voraus, dass alle Objekte mit der gleichen Schichthöhe geslicet werden."
+
+msgid "The prime tower is only supported if all objects have the same variable layer height."
+msgstr "Der Reinigungsturm wird nur unterstützt, wenn alle Objekte die gleiche variable Schichthöhe haben"
+
+msgid "Formorix 5D configuration is incomplete or uses an unsupported schema."
+msgstr ""
+
 msgid "No extrusions under current settings."
 msgstr "Keine Extrusion unter den aktuellen Einstellungen."
 
@@ -15629,22 +16247,6 @@ msgstr "Der Reinigungsturm wird nicht unterstützt, wenn die adaptive Schichthö
 
 msgid "A prime tower requires any “support gap” to be a multiple of layer height."
 msgstr "Der Reinigungsturm erfordert einen \"Stützabstand\", der ein Vielfaches der Schichthöhe sein muss."
-
-msgid "A prime tower requires that all objects have the same layer height."
-msgstr "Der Reinigungsturm setzt voraus, dass alle Objekte die gleiche Schichthöhe haben."
-
-# AI Translated
-msgid "A prime tower requires that all objects are printed over the same number of raft layers."
-msgstr "Der Reinigungsturm erfordert, dass alle Objekte über der gleichen Anzahl von Druckbasisschichten gedruckt werden."
-
-msgid "The prime tower is only supported for multiple objects if they are printed with the same support_top_z_distance."
-msgstr "Der Reinigungsturm wird nur für mehrere Objekte unterstützt, wenn sie mit dem gleichen support_top_z_distance gedruckt werden."
-
-msgid "A prime tower requires that all objects are sliced with the same layer height."
-msgstr "Der Reinigungsturm setzt voraus, dass alle Objekte mit der gleichen Schichthöhe geslicet werden."
-
-msgid "The prime tower is only supported if all objects have the same variable layer height."
-msgstr "Der Reinigungsturm wird nur unterstützt, wenn alle Objekte die gleiche variable Schichthöhe haben"
 
 msgid "One or more object were assigned an extruder that the printer does not have."
 msgstr "Einem oder mehreren Objekten wurde ein Extruder zugewiesen, den der Drucker nicht hat."
@@ -15805,6 +16407,117 @@ msgstr "Der Band-Reinigungsturm kann das gesamte Spülvolumen nicht aufnehmen: I
 
 msgid "Processing of the filename_format template failed."
 msgstr "Verarbeitung der Vorlage filename_format fehlgeschlagen."
+
+msgid "X position"
+msgstr ""
+
+msgid "X minimum"
+msgstr ""
+
+msgid "X maximum"
+msgstr ""
+
+msgid "Y position"
+msgstr ""
+
+msgid "Y minimum"
+msgstr ""
+
+msgid "Y maximum"
+msgstr ""
+
+msgid "Local head Z position"
+msgstr ""
+
+msgid "Local head Z minimum"
+msgstr ""
+
+msgid "Local head Z maximum"
+msgstr ""
+
+msgid "A orientation"
+msgstr ""
+
+msgid "A minimum"
+msgstr ""
+
+msgid "A maximum"
+msgstr ""
+
+msgid "B orientation"
+msgstr ""
+
+msgid "B minimum"
+msgstr ""
+
+msgid "B maximum"
+msgstr ""
+
+msgid "Experimental Formorix 5D mode"
+msgstr ""
+
+msgid "Configuration only for three independent heads. Slicing, G-code export and sending print jobs are disabled in this mode. Disable it to use conventional OrcaSlicer slicing."
+msgstr ""
+
+msgid "Formorix configuration version"
+msgstr ""
+
+msgid "Experimental configuration in millimeters; no movement is generated. Head Z is local travel, independent of the shared bed Z travel and printable height."
+msgstr ""
+
+msgid "Experimental orientation in degrees. A and B are independent axis limits; rotation order, combined tilt and collision checks are not implemented."
+msgstr ""
+
+msgid "Shared bed Z position"
+msgstr ""
+
+msgid "Shared bed Z minimum"
+msgstr ""
+
+msgid "Shared bed Z maximum"
+msgstr ""
+
+msgid "Maximum axis tilt"
+msgstr ""
+
+msgid "°"
+msgstr "°"
+
+msgid "Target speed"
+msgstr ""
+
+msgid "Provisional 5D target speed. This does not change conventional slicing speeds."
+msgstr ""
+
+msgid "Target acceleration"
+msgstr ""
+
+msgid "Provisional 5D target acceleration. This does not emit firmware commands."
+msgstr ""
+
+msgid "Extrusion channel"
+msgstr ""
+
+msgid "Unique zero-based logical extrusion channel for this head. This is not an OrcaSlicer extruder index or a firmware tool command."
+msgstr ""
+
+msgid "Formorix 5D: the shared bed Z position must be within valid non-negative travel limits."
+msgstr ""
+
+msgid "Formorix 5D: tilt, target speed and target acceleration must be finite positive values; tilt cannot exceed 180 degrees."
+msgstr ""
+
+msgid "Formorix 5D: every head position must be within finite limits, with minimum less than maximum."
+msgstr ""
+
+msgid "Formorix 5D: head orientation limits exceed the maximum axis tilt."
+msgstr ""
+
+msgid "Formorix 5D: each head needs a distinct extrusion channel between 0 and 255."
+msgstr ""
+
+msgid "Formorix 5D is experimental and configuration-only. Slicing, executable G-code export and sending print jobs are disabled. Save a project or printer preset instead, or disable Formorix 5D mode for conventional slicing."
+msgstr ""
 
 msgid "Printer technology"
 msgstr "Druckertechnologie"
@@ -18520,9 +19233,6 @@ msgstr ""
 "\n"
 "Hinweis: Für Klipper-Maschinen wird „Deaktiviert“ empfohlen. Klipper zerlegt Bögen wieder in Liniensegmente, was die Oberflächenqualität verringert und die Druckzeit verlängern kann."
 
-msgid "Enabled"
-msgstr "Aktiviert"
-
 # AI Translated
 msgid "Sparse infill only"
 msgstr "Nur Füllung"
@@ -20962,9 +21672,6 @@ msgstr "Neigungswinkel des Förderbands"
 # AI Translated
 msgid "Tilt angle of the belt surface, in degrees. Most belt printers use 45°. Positive values rotate counter-clockwise looking down the positive tilt axis; the magnitude is also the physical belt tilt used for bed rendering and support gravity."
 msgstr "Neigungswinkel der Förderbandoberfläche in Grad. Die meisten Förderbanddrucker verwenden 45°. Positive Werte drehen gegen den Uhrzeigersinn, wenn man entlang der positiven Neigungsachse blickt; der Betrag ist auch die physische Förderbandneigung, die für die Darstellung des Druckbetts und die Schwerkraft der Stützen verwendet wird."
-
-msgid "°"
-msgstr "°"
 
 # AI Translated
 msgid "Decouple machine-frame tilt"
@@ -38784,6 +39491,92 @@ msgid ""
 msgstr ""
 "Verwerfungen vermeiden\n"
 "Wussten Sie, dass beim Drucken von Materialien, die zu Verwerfungen neigen, wie z.B. ABS, durch eine entsprechende Erhöhung der Heizbetttemperatur die Wahrscheinlichkeit von Verwerfungen verringert werden kann?"
+
+#~ msgid "OrcaSlicer will terminate because of running out of memory. It may be a bug. It will be appreciated if you report the issue to our team."
+#~ msgstr "OrcaSlicer wird wegen Arbeitsspeichermangels beendet, was ein Bug sein kann. Bitte melden Sie diesen Fehler dem technischen Support."
+
+#~ msgid "OrcaSlicer will terminate because of a localization error. It will be appreciated if you report the specific scenario this issue happened."
+#~ msgstr "OrcaSlicer wird aufgrund eines Lokalisierungsfehlers beendet.Bitte melden Sie diesen Fehler dem technischen Support."
+
+#, boost-format
+#~ msgid "OrcaSlicer got an unhandled exception: %1%"
+#~ msgstr "OrcaSlicer hat eine unbehandelte Ausnahme erzeugt: %1%"
+
+#~ msgid ""
+#~ "The OrcaSlicer configuration file may be corrupted and cannot be parsed.\n"
+#~ "OrcaSlicer has attempted to recreate the configuration file.\n"
+#~ "Please note, application settings will be lost, but printer profiles will not be affected."
+#~ msgstr ""
+#~ "Die OrcaSlicer-Konfigurationsdatei ist möglicherweise beschädigt und kann nicht analysiert werden.\n"
+#~ "OrcaSlicer hat versucht, die Konfigurationsdatei neu zu erstellen.\n"
+#~ "Bitte beachten Sie, dass die Anwendungseinstellungen verloren gehen, die Druckerprofile jedoch nicht betroffen sind."
+
+# AI Translated
+#, c-format, boost-format
+#~ msgid "Associate %s:// with OrcaSlicer so that Orca can open models from %s"
+#~ msgstr "%s:// mit OrcaSlicer verknüpfen, damit Orca Modelle von %s öffnen kann"
+
+#~ msgid "Allow only one OrcaSlicer instance"
+#~ msgstr "Nur eine OrcaSlicer-Instanz zulassen"
+
+#~ msgid "If this is enabled, when starting OrcaSlicer and another instance of the same OrcaSlicer is already running, that instance will be reactivated instead."
+#~ msgstr "Wenn dies aktiviert ist und OrcaSlicer gestartet wird, während bereits eine andere Instanz von OrcaSlicer läuft, wird diese Instanz stattdessen reaktiviert."
+
+# AI Translated
+#~ msgid "On a computer with two GPUs, run OrcaSlicer on the discrete GPU instead of the one that drives the display. Some Wayland systems cannot show frames rendered on the other GPU, or fail to open the window at all. Turn this off if the 3D view stays empty; if OrcaSlicer no longer starts, start it once with DRI_PRIME=0 in the environment to get back here."
+#~ msgstr "Führt OrcaSlicer auf einem Computer mit zwei GPUs auf der dedizierten GPU aus statt auf der GPU, die den Bildschirm ansteuert. Manche Wayland-Systeme können auf der anderen GPU gerenderte Bilder nicht anzeigen oder öffnen das Fenster gar nicht. Deaktivieren Sie diese Option, wenn die 3D-Ansicht leer bleibt; startet OrcaSlicer nicht mehr, starten Sie es einmal mit DRI_PRIME=0 in der Umgebung, um hierher zurückzukehren."
+
+#~ msgid "Associate files to OrcaSlicer"
+#~ msgstr "Dateien mit OrcaSlicer verknüpfen"
+
+#~ msgid "Associate 3MF files to OrcaSlicer"
+#~ msgstr "Dateiendung .3mf mit OrcaSlicer verknüpfen"
+
+#~ msgid "If enabled, this sets OrcaSlicer as the default application to open 3MF files."
+#~ msgstr "Wenn aktiviert, wird OrcaSlicer als Standardanwendung zum Öffnen von .3mf-Dateien festgelegt"
+
+#~ msgid "Associate DRC files to OrcaSlicer"
+#~ msgstr "Dateiendung .drc mit OrcaSlicer verknüpfen"
+
+# AI Translated
+#~ msgid "If enabled, sets OrcaSlicer as default application to open DRC files."
+#~ msgstr "Wenn aktiviert, wird OrcaSlicer als Standardanwendung zum Öffnen von DRC-Dateien festgelegt."
+
+#~ msgid "Associate STL files to OrcaSlicer"
+#~ msgstr "Dateiendung .stl mit OrcaSlicer verknüpfen"
+
+#~ msgid "If enabled, this sets OrcaSlicer as the default application to open STL files."
+#~ msgstr "Wenn aktiviert, wird OrcaSlicer als Standardanwendung zum Öffnen von .stl-Dateien festgelegt"
+
+#~ msgid "Associate STEP files to OrcaSlicer"
+#~ msgstr "Dateiendung .step/.stp mit OrcaSlicer verknüpfen"
+
+#~ msgid "If enabled, this sets OrcaSlicer as the default application to open STEP files."
+#~ msgstr "Wenn aktiviert, wird OrcaSlicer als Standardanwendung zum Öffnen von .step-Dateien festgelegt"
+
+#~ msgid "Associate web links to OrcaSlicer"
+#~ msgstr "Web-Links mit OrcaSlicer verknüpfen"
+
+#~ msgid "If enabled, OrcaSlicer will re-slice automatically whenever slicing-related settings change."
+#~ msgstr "Wenn aktiviert, wird OrcaSlicer automatisch neu geschnitten, sobald sich einstellungen zum Schneiden ändern."
+
+# AI Translated
+#~ msgid "If enabled, OrcaSlicer will remember the last selected option in the print button's dropdown (e.g. Print, Export plate sliced file, Export G-code file) and use it as the default on next startup."
+#~ msgstr "Wenn aktiviert, merkt sich OrcaSlicer die zuletzt gewählte Option im Dropdown-Menü der Druckschaltfläche (z. B. Drucken, Geslicte Datei der Druckplatte exportieren, G-Code-Datei exportieren) und verwendet sie beim nächsten Start als Standard."
+
+# AI Translated
+#~ msgid ""
+#~ "Route print jobs for non-Bambu printers through printer plug-in agents instead of the classic print-host upload flow.\n"
+#~ "When disabled, OrcaSlicer uses the legacy print-host behavior."
+#~ msgstr ""
+#~ "Leitet Druckaufträge für Nicht-Bambu-Drucker über Drucker-Plugin-Agenten statt über den klassischen Druck-Host-Upload.\n"
+#~ "Wenn deaktiviert, verwendet OrcaSlicer das bisherige Druck-Host-Verhalten."
+
+#~ msgid "Welcome to Orca Slicer"
+#~ msgstr "Willkommen im Orca Slicer"
+
+#~ msgid "Orca Slicer will be set up in several steps. Let's start!"
+#~ msgstr "Das Orca Slicer wird in mehreren Schritten eingerichtet. Lass uns anfangen!"
 
 #~ msgid "Show options when importing STEP file"
 #~ msgstr "Optionen beim Importieren von STEP-Dateien anzeigen"

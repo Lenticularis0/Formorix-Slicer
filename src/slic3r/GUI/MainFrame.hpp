@@ -44,6 +44,7 @@
 #endif
 #define TAB_ID_PREPARE       "prepare"
 #define TAB_ID_PREVIEW       "preview"
+#define TAB_ID_FORMORIX_SURFACES "formorix_surfaces"
 #define TAB_ID_MONITOR       "monitor"
 // Printer-agents mode shows the legacy web page alongside the native Device tab, so it needs an
 // id of its own: sharing TAB_ID_MONITOR makes every name lookup resolve to whichever of the two

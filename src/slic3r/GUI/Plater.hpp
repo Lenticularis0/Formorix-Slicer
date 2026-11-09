@@ -522,6 +522,8 @@ public:
 
     bool is_sidebar_enabled() const;
     void enable_sidebar(bool enabled);
+    void show_formorix_surfaces(bool show);
+    bool commit_formorix_surface_edit();
     bool is_sidebar_collapsed() const;
     void collapse_sidebar(bool collapse);
     Sidebar::DockingState get_sidebar_docking_state() const;

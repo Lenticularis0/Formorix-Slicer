@@ -212,6 +212,8 @@ set(SLIC3R_GUI_SOURCES
     GUI/Gizmos/GLGizmosCommon.cpp
     GUI/Gizmos/GLGizmosCommon.hpp
     GUI/Gizmos/GLGizmoSeam.cpp
+    GUI/Gizmos/GLGizmoFormorixSurfaces.cpp
+    GUI/Gizmos/GLGizmoFormorixSurfaces.hpp
     GUI/Gizmos/GLGizmoSeam.hpp
     GUI/Gizmos/GLGizmoSimplify.cpp
     GUI/Gizmos/GLGizmoSimplify.hpp
@@ -457,6 +459,8 @@ set(SLIC3R_GUI_SOURCES
     GUI/PhysicalPrinterDialog.cpp
     GUI/PhysicalPrinterDialog.hpp
     GUI/Plater.cpp
+    GUI/FormorixSurfaceEditor.cpp
+    GUI/FormorixSurfaceEditor.hpp
     GUI/Plater.hpp
     GUI/PlateSettingsDialog.cpp
     GUI/PlateSettingsDialog.hpp

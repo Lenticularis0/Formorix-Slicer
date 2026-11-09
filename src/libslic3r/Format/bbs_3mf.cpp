@@ -1,4 +1,7 @@
 #include "libslic3r/Formorix5D.hpp"
+#include "libslic3r/FormorixSurfaces.hpp"
+#include <charconv>
+#include <system_error>
 #include "../libslic3r.h"
 #include "../Exception.hpp"
 #include "../IMEXHelpers.hpp"
@@ -356,6 +359,15 @@ static constexpr const char* IMPORTED_PARTS_HIDDEN_KEY = "orca:imported_parts_hi
 static constexpr const char* INSTANCESCOUNT_ATTR = "instances_count";
 static constexpr const char* CUSTOM_SUPPORTS_ATTR = "paint_supports";
 static constexpr const char* CUSTOM_FUZZY_SKIN_ATTR  = "paint_fuzzy_skin";
+static constexpr const char* FORMORIX_SURFACE_ATTR = "formorix_surface_v1";
+static constexpr const char* FORMORIX_TOPOLOGY_KEY = "formorix_surface_topology_v1";
+
+static std::uint64_t formorix_topology_from_string(const std::string &text)
+{
+    std::uint64_t value = 0;
+    const auto result = std::from_chars(text.data(), text.data() + text.size(), value);
+    return result.ec == std::errc{} && result.ptr == text.data() + text.size() ? value : 0;
+}
 static constexpr const char* CUSTOM_SEAM_ATTR = "paint_seam";
 static constexpr const char* MMU_SEGMENTATION_ATTR = "paint_color";
 // Texture displacement. One paint mask per layer slot, mirroring paint_color; the layer stack itself is
@@ -858,6 +870,7 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
             std::vector<std::string> custom_seam;
             std::vector<std::string> mmu_segmentation;
             std::vector<std::string> fuzzy_skin;
+            std::vector<std::string> formorix_surfaces;
             // One per texture displacement layer slot, indexed like `triangles` but stored only as far as the
             // slot's last painted triangle: empty when the slot has no paint, which is nearly every file.
             std::vector<std::string> texture_displacement[TEXTURE_DISPLACEMENT_MAX_LAYERS];
@@ -881,6 +894,7 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
                 custom_seam.clear();
                 mmu_segmentation.clear();
                 fuzzy_skin.clear();
+                formorix_surfaces.clear();
                 for (std::vector<std::string> &slot : texture_displacement)
                     slot.clear();
             }
@@ -2063,6 +2077,18 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
                         if (mz_zip_reader_extract_to_mem(&archive, stat.m_file_index, buf.data(), buf.size(), 0))
                             model.cad_recipe = std::move(buf);
                     }
+                }
+                else if (boost::algorithm::iequals(name, FormorixSurfaces::archive_path)) {
+                    if (stat.m_uncomp_size > 4 * 1024 * 1024) {
+                        add_error("Formorix surface settings exceed the supported size limit");
+                        return false;
+                    }
+                    std::string data(static_cast<size_t>(stat.m_uncomp_size), '\0');
+                    if (!mz_zip_reader_extract_to_mem(&archive, stat.m_file_index, data.data(), data.size(), 0)) {
+                        add_error("Could not read Formorix surface settings");
+                        return false;
+                    }
+                    model.formorix_surfaces = std::move(data);
                 }
                 else if (boost::algorithm::iequals(name, CUT_INFORMATION_FILE)) {
                     // extract object cut info
@@ -4052,6 +4078,7 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
             m_curr_object->geometry.custom_seam.push_back(bbs_get_attribute_value_string(attributes, num_attributes, CUSTOM_SEAM_ATTR));
             m_curr_object->geometry.mmu_segmentation.push_back(bbs_get_attribute_value_string(attributes, num_attributes, MMU_SEGMENTATION_ATTR));
             m_curr_object->geometry.fuzzy_skin.push_back(bbs_get_attribute_value_string(attributes, num_attributes, CUSTOM_FUZZY_SKIN_ATTR));
+            m_curr_object->geometry.formorix_surfaces.push_back(bbs_get_attribute_value_string(attributes, num_attributes, FORMORIX_SURFACE_ATTR));
             for (int slot = 0; slot < int(TEXTURE_DISPLACEMENT_MAX_LAYERS); ++slot)
                 if (const char *paint = bbs_get_attribute_value_charptr(attributes, num_attributes, TEXTURE_DISPLACEMENT_ATTRS[slot])) {
                     std::vector<std::string> &mask = m_curr_object->geometry.texture_displacement[slot];
@@ -5390,6 +5417,7 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
                 volume->seam_facets.reserve(triangles_count);
                 volume->mmu_segmentation_facets.reserve(triangles_count);
                 volume->fuzzy_skin_facets.reserve(triangles_count);
+                volume->formorix_facets.reserve(triangles_count);
                 for (size_t i=0; i<triangles_count; ++i) {
                     assert(i < sub_object->geometry.custom_supports.size());
                     assert(i < sub_object->geometry.custom_seam.size());
@@ -5403,6 +5431,8 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
                         volume->mmu_segmentation_facets.set_triangle_from_string(i, sub_object->geometry.mmu_segmentation[i]);
                     if (!sub_object->geometry.fuzzy_skin[i].empty())
                         volume->fuzzy_skin_facets.set_triangle_from_string(i, sub_object->geometry.fuzzy_skin[i]);
+                    if (i < sub_object->geometry.formorix_surfaces.size() && !sub_object->geometry.formorix_surfaces[i].empty())
+                        volume->formorix_facets.set_triangle_from_string(i, sub_object->geometry.formorix_surfaces[i]);
                 }
                 volume->supported_facets.shrink_to_fit();
                 volume->seam_facets.shrink_to_fit();
@@ -5410,6 +5440,9 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
                 volume->mmu_segmentation_facets.touch();
                 volume->fuzzy_skin_facets.shrink_to_fit();
                 volume->fuzzy_skin_facets.touch();
+                volume->formorix_facets.shrink_to_fit();
+                volume->formorix_facets.touch();
+                if (!volume->formorix_facets.empty()) volume->formorix_topology = FormorixSurfaces::topology_id(volume->mesh().its);
                 for (int slot = 0; slot < int(TEXTURE_DISPLACEMENT_MAX_LAYERS); ++slot) {
                     const std::vector<std::string> &mask = sub_object->geometry.texture_displacement[slot];
                     if (mask.empty())
@@ -5439,6 +5472,8 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
                     volume->name = metadata.value;
                 else if (metadata.key == TEXTURE_DISPLACEMENT_KEY)
                     _apply_texture_displacement(*volume, metadata.value);
+                else if (metadata.key == FORMORIX_TOPOLOGY_KEY)
+                    volume->formorix_topology = formorix_topology_from_string(metadata.value);
                 //else if ((metadata.key == MODIFIER_KEY) && (metadata.value == "1"))
 				//	volume->set_type(ModelVolumeType::PARAMETER_MODIFIER);
 				//for old format
@@ -5600,10 +5635,16 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
                     volume->seam_facets.set_triangle_from_string(i, geometry.custom_seam[index]);
                 if (! geometry.mmu_segmentation[index].empty())
                     volume->mmu_segmentation_facets.set_triangle_from_string(i, geometry.mmu_segmentation[index]);
+                if (index < geometry.formorix_surfaces.size() && !geometry.formorix_surfaces[index].empty())
+                    volume->formorix_facets.set_triangle_from_string(i, geometry.formorix_surfaces[index]);
             }
             volume->supported_facets.shrink_to_fit();
             volume->seam_facets.shrink_to_fit();
             volume->mmu_segmentation_facets.shrink_to_fit();
+
+            volume->formorix_facets.shrink_to_fit();
+            volume->formorix_facets.touch();
+            if (!volume->formorix_facets.empty()) volume->formorix_topology = FormorixSurfaces::topology_id(volume->mesh().its);
 
             for (int slot = 0; slot < int(TEXTURE_DISPLACEMENT_MAX_LAYERS); ++slot) {
                 const std::vector<std::string> &mask = geometry.texture_displacement[slot];
@@ -5627,6 +5668,8 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
                     volume->name = metadata.value;
                 else if (metadata.key == TEXTURE_DISPLACEMENT_KEY)
                     _apply_texture_displacement(*volume, metadata.value);
+                else if (metadata.key == FORMORIX_TOPOLOGY_KEY)
+                    volume->formorix_topology = formorix_topology_from_string(metadata.value);
                 //else if ((metadata.key == MODIFIER_KEY) && (metadata.value == "1"))
 				//	volume->set_type(ModelVolumeType::PARAMETER_MODIFIER);
 				//for old format
@@ -5930,6 +5973,7 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
             current_object->geometry.custom_seam.push_back(bbs_get_attribute_value_string(attributes, num_attributes, CUSTOM_SEAM_ATTR));
             current_object->geometry.mmu_segmentation.push_back(bbs_get_attribute_value_string(attributes, num_attributes, MMU_SEGMENTATION_ATTR));
             current_object->geometry.fuzzy_skin.push_back(bbs_get_attribute_value_string(attributes, num_attributes, CUSTOM_FUZZY_SKIN_ATTR));
+            current_object->geometry.formorix_surfaces.push_back(bbs_get_attribute_value_string(attributes, num_attributes, FORMORIX_SURFACE_ATTR));
             for (int slot = 0; slot < int(TEXTURE_DISPLACEMENT_MAX_LAYERS); ++slot)
                 if (const char *paint = bbs_get_attribute_value_charptr(attributes, num_attributes, TEXTURE_DISPLACEMENT_ATTRS[slot])) {
                     std::vector<std::string> &mask = current_object->geometry.texture_displacement[slot];
@@ -6718,6 +6762,13 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
                 close_zip_writer(&archive);
                 return false;
             }
+            if (!model.formorix_surfaces.empty() &&
+                !mz_zip_writer_add_mem(&archive, FormorixSurfaces::archive_path, model.formorix_surfaces.data(),
+                                       model.formorix_surfaces.size(), MZ_DEFAULT_COMPRESSION)) {
+                add_error("Could not save Formorix surface settings");
+                close_zip_writer(&archive);
+                return false;
+            }
 
             // BBS progress point
             /*BOOST_LOG_TRIVIAL(info) << __FUNCTION__ << ":" <<__LINE__ << boost::format("export 3mf EXPORT_STAGE_ADD_LAYER_RANGE\n");
@@ -7402,6 +7453,8 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
                                     && (shared_volume->seam_facets.equals(volume->seam_facets))
                                     && (shared_volume->mmu_segmentation_facets.equals(volume->mmu_segmentation_facets))
                                     && (shared_volume->fuzzy_skin_facets.equals(volume->fuzzy_skin_facets))
+                                    && (shared_volume->formorix_facets.equals(volume->formorix_facets))
+                                    && (shared_volume->formorix_topology == volume->formorix_topology)
                                     && same_texture_paint)
                                 {
                                     auto data = iter->second.first;
@@ -7816,6 +7869,13 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
                     output_buffer += "=\"";
                     output_buffer += fuzzy_skin_painting_data_string;
                     output_buffer += "\"";
+                }
+
+                const std::string formorix_paint = volume->formorix_facets.get_triangle_as_string(i);
+                if (!formorix_paint.empty()) {
+                    output_buffer += " ";
+                    output_buffer += FORMORIX_SURFACE_ATTR;
+                    output_buffer += "=\"" + formorix_paint + "\"";
                 }
 
                 // One attribute per texture displacement layer slot. Older readers ignore attributes they do
@@ -8432,6 +8492,9 @@ bool _BBS_3MF_Exporter::_add_model_config_file_to_archive(mz_zip_archive& archiv
                             }
 
                             add_texture_displacement(stream, *volume, archive, std::to_string(volume->id().id));
+                            if (!volume->formorix_facets.empty())
+                                stream << "      <" << METADATA_TAG << " " << KEY_ATTR << "=\"" << FORMORIX_TOPOLOGY_KEY
+                                       << "\" " << VALUE_ATTR << "=\"" << volume->formorix_topology << "\"/>\n";
                     
                             if (const std::optional<TextConfiguration> &tc = volume->text_configuration;
                                 tc.has_value())
