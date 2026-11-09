@@ -8,6 +8,8 @@ from an installed OrcaSlicer; the translation catalog remains `OrcaSlicer`.
 The About dialog retains upstream credits and identifies the fork.
 G-code producer detection and configuration import accept both the Formorix
 name and the original OrcaSlicer headers.
+The plugin audit registry protects both Formorix and legacy Orca application
+config filenames, including backup suffixes and case-insensitive spellings.
 The application-update check points users to the fork instead of offering
 upstream executables that would remove Formorix functionality. The profile
 update path is unchanged.

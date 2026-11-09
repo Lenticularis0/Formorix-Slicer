@@ -38,7 +38,8 @@ The first dependency build downloads and compiles substantial third-party code.
 ```powershell
 .\build_win.bat -d --msvc --msbuild -j 8
 .\build_win.bat -s --msvc --msbuild --tests -j 8 --install
-ctest --test-dir build -C Release --output-on-failure
+.\build\tests\slic3rutils\Release\tools\uv\uv.exe pip install --python .\build\tests\slic3rutils\Release\python\python.exe --only-binary :all: numpy==2.5.3
+ctest --test-dir build/tests -C Release -LE 'NotWorking|RequiresApp' --no-tests=error --output-on-failure
 .\build\tests\libslic3r\Release\libslic3r_tests.exe '[Formorix5D]'
 .\build\tests\fff_print\Release\fff_print_tests.exe '[Formorix5D]'
 python scripts/orca_profile_tool.py check
@@ -48,6 +49,11 @@ python scripts/orca_profile_tool.py version-check --base upstream/main
 Internal CMake targets and executable filenames retain upstream names for build
 compatibility. The running application identifies itself as Formorix Slicer.
 Local build trees, downloaded dependency sources and logs are not source artifacts.
+Close test instances before building/installing: the upstream post-build step
+refreshes the bundled Python runtime, which Windows cannot replace while loaded.
+NumPy above is installed only in the isolated test interpreter for the existing
+Python bridge tests. Windows skips symlink tests when the current process lacks
+symlink privileges; the Linux-only CLI suite is not registered on Windows.
 
 ## Manual verification
 

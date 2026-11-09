@@ -9,6 +9,8 @@ Source: <https://github.com/Lenticularis0/Formorix-Slicer>.
 See [development and verification](docs/Formorix-development.md) and the
 [5D architecture](docs/HLSD/formorix-5d.md). Upstream documentation and credits
 follow below; upstream release downloads contain OrcaSlicer, not this fork.
+The completed Windows build and GUI checks are recorded in the
+[Auftrag 01 report](docs/Formorix-Auftrag-01.md).
 
 <div align="center">
 
