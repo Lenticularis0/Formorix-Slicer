@@ -30,6 +30,8 @@ set(lisbslic3r_sources
     Formorix5D.cpp
     FormorixSurfaces.cpp
     FormorixSurfaces.hpp
+    FormorixPreview.cpp
+    FormorixPreview.hpp
     Formorix5D.hpp
     AABBMesh.cpp
     AABBMesh.hpp

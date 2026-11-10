@@ -1,4 +1,10 @@
 #include "FormorixSurfaceEditor.hpp"
+#include "FormorixHelp.hpp"
+#include "FormorixPreviewView.hpp"
+#include "MainFrame.hpp"
+#include "Jobs/Worker.hpp"
+#include "Jobs/Job.hpp"
+#include "libslic3r/FormorixPreview.hpp"
 #include "I18N.hpp"
 #include "format.hpp"
 #include <cstddef>
@@ -49,9 +55,13 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <sstream>
+#include <iomanip>
+#include <cstdint>
 
 namespace Slic3r::GUI {
 namespace FS = FormorixSurfaces;
+namespace FP = FormorixPreview;
 
 struct FormorixSurfaceEditor::Impl : wxEvtHandler {
     Plater &plater;
@@ -90,6 +100,11 @@ struct FormorixSurfaceEditor::Impl : wxEvtHandler {
     wxTimer timer;
     DynamicPrintConfig support_config;
     std::unique_ptr<ConfigOptionsGroup> support_group;
+    FormorixPreviewPanel *preview=nullptr;
+    bool preview_mode=false;
+    std::shared_ptr<bool> alive=std::make_shared<bool>(true);
+    std::string preview_signature;
+    FormorixHelpTopic help_topic=FormorixHelpTopic::Surfaces;
 
     explicit Impl(Plater &owner) : plater(owner), timer(this)
     {
@@ -100,12 +115,18 @@ struct FormorixSurfaceEditor::Impl : wxEvtHandler {
             pane->SetSizer(new wxBoxSizer(wxVERTICAL));
             pane->SetScrollRate(0, pane->FromDIP(12));
         }
+        preview=new FormorixPreviewPanel(&plater,[this]{plater.get_view3D_canvas3D()->set_as_dirty();},[this]{
+            preview->set_result({});preview_signature.clear();
+            wxGetApp().mainframe->select_tab(TAB_ID_PREPARE);
+            wxGetApp().mainframe->request_select_tab(TAB_ID_PREVIEW);
+        });
+        preview->Hide();
         build_left();
         build_right();
         Bind(wxEVT_TIMER, [this](wxTimerEvent &) { if (shown) sync(); });
         theme();
     }
-    ~Impl() override { timer.Stop(); }
+    ~Impl() override { *alive=false;timer.Stop(); }
 
     FS::Region *region() { return project.find(active); }
     FS::Settings &settings() { auto *r = region(); return r ? r->settings : empty_settings; }
@@ -176,9 +197,12 @@ struct FormorixSurfaceEditor::Impl : wxEvtHandler {
     }
     wxStaticText *label(wxWindow *parent, const wxString &text)
     {
+        auto *row=new wxBoxSizer(wxHORIZONTAL);
         auto *value = new wxStaticText(parent, wxID_ANY, text);
-        value->Wrap(parent->FromDIP(parent == left ? 235 : 315));
-        parent->GetSizer()->Add(value, 0, wxEXPAND | wxALL, parent->FromDIP(5));
+        value->Wrap(parent->FromDIP(parent == left ? 200 : 280));
+        row->Add(value,1,wxALIGN_CENTER_VERTICAL);
+        if(!text.empty())row->Add(formorix_help_button(parent,help_topic),0,wxLEFT,parent->FromDIP(4));
+        parent->GetSizer()->Add(row, 0, wxEXPAND | wxALL, parent->FromDIP(5));
         return value;
     }
     Button *button(wxWindow *parent, const wxString &text, std::function<void()> action)
@@ -192,8 +216,9 @@ struct FormorixSurfaceEditor::Impl : wxEvtHandler {
         region_controls.push_back(value);
         return value;
     }
-    wxWindow *group(const wxString &title, bool expanded = false)
+    wxWindow *group(const wxString &title, bool expanded = false,FormorixHelpTopic topic=FormorixHelpTopic::Surfaces)
     {
+        help_topic=topic;
         auto *fold = new wxCollapsiblePane(right, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxCP_NO_TLW_RESIZE);
         auto *pane = fold->GetPane();
         pane->SetBackgroundColour(right->GetBackgroundColour());
@@ -226,6 +251,7 @@ struct FormorixSurfaceEditor::Impl : wxEvtHandler {
         caption->Wrap(parent->FromDIP(parent == left ? 200 : 280));
         row->Add(value, 0, wxALIGN_TOP | wxRIGHT, parent->FromDIP(5));
         row->Add(caption, 1, wxEXPAND);
+        row->Add(formorix_help_button(parent,help_topic),0,wxLEFT,parent->FromDIP(4));
         parent->GetSizer()->Add(row, 0, wxEXPAND | wxALL, parent->FromDIP(5));
         value->Bind(wxEVT_TOGGLEBUTTON, [this, value, set](wxCommandEvent &event) { if (!updating) set(value->GetValue()); event.Skip(); });
         refreshers.emplace_back([value, get] { value->SetValue(get()); });
@@ -235,8 +261,11 @@ struct FormorixSurfaceEditor::Impl : wxEvtHandler {
     wxWindow *number(wxWindow *parent, const wxString &title, std::function<double()> get, std::function<void(double)> set,
                 double low, double high, bool integer = false, bool per_region = true)
     {
-        label(parent, title);
-        auto *value = new ::TextInput(parent, wxEmptyString, wxEmptyString, wxEmptyString,
+        wxString caption=title,unit;
+        for(const auto&suffix:{wxString(" (mm)"),wxString::FromUTF8(" (°)"),wxString(" (%)")})
+            if(caption.EndsWith(suffix)){unit=suffix.Mid(2,suffix.size()-3);caption.RemoveLast(suffix.size());break;}
+        label(parent, caption);
+        auto *value = new ::TextInput(parent, wxEmptyString, unit, wxEmptyString,
                                       wxDefaultPosition, parent->FromDIP(wxSize(150, 30)), wxTE_PROCESS_ENTER);
         value->GetTextCtrl()->SetName(title);
         value->SetToolTip(wxString::Format(_L("Allowed range: %1$.4g to %2$.4g"), low, high));
@@ -273,6 +302,9 @@ struct FormorixSurfaceEditor::Impl : wxEvtHandler {
     void configure_painter();
     void select_object(int index);
     void sync();
+    void calculate();
+    std::string fingerprint() const;
+    bool validate_preview();
     void theme()
     {
         for (auto *pane : {left, right}) {
@@ -280,11 +312,13 @@ struct FormorixSurfaceEditor::Impl : wxEvtHandler {
             wxGetApp().UpdateDarkUIWin(pane);
         }
         if (support_group) support_group->sys_color_changed();
+        if(preview)preview->theme();
     }
 };
 
 void FormorixSurfaceEditor::Impl::build_left()
 {
+    help_topic=FormorixHelpTopic::Selection;
     label(left, _L("5D surface regions"));
     objects = choice(left, _L("Model to paint"), {}, [] { return -1; }, [this](int i) { select_object(i); }, false);
     // This dropdown is synchronized from the model, not a project setting.
@@ -292,6 +326,7 @@ void FormorixSurfaceEditor::Impl::build_left()
     project_controls.pop_back();
     button(left, _L("Add model…"), [this] { plater.add_model(); sync(); });
     project_controls.pop_back(); region_controls.pop_back();
+    button(left,_L("Calculate 5D preview"),[this]{calculate();});
     regions = new wxListBox(left, wxID_ANY, wxDefaultPosition, left->FromDIP(wxSize(235, 150)), 0, nullptr, wxLB_EXTENDED);
     regions->SetName(_L("5D surface regions"));
     left->GetSizer()->Add(regions, 0, wxEXPAND | wxALL, left->FromDIP(5));
@@ -332,25 +367,25 @@ void FormorixSurfaceEditor::Impl::build_left()
         if (!name->GetTextCtrl()->HasFocus()) name->GetTextCtrl()->ChangeValue(region() ? from_u8(region()->name) : wxString{});
     });
     region_controls.push_back(name);
-    button(left, _L("Merge selected regions"), [this] {
+    button(left, _L("Merge regions"), [this] {
         if (!writable || selected.size() < 2 || !region()) { message(_L("Use Ctrl-click to select at least two regions.")); return; }
         plater.take_snapshot(_u8L("Merge 5D surface regions"));
         FS::merge_regions(project, plater.model(), selected, active);
         for (auto *object : plater.model().objects) save_object_mesh(*object);
         selected = {active}; store(); painter()->reload_paint();
-        message(_L("Regions merged. The active region's settings and head assignment were retained. Continuous paths are requested, not calculated."));
+        message(_L("Regions merged. Calculate the preview to check continuity."));
     });
-    button(left, _L("Copy settings to selected regions"), [this] {
+    button(left, _L("Copy settings"), [this] {
         if (!region() || selected.size() < 2) { message(_L("Use Ctrl-click to select the source and destination regions.")); return; }
         const auto source = settings();
         edit([&](FS::Project &p) { for (int id : selected) p.find(id)->settings = source; });
     });
-    button(left, _L("Show / hide selected regions"), [this] {
+    button(left, _L("Show / hide regions"), [this] {
         if (!region()) return;
         const bool visible = !region()->visible;
         edit([&](FS::Project &p) { for (int id : selected) p.find(id)->visible = visible; });
     });
-    button(left, _L("Remove selected regions"), [this] {
+    button(left, _L("Remove regions"), [this] {
         if (!writable || selected.empty()) return;
         plater.take_snapshot(_u8L("Remove 5D surface regions"));
         FS::remove_regions(project, plater.model(), selected);
@@ -359,7 +394,7 @@ void FormorixSurfaceEditor::Impl::build_left()
         selected = active ? std::vector<int>{active} : std::vector<int>{};
         store(); painter()->reload_paint();
     });
-    label(left, _L("The last clicked region supplies settings when merging or copying. Ctrl-click selects multiple regions."));
+    label(left, _L("Ctrl-click: select multiple regions."));
     choice(left, _L("Selection tool"), {_L("Connected surface"), _L("Brush: add"), _L("Brush: erase"), _L("Pick reference edge")},
            [this] { return project.selection.tool; }, [this](int i) { edit([i](auto &p) { p.selection.tool = i; }); });
     number(left, _L("Brush radius (mm)"), [this] { return project.selection.brush_radius; }, [this](double v) { edit([v](auto &p) { p.selection.brush_radius = v; }); }, .4, 8.);
@@ -371,39 +406,42 @@ void FormorixSurfaceEditor::Impl::build_left()
         if (project.selection.slope_min > project.selection.slope_max) { message(_L("Minimum slope must not exceed maximum slope.")); return; }
         if (auto *g = painter()) g->select_slope(project.selection.slope_min, project.selection.slope_max);
     });
-    label(left, _L("Slope is measured between the outward surface normal and global +Z. Left-click paints; Shift-click or right-click erases. Ctrl-drag rotates the view; the wheel zooms."));
+    label(left, _L("Ctrl-drag: rotate. Wheel: zoom."));
     number(left, _L("Section position (0–1)"), [this] { return project.selection.section_position; }, [this](double v) { edit([v](auto &p) { p.selection.section_position = v; }); if (auto *g = painter()) g->section(v); }, 0., 1.);
     button(left, _L("Reset section"), [this] { edit([](auto &p) { p.selection.section_position = 0.; }); if (auto *g = painter()) g->section(0.); refresh_values(); });
-    label(left, _L("Section view shows the original model. Shell depth is specified along the local normal; offset geometry is not calculated."));
-    status = label(left, _L("Add a region and select a surface on the model. Experimental: no 5D paths or executable 5D output."));
+    label(left, _L("Section: original model."));
+    status = label(left, _L("Select surfaces, then calculate the preview."));
 }
 
 void FormorixSurfaceEditor::Impl::build_right()
 {
-    label(right, _L("Manufacturing intent — not calculated"));
-    auto *pane = group(_L("5D layers"), true);
+    label(right, _L("Experimental 5D preview"));
+    auto *pane = group(_L("5D layers"), true,FormorixHelpTopic::ShellDepth);
     choice(pane, _L("Shell definition"), {_L("Number of 5D layers"), _L("5D shell thickness"), _L("Entire wall in 5D")},
         [this] { return int(settings().shell_mode); }, [this](int v) { edit_settings([v](auto &s) { s.shell_mode = FS::ShellMode(v); }); });
     depend(number(pane, _L("Number of 5D layers"), [this] { return settings().layers; }, [this](double v) { edit_settings([v](auto &s) { s.layers = int(v); }); }, 1, 10000, true), [this] { return settings().shell_mode == FS::ShellMode::Layers; });
     depend(number(pane, _L("Shell thickness along local normal (mm)"), [this] { return settings().shell_thickness; }, [this](double v) { edit_settings([v](auto &s) { s.shell_thickness = v; }); }, .001, 10000), [this] { return settings().shell_mode == FS::ShellMode::Thickness; });
+    help_topic=FormorixHelpTopic::SurfaceLayerHeight;
     number(pane, _L("5D layer thickness (mm)"), [this] { return settings().layer_height; }, [this](double v) { edit_settings([v](auto &s) { s.layer_height = v; }); }, .001, 100);
     check(pane, _L("Preserve original model dimensions"), [this] { return settings().preserve_dimensions; }, [this](bool v) { edit_settings([v](auto &s) { s.preserve_dimensions = v; }); });
-    label(pane, _L("The requested shell lies inside the nominal geometry. Depth follows the local surface normal, not global Z. No offset geometry has been generated."));
-    wall_warning = label(pane, _L("A wall printed entirely in 5D requires a suitable load-bearing structure before 5D printing. Conventional planar supports may be required first."));
+    label(pane, _L("Offsets follow the local normal."));
+    help_topic=FormorixHelpTopic::Supports;
+    wall_warning = label(pane, _L("Full-wall 5D requires a supporting structure."));
+    help_topic=FormorixHelpTopic::ContinuousPaths;
     continuity = label(pane, wxEmptyString);
     check(pane, _L("Restrict region to one print head"), [this] { return settings().single_head; }, [this](bool v) {
         edit_settings([v](auto &s) { s.single_head = v; if (v) s.head_mask &= (~s.head_mask + 1); });
     });
-    label(pane, _L("A physically continuous extrusion path requires the same head. Different heads use the transition settings. Connectivity and paths are not yet checked."));
+    label(pane, _L("Preview: one head per region."));
 
-    pane = group(_L("Nozzle orientation"));
+    pane = group(_L("Nozzle orientation"), false,FormorixHelpTopic::NozzleDeviation);
     choice(pane, _L("Nozzle orientation"), {_L("Normal to the local surface"), _L("Allow deviation from the normal")},
         [this] { return settings().allow_deviation ? 1 : 0; }, [this](int v) { edit_settings([v](auto &s) { s.allow_deviation = v != 0; }); });
     depend(number(pane, _L("Maximum deviation (°)"), [this] { return settings().max_deviation; }, [this](double v) { edit_settings([v](auto &s) { s.max_deviation = v; }); }, 0, 15), [this] { return settings().allow_deviation; });
     check(pane, _L("Allow vertical surfaces"), [this] { return settings().allow_vertical; }, [this](bool v) { edit_settings([v](auto &s) { s.allow_vertical = v; }); });
-    label(pane, _L("Reachability: not checked. A vertical wall normally requires 90° nozzle tilt; the provisional mechanism allows 75°. Up to 15° deviation may help, but only future kinematic checks can confirm this."));
+    label(pane, _L("Machine reachability: not checked."));
 
-    pane = group(_L("Underlay and supports"));
+    pane = group(_L("Underlay and supports"), false,FormorixHelpTopic::Supports);
     check(pane, _L("Use normal infill as underlay"), [this] { return settings().use_infill; }, [this](bool v) { edit_settings([v](auto &s) { s.use_infill = v; }); });
     check(pane, _L("Inherit Infill first"), [this] { return settings().inherit_infill_first; }, [this](bool v) { edit_settings([v](auto &s) { s.inherit_infill_first = v; }); });
     check(pane, _L("Denser underlay / transition structure"), [this] { return settings().dense_underlay; }, [this](bool v) { edit_settings([v](auto &s) { s.dense_underlay = v; }); });
@@ -411,10 +449,10 @@ void FormorixSurfaceEditor::Impl::build_right()
     check(pane, _L("Additional supports requested"), [this] { return settings().additional_support; }, [this](bool v) { edit_settings([v](auto &s) { s.additional_support = v; }); });
     choice(pane, _L("Support material strategy"), {_L("Normal breakaway supports"), _L("Water-soluble supports (e.g. PVA)"), _L("Automatic from configured materials")},
         [this] { return int(settings().support_material); }, [this](int v) { edit_settings([v](auto &s) { s.support_material = FS::SupportMaterial(v); }); });
-    label(pane, _L("5D support structures are not calculated. The following settings are the existing Orca process settings and also affect normal planar printing."));
+    label(pane, _L("Shared Orca settings. 5D supports: not calculated."));
     build_support(pane);
 
-    pane = group(_L("Surface properties"));
+    pane = group(_L("Surface properties"), false,FormorixHelpTopic::ContinuousPaths);
     choice(pane, _L("Path direction"), {_L("Automatic"), _L("Along selected edge"), _L("Custom direction")},
         [this] { return int(settings().direction); }, [this](int v) { edit_settings([v](auto &s) { s.direction = FS::Direction(v); }); });
     edge_status = label(pane, wxEmptyString);
@@ -431,9 +469,9 @@ void FormorixSurfaceEditor::Impl::build_right()
     number(pane, _L("Distance from region boundary (mm)"), [this] { return settings().boundary_margin; }, [this](double v) { edit_settings([v](auto &s) { s.boundary_margin = v; }); }, 0, 10000);
     choice(pane, _L("Surface quality"), {_L_CONTEXT("Draft", "Surface quality"), _L("Standard"), _L_CONTEXT("Fine", "Surface quality")}, [this] { return settings().quality; }, [this](int v) { edit_settings([v](auto &s) { s.quality = v; }); });
     check(pane, _L("Request 5D ironing (future function)"), [this] { return settings().ironing; }, [this](bool v) { edit_settings([v](auto &s) { s.ironing = v; }); });
-    label(pane, _L("Speed, line width, flow, temperature and cooling are inherited from the assigned Orca material and process profiles. Surface paths and ironing are not calculated."));
+    label(pane, _L("Orca profiles inherited. 5D ironing: not calculated."));
 
-    pane = group(_L("Transitions between regions"));
+    pane = group(_L("Transitions between regions"), false,FormorixHelpTopic::Transitions);
     transition_target = choice(pane, _L("Other region"), {}, [this] {
         const auto it = std::find(neighbor_ids.begin(), neighbor_ids.end(), neighbor);
         return it == neighbor_ids.end() ? -1 : int(it - neighbor_ids.begin());
@@ -444,16 +482,16 @@ void FormorixSurfaceEditor::Impl::build_right()
     depend(number(pane, _L("Desired overlap (%)"), [this] { return transition().overlap; }, [this](double v) { edit_transition([v](auto &t) { t.overlap = v; }); }, 0, 100), [this] { return neighbor != 0 && transition().kind == FS::TransitionKind::Interwoven; });
     depend(choice(pane, _L("Interwoven pattern"), {_L("Automatic"), _L("Toothed"), _L("Alternating between layers")},
         [this] { return int(transition().pattern); }, [this](int v) { edit_transition([v](auto &t) { t.pattern = FS::TransitionPattern(v); }); }), [this] { return neighbor != 0 && transition().kind == FS::TransitionKind::Interwoven; });
-    label(pane, _L("Fixed: each head stays in its assigned region. Interwoven: the regions interlock in the requested zone. Parallel: two heads travel close together over the complete region. These are intentions only; no paths, spacing or collision safety have been calculated."));
-    label(pane, _L("Adjacency and material compatibility: not checked. Some materials do not bond reliably. A later technical check is required before any manufacturing strategy can be released."));
+    label(pane, _L("Multi-head transitions: not calculated."));
+    label(pane, _L("Material compatibility: not checked."));
 
-    pane = group(_L("Head assignment"));
+    pane = group(_L("Head assignment"), false,FormorixHelpTopic::MultiHead);
     for (int i = 0; i < 3; ++i)
         check(pane, format_wxstr(_L("Assign to head %1%"), i + 1), [this, i] { return (settings().head_mask & (1u << i)) != 0; }, [this, i](bool v) {
             edit_settings([i, v](auto &s) { if (v && s.single_head) s.head_mask = 1u << i; else if (v) s.head_mask |= 1u << i; else s.head_mask &= ~(1u << i); });
         });
-    label(pane, _L("Head assignments describe future 5D work. They do not change Orca's normal extruder or support-material assignments."));
-    build_heads(group(_L("Multi-head operation")));
+    label(pane, _L("One assigned head is planned in the preview."));
+    build_heads(group(_L("Multi-head operation"), false,FormorixHelpTopic::MultiHead));
 }
 
 void FormorixSurfaceEditor::Impl::build_support(wxWindow *parent)
@@ -490,8 +528,10 @@ void FormorixSurfaceEditor::Impl::build_heads(wxWindow *parent)
             }
             edit([v](auto &p) { p.strategy = FS::Strategy(v); });
         }, false);
-    label(parent, _L("Automatic parallel operation requests simultaneous work when possible; unavailable heads wait. Allocation, timing and collisions are not calculated."));
+    label(parent, _L("Multi-head scheduling: not calculated."));
+    help_topic=FormorixHelpTopic::HighSpeed;
     head_status = label(parent, wxEmptyString);
+    help_topic=FormorixHelpTopic::MultiHead;
     const std::array<wxString, 5> tasks{_L("Normal part construction"), _L("5D surfaces"), _L("Support structures"), _L("Reinforcement regions (e.g. CF)"), _L("Automatic task allocation")};
     for (int i = 0; i < 3; ++i) {
         label(parent, format_wxstr(_L("Head %1%"), i + 1));
@@ -513,7 +553,7 @@ void FormorixSurfaceEditor::Impl::build_heads(wxWindow *parent)
             }, false);
         assignments[i] = label(parent, wxEmptyString);
     }
-    label(parent, _L("Example: head 1 PETG for the part, head 2 PVA for supports, head 3 PETG-CF for reinforcement. Material suitability and bonding remain unverified."));
+    label(parent, _L("Material suitability: not checked."));
 }
 
 void FormorixSurfaceEditor::Impl::refresh_list()
@@ -550,9 +590,9 @@ void FormorixSurfaceEditor::Impl::refresh_values()
     continuity->Wrap(-1);
     continuity->SetLabel(region() && region()->continuous ? _L("Cross-surface paths: continuous") : _L("Merge regions to request continuous cross-surface paths."));
     continuity->Wrap(right->FromDIP(315));
-    wall_warning->Show(region() && settings().shell_mode == FS::ShellMode::FullWall);
+    wall_warning->GetContainingSizer()->ShowItems(region() && settings().shell_mode == FS::ShellMode::FullWall);
     edge_status->Wrap(-1);
-    edge_status->SetLabel(settings().edge_selected ? _L("Reference edge stored. Path direction not calculated.") : _L("No reference edge selected."));
+    edge_status->SetLabel(settings().edge_selected ? _L("Reference edge stored.") : _L("No reference edge selected."));
     edge_status->Wrap(right->FromDIP(315));
     bool petg = true;
     bool same_profile = true;
@@ -581,9 +621,9 @@ void FormorixSurfaceEditor::Impl::refresh_values()
     high_speed_ready = petg && temperature_min <= temperature_max;
     head_status->Wrap(-1);
     head_status->SetLabel(high_speed_ready ? (same_profile ?
-        _L("High-speed prerequisite: three enabled heads with the same PETG profile. Technical approval, collisions and scheduling: not checked.") :
-        _L("Three compatible PETG profiles with overlapping temperature ranges selected. Calibration, collisions and scheduling are not checked; high-speed remains a requested strategy without technical approval.")) :
-        _L("High-speed prerequisite not met: assign compatible PETG profiles to all three enabled heads. The selected strategy is only a request."));
+        _L("Same PETG profile. Technical approval: pending.") :
+        _L("Compatible PETG profiles. Technical approval: pending.")) :
+        _L("High-speed prerequisite: not met."));
     head_status->Wrap(right->FromDIP(315));
     right->Layout(); right->FitInside();
     left->Refresh(); right->Refresh();
@@ -595,13 +635,14 @@ void FormorixSurfaceEditor::Impl::configure_painter()
     auto &manager = plater.get_view3D_canvas3D()->get_gizmos_manager();
     auto *g = painter();
     if (!g) return;
+    g->preview=preview_mode?preview->state():nullptr;
     g->configure(project, writable && region() ? active : 0, GLGizmoFormorixSurfaces::Tool(project.selection.tool), float(project.selection.brush_radius), float(project.selection.limit_edges ? project.selection.edge_angle : 180.));
     g->edge_selected = [this](const std::array<double, 6> &edge) {
         // Defer native control updates until the canvas mouse handler has returned.
         left->CallAfter([this, edge] {
             if (!shown || wxGetApp().is_closing()) return;
             edit_settings([&](auto &s) { s.edge = edge; s.edge_selected = true; s.direction = FS::Direction::Edge; });
-            message(_L("Reference edge stored for this region. No path direction has been calculated."));
+            message(_L("Reference edge stored."));
         });
     };
     if (region() && writable && manager.get_current_type() != GLGizmosManager::FormorixSurfaces && g->is_activable())
@@ -620,6 +661,7 @@ void FormorixSurfaceEditor::Impl::select_object(int index)
 void FormorixSurfaceEditor::Impl::sync()
 {
     if (wxGetApp().is_closing()) return;
+    validate_preview();
     const auto &model = plater.model();
     if (cached_json != model.formorix_surfaces) {
         cached_json = model.formorix_surfaces;
@@ -663,10 +705,118 @@ void FormorixSurfaceEditor::Impl::sync()
     }
 }
 
+std::string FormorixSurfaceEditor::Impl::fingerprint() const
+{
+    std::ostringstream out;out<<std::setprecision(17)<<plater.model().formorix_surfaces;
+    const auto&selection=plater.get_view3D_canvas3D()->get_selection();
+    const int object=selection.get_object_idx(),instance=selection.get_instance_idx();
+    out<<'|'<<object<<'|'<<instance<<'|'<<active;
+    if(object<0||object>=int(plater.model().objects.size()))return out.str();
+    const auto*model=plater.model().objects[object];out<<'|'<<model->id().id;
+    if(instance<0||instance>=int(model->instances.size()))return out.str();
+    out<<model->instances[instance]->get_matrix().matrix();
+    std::uint64_t hash=14695981039346656037ull;
+    auto bytes=[&](const void*data,std::size_t count){auto*p=static_cast<const unsigned char*>(data);while(count--){hash^=*p++;hash*=1099511628211ull;}};
+    for(const auto*v:model->volumes)if(v->is_model_part()){
+        out<<v->id().id<<':'<<v->formorix_facets.timestamp()<<':'<<v->get_matrix().matrix();
+        const auto&mesh=v->mesh().its;for(const auto&p:mesh.vertices)bytes(p.data(),sizeof(float)*3);for(const auto&t:mesh.indices)bytes(t.data(),sizeof(int)*3);
+    }
+    out<<hash;
+    const auto*bundle=wxGetApp().preset_bundle;
+    auto config=[&](const DynamicPrintConfig&c){for(const auto&key:c.keys())out<<key<<'='<<c.opt_serialize(key)<<';';};
+    config(bundle->prints.get_edited_preset().config);config(bundle->printers.get_edited_preset().config);config(bundle->filaments.get_edited_preset().config);
+    for(const auto&head:project.heads)if(const auto*preset=bundle->filaments.find_preset(head.material_preset))config(preset->config);
+    return out.str();
+}
+bool FormorixSurfaceEditor::Impl::validate_preview()
+{
+    if(!preview->state()->result)return false;
+    if(preview_signature!=fingerprint()){
+        preview->set_result({});preview_signature.clear();
+        message(_L("Model or settings changed. Calculate the preview again."));
+        return false;
+    }
+    return true;
+}
+void FormorixSurfaceEditor::Impl::calculate()
+{
+    wxWindow*focused=wxWindow::FindFocus();
+    for(const auto&edit:pending_edits)if(edit.first==focused&&!edit.second())return;
+    if(!region()||!writable)return;
+    if(!plater.get_ui_job_worker().is_idle()){message(_L("Wait for the current operation to finish."));return;}
+    preview->pause();
+    try {
+        FP::Options options;options.region=active;
+        unsigned mask=settings().head_mask;
+        if(!mask||(mask&(mask-1)))throw FP::Issue::MultipleHeads;
+        options.head=mask==1?0:mask==2?1:2;
+        if(!project.heads[options.head].enabled)throw FP::Issue::MultipleHeads;
+        const auto&selection=plater.get_view3D_canvas3D()->get_selection();
+        int object=selection.get_object_idx(),instance=selection.get_instance_idx();
+        if(object<0||object>=int(plater.model().objects.size())||instance<0)throw FP::Issue::Empty;
+        auto*model=plater.model().objects[object];
+        std::size_t faces=0;for(const auto*v:model->volumes)faces+=v->mesh().its.indices.size();
+        if(faces>500000)throw FP::Issue::TooLarge;
+        auto settings_copy=settings();
+        if(settings_copy.direction==FS::Direction::Edge){const auto d=FP::reference_direction(*model,instance,settings_copy);settings_copy.custom_direction={d.x(),d.y(),d.z()};settings_copy.direction=FS::Direction::Custom;}
+        auto input=FP::extract(*model,instance,active);
+        const auto*bundle=wxGetApp().preset_bundle;const auto config=bundle->full_config();
+        const auto&name=project.heads[options.head].material_preset;
+        const auto*material=name.empty()?&bundle->filaments.get_edited_preset():bundle->filaments.find_preset(name);
+        if(!material)throw FP::Issue::ProfileMissing;
+        if(material->name==bundle->filaments.get_edited_preset().name)material=&bundle->filaments.get_edited_preset();
+        const double nozzle=config.opt_float("nozzle_diameter",0);
+        options.line_width=config.get_abs_value("outer_wall_line_width",nozzle);
+        if(options.line_width==0.)options.line_width=config.get_abs_value("line_width",nozzle);
+        if(options.line_width==0.)options.line_width=nozzle*1.05;
+        options.speed=config.opt_float("outer_wall_speed",0);options.travel_speed=config.opt_float("travel_speed",0);
+        if(const auto*tilt=config.option<ConfigOptionFloat>("formorix_5d_max_tilt"))options.max_tilt=tilt->value;
+        if(material->config.has("filament_max_volumetric_speed")){
+            const double flow=material->config.opt_float("filament_max_volumetric_speed",0);
+            if(flow>0.)options.speed=std::min(options.speed,flow/(options.line_width*settings_copy.layer_height));
+        }
+        const std::string signature=fingerprint();auto result=std::make_shared<FP::Result>();auto life=alive;
+        message(_L("Calculating 5D preview…"));
+        const bool queued=queue_job(plater.get_ui_job_worker(),[input=std::move(input),settings_copy,options,result](Job::Ctl&ctl){
+            ctl.update_status(0,_u8L("Calculating 5D preview…"));
+            *result=FP::generate(input,settings_copy,options,[&ctl]{return ctl.was_canceled();});
+            ctl.update_status(100);
+        },[this,life,result,signature](bool canceled,std::exception_ptr&error){
+            const bool failed=bool(error);error=nullptr;
+            if(!*life||wxGetApp().is_closing())return;
+            if(canceled){message(formorix_preview_error(FP::Issue::Canceled));return;}
+            if(failed){message(formorix_preview_error(FP::Issue::InvalidMesh));return;}
+            if(signature!=fingerprint()){message(_L("Model or settings changed. Calculate the preview again."));return;}
+            preview_signature=signature;preview->set_result(result);
+            message(result->ok()?_L("Preview ready. Experimental export remains blocked."):formorix_preview_error(result->errors.front()));
+            wxGetApp().mainframe->request_select_tab(TAB_ID_PREVIEW);
+        });
+        if(!queued)message(_L("Preview could not be queued. Try again."));
+    }catch(FP::Issue issue){message(formorix_preview_error(issue));}
+    catch(const std::exception&){message(formorix_preview_error(FP::Issue::InvalidMesh));}
+}
+
 FormorixSurfaceEditor::FormorixSurfaceEditor(Plater &plater) : m_impl(std::make_unique<Impl>(plater)) {}
 FormorixSurfaceEditor::~FormorixSurfaceEditor() = default;
 wxWindow *FormorixSurfaceEditor::left() const { return m_impl->left; }
 wxWindow *FormorixSurfaceEditor::right() const { return m_impl->right; }
+wxWindow *FormorixSurfaceEditor::bottom() const {return m_impl->preview;}
+bool FormorixSurfaceEditor::has_preview(){return m_impl->validate_preview();}
+bool FormorixSurfaceEditor::preview_visible()const{return m_impl->preview_mode;}
+void FormorixSurfaceEditor::show_preview(bool visible)
+{
+    auto&p=*m_impl;
+    if(p.preview_mode==visible)return;
+    p.preview_mode=visible;
+    if(!visible)p.preview->pause();
+    auto*canvas=p.plater.get_view3D_canvas3D();
+    canvas->enable_main_toolbar(!visible);
+    canvas->enable_picking(!visible);
+    canvas->enable_moving(!visible);
+    canvas->get_gizmos_manager().set_toolbar_enabled(!visible);
+    p.configure_painter();
+    if(auto*g=p.painter())g->section(visible?0.:p.project.selection.section_position);
+}
 void FormorixSurfaceEditor::show(bool visible)
 {
     auto &p = *m_impl;
@@ -675,10 +825,11 @@ void FormorixSurfaceEditor::show(bool visible)
         p.sync(); p.refresh_list(); p.refresh_values(); p.configure_painter(); p.timer.Start(500);
         if (auto *g = p.painter()) g->section(p.project.selection.section_position);
     } else {
+        p.preview->pause();
         p.timer.Stop();
         auto &manager = p.plater.get_view3D_canvas3D()->get_gizmos_manager();
         if (manager.get_current_type() == GLGizmosManager::FormorixSurfaces) manager.reset_all_states();
-        if (auto *g = p.painter()) g->edge_selected = {};
+        if (auto *g = p.painter()) {g->edge_selected = {};g->preview.reset();}
     }
 }
 bool FormorixSurfaceEditor::commit_pending_edit()
@@ -692,6 +843,7 @@ bool FormorixSurfaceEditor::commit_pending_edit()
 void FormorixSurfaceEditor::sys_color_changed() { m_impl->theme(); }
 void FormorixSurfaceEditor::rescale()
 {
+    m_impl->preview->rescale();
     if (m_impl->support_group) m_impl->support_group->msw_rescale();
     std::vector<wxWindow *> controls = m_impl->project_controls;
     controls.insert(controls.end(), m_impl->region_controls.begin(), m_impl->region_controls.end());

@@ -1,0 +1,40 @@
+{
+  "platform": "Windows x64 / MSVC 14.51 Release",
+  "date": "2026-11-10",
+  "selection_excludes": [
+    "NotWorking",
+    "RequiresApp"
+  ],
+  "selected": 3097,
+  "passed": 3091,
+  "skipped": [
+    "A tree grant compares canonical paths on both sides",
+    "A symlink pointing outside the plugin folder is skipped, not reported as an error",
+    "A saved exact file grant covers an equivalent spelling of the same file",
+    "a link to unparsable install-state contents is not malformed contents a load may set aside",
+    "A write through a dangling symlink inside a granted tree is denied",
+    "Stdlib code is recognized through a symlinked Python home"
+  ],
+  "failed": [],
+  "time_seconds": 245.37,
+  "preview_cases": 7,
+  "preview_assertions": 58064,
+  "baseline": {
+    "selected": 3090,
+    "passed": 3084,
+    "skipped": 6,
+    "failed": 0,
+    "time_seconds": 131.85
+  },
+  "notes": [
+    "Linux-only CLI suite is not registered on Windows.",
+    "Skipped tests require Windows symlink privileges.",
+    "Final Windows GUI acceptance completed: slider, +/-1 second, reset, 16x playback, pause, three nozzle labels, help buttons and conventional MK4 cube slicing.",
+    "Browser window approval timed out; opened page titles were observed and all twelve help targets and anchors were independently checked over HTTPS."
+  ],
+  "final_windows_dll_sha256": "1200d63ad3d026cbc3bc920ce46ff513b658da5dff31d4e571b1c671b6420b0b",
+  "clang_tidy_changed_cpp_files": 16,
+  "clang_tidy_result": "passed",
+  "final_installation": "build/Formorix-Abnahme03",
+  "help_targets_checked": 12
+}

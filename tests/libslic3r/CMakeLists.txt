@@ -31,6 +31,7 @@ add_executable(${_TEST_NAME}_tests
     test_config.cpp
     test_formorix_5d.cpp
     test_formorix_surfaces.cpp
+    test_formorix_preview.cpp
     test_config_variant_expansion.cpp
     test_locales_utils.cpp
     test_drc.cpp

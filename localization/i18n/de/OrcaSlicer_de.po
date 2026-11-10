@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orca Slicer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-09 04:52+0100\n"
+"POT-Creation-Date: 2026-11-10 09:03+0100\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Heiko Liebscher <hliebschergmail.com>\n"
 "Language-Team: \n"
@@ -10729,6 +10729,10 @@ msgid "Add model…"
 msgstr "Modell hinzufügen…"
 
 # AI Translated
+msgid "Calculate 5D preview"
+msgstr "5D-Vorschau berechnen"
+
+# AI Translated
 msgid "Add region"
 msgstr "Bereich hinzufügen"
 
@@ -10750,8 +10754,8 @@ msgid "Enter a region name before saving."
 msgstr "Geben Sie vor dem Speichern einen Bereichsnamen ein."
 
 # AI Translated
-msgid "Merge selected regions"
-msgstr "Ausgewählte Bereiche zusammenfassen"
+msgid "Merge regions"
+msgstr "Bereiche zusammenfassen"
 
 # AI Translated
 msgid "Use Ctrl-click to select at least two regions."
@@ -10762,32 +10766,32 @@ msgid "Merge 5D surface regions"
 msgstr "5D-Oberflächenbereiche zusammenfassen"
 
 # AI Translated
-msgid "Regions merged. The active region's settings and head assignment were retained. Continuous paths are requested, not calculated."
-msgstr "Bereiche zusammengefasst. Einstellungen und Kopfzuordnung des aktiven Bereichs wurden übernommen. Durchgehende Bahnen sind vorgemerkt, noch nicht berechnet."
+msgid "Regions merged. Calculate the preview to check continuity."
+msgstr "Bereiche zusammengefasst. Prüfen Sie den Zusammenhang in der Vorschau."
 
 # AI Translated
-msgid "Copy settings to selected regions"
-msgstr "Einstellungen auf ausgewählte Bereiche übertragen"
+msgid "Copy settings"
+msgstr "Einstellungen übertragen"
 
 # AI Translated
 msgid "Use Ctrl-click to select the source and destination regions."
 msgstr "Wählen Sie mit Strg-Klick die Quell- und Zielbereiche aus."
 
 # AI Translated
-msgid "Show / hide selected regions"
-msgstr "Ausgewählte Bereiche ein-/ausblenden"
+msgid "Show / hide regions"
+msgstr "Bereiche ein-/ausblenden"
 
 # AI Translated
-msgid "Remove selected regions"
-msgstr "Ausgewählte Bereiche entfernen"
+msgid "Remove regions"
+msgstr "Bereiche entfernen"
 
 # AI Translated
 msgid "Remove 5D surface regions"
 msgstr "5D-Oberflächenbereiche entfernen"
 
 # AI Translated
-msgid "The last clicked region supplies settings when merging or copying. Ctrl-click selects multiple regions."
-msgstr "Beim Zusammenfassen oder Übertragen gelten die Einstellungen des zuletzt angeklickten Bereichs. Strg-Klick wählt mehrere Bereiche aus."
+msgid "Ctrl-click: select multiple regions."
+msgstr "Strg-Klick: mehrere Bereiche wählen."
 
 # AI Translated
 msgid "Selection tool"
@@ -10838,8 +10842,8 @@ msgid "Minimum slope must not exceed maximum slope."
 msgstr "Die kleinste Neigung darf die grösste Neigung nicht überschreiten."
 
 # AI Translated
-msgid "Slope is measured between the outward surface normal and global +Z. Left-click paints; Shift-click or right-click erases. Ctrl-drag rotates the view; the wheel zooms."
-msgstr "Die Neigung wird zwischen der äusseren Oberflächennormalen und global +Z gemessen. Linksklick markiert; Umschalt-Klick oder Rechtsklick entfernt. Strg-Ziehen dreht die Ansicht; das Mausrad zoomt."
+msgid "Ctrl-drag: rotate. Wheel: zoom."
+msgstr "Strg-Ziehen: drehen. Mausrad: zoomen."
 
 # AI Translated
 msgid "Section position (0–1)"
@@ -10851,16 +10855,16 @@ msgid "Reset section"
 msgstr "Schnittansicht zurücksetzen"
 
 # AI Translated
-msgid "Section view shows the original model. Shell depth is specified along the local normal; offset geometry is not calculated."
-msgstr "Die Schnittansicht zeigt das Originalmodell. Die Schalentiefe gilt entlang der lokalen Normalen; eine versetzte Geometrie wird noch nicht berechnet."
+msgid "Section: original model."
+msgstr "Schnittansicht: Originalmodell."
 
 # AI Translated
-msgid "Add a region and select a surface on the model. Experimental: no 5D paths or executable 5D output."
-msgstr "Fügen Sie einen Bereich hinzu und wählen Sie eine Fläche am Modell. Experimentell: keine 5D-Bahnen und keine ausführbaren 5D-Druckdateien."
+msgid "Select surfaces, then calculate the preview."
+msgstr "Flächen markieren, dann die Vorschau berechnen."
 
 # AI Translated
-msgid "Manufacturing intent — not calculated"
-msgstr "Fertigungsvorgaben – noch nicht berechnet"
+msgid "Experimental 5D preview"
+msgstr "Experimentelle 5D-Vorschau"
 
 # AI Translated
 msgid "5D layers"
@@ -10896,20 +10900,20 @@ msgid "Preserve original model dimensions"
 msgstr "Originalabmessungen des Modells beibehalten"
 
 # AI Translated
-msgid "The requested shell lies inside the nominal geometry. Depth follows the local surface normal, not global Z. No offset geometry has been generated."
-msgstr "Die vorgesehene Schale liegt innerhalb der Sollgeometrie. Ihre Tiefe folgt der lokalen Oberflächennormalen, nicht global Z. Es wurde noch keine versetzte Geometrie erzeugt."
+msgid "Offsets follow the local normal."
+msgstr "Versatz entlang der lokalen Normalen."
 
 # AI Translated
-msgid "A wall printed entirely in 5D requires a suitable load-bearing structure before 5D printing. Conventional planar supports may be required first."
-msgstr "Für die Herstellung einer vollständig in 5D gedruckten Wand muss vor dem 5D-Druck eine geeignete Tragstruktur vorhanden sein. Gegebenenfalls sind zunächst normale planare Stützstrukturen erforderlich."
+msgid "Full-wall 5D requires a supporting structure."
+msgstr "Eine vollständige 5D-Wand benötigt eine Tragstruktur."
 
 # AI Translated
 msgid "Restrict region to one print head"
 msgstr "Bereich auf einen Druckkopf beschränken"
 
 # AI Translated
-msgid "A physically continuous extrusion path requires the same head. Different heads use the transition settings. Connectivity and paths are not yet checked."
-msgstr "Eine physisch durchgehende Extrusionsbahn erfordert denselben Druckkopf. Bei unterschiedlichen Köpfen gelten die Übergangseinstellungen. Zusammenhang und Bahnen sind noch nicht geprüft."
+msgid "Preview: one head per region."
+msgstr "Vorschau: ein Kopf pro Bereich."
 
 # AI Translated
 msgid "Nozzle orientation"
@@ -10932,8 +10936,8 @@ msgid "Allow vertical surfaces"
 msgstr "Senkrechte Flächen zulassen"
 
 # AI Translated
-msgid "Reachability: not checked. A vertical wall normally requires 90° nozzle tilt; the provisional mechanism allows 75°. Up to 15° deviation may help, but only future kinematic checks can confirm this."
-msgstr "Erreichbarkeit: noch nicht geprüft. Eine senkrechte Wand erfordert normalerweise 90° Düsenneigung; die vorläufige Mechanik erlaubt 75°. Bis zu 15° Abweichung können helfen. Die spätere Kinematikprüfung muss dies bestätigen."
+msgid "Machine reachability: not checked."
+msgstr "Mechanische Erreichbarkeit: nicht geprüft."
 
 # AI Translated
 msgid "Underlay and supports"
@@ -10976,8 +10980,8 @@ msgid "Automatic from configured materials"
 msgstr "Automatisch anhand der konfigurierten Materialien"
 
 # AI Translated
-msgid "5D support structures are not calculated. The following settings are the existing Orca process settings and also affect normal planar printing."
-msgstr "5D-Stützstrukturen werden noch nicht berechnet. Die folgenden Einstellungen sind die bestehenden Orca-Prozesseinstellungen und gelten auch für den normalen planaren Druck."
+msgid "Shared Orca settings. 5D supports: not calculated."
+msgstr "Gemeinsame Orca-Werte. 5D-Stützen: nicht berechnet."
 
 # AI Translated
 msgid "Surface properties"
@@ -11050,8 +11054,8 @@ msgid "Request 5D ironing (future function)"
 msgstr "5D-Ironing vorsehen (zukünftige Funktion)"
 
 # AI Translated
-msgid "Speed, line width, flow, temperature and cooling are inherited from the assigned Orca material and process profiles. Surface paths and ironing are not calculated."
-msgstr "Geschwindigkeit, Linienbreite, Flow, Temperatur und Kühlung werden aus den zugeordneten Orca-Material- und Prozessprofilen übernommen. Oberflächenbahnen und Ironing sind noch nicht berechnet."
+msgid "Orca profiles inherited. 5D ironing: not calculated."
+msgstr "Orca-Profile übernommen. 5D-Bügeln: nicht berechnet."
 
 # AI Translated
 msgid "Transitions between regions"
@@ -11098,12 +11102,12 @@ msgid "Alternating between layers"
 msgstr "Wechselnd zwischen Schichten"
 
 # AI Translated
-msgid "Fixed: each head stays in its assigned region. Interwoven: the regions interlock in the requested zone. Parallel: two heads travel close together over the complete region. These are intentions only; no paths, spacing or collision safety have been calculated."
-msgstr "Fest: Jeder Kopf bleibt in seinem Bereich. Verwoben: Die Bereiche greifen in der gewünschten Zone ineinander. Parallel: Zwei Köpfe fahren dicht beieinander den gesamten Bereich ab. Dies sind nur Vorgaben; Bahnen, Abstände und Kollisionssicherheit wurden nicht berechnet."
+msgid "Multi-head transitions: not calculated."
+msgstr "Mehrkopf-Übergänge: nicht berechnet."
 
 # AI Translated
-msgid "Adjacency and material compatibility: not checked. Some materials do not bond reliably. A later technical check is required before any manufacturing strategy can be released."
-msgstr "Nachbarschaft und Materialverträglichkeit: noch nicht geprüft. Manche Materialien verbinden sich nicht zuverlässig. Jede Fertigungsstrategie erfordert eine spätere technische Freigabe."
+msgid "Material compatibility: not checked."
+msgstr "Materialverträglichkeit: nicht geprüft."
 
 # AI Translated
 msgid "Head assignment"
@@ -11115,8 +11119,8 @@ msgid "Assign to head %1%"
 msgstr "Kopf %1% zuweisen"
 
 # AI Translated
-msgid "Head assignments describe future 5D work. They do not change Orca's normal extruder or support-material assignments."
-msgstr "Die Kopfzuordnungen beschreiben zukünftige 5D-Aufgaben. Orcas normale Extruder- und Stützmaterialzuordnungen bleiben davon unabhängig."
+msgid "One assigned head is planned in the preview."
+msgstr "Die Vorschau plant einen zugewiesenen Kopf."
 
 # AI Translated
 msgid "Multi-head operation"
@@ -11151,8 +11155,8 @@ msgid "High-speed mode requires three enabled heads with compatible PETG profile
 msgstr "Der High-Speed-Modus erfordert drei aktivierte Köpfe mit kompatiblen PETG-Profilen. Prüfen Sie die Gruppe Mehrkopf-Betrieb."
 
 # AI Translated
-msgid "Automatic parallel operation requests simultaneous work when possible; unavailable heads wait. Allocation, timing and collisions are not calculated."
-msgstr "Der automatische Parallelbetrieb sieht möglichst gleichzeitiges Arbeiten vor; nicht einsetzbare Köpfe warten. Aufteilung, Zeitplanung und Kollisionen sind noch nicht berechnet."
+msgid "Multi-head scheduling: not calculated."
+msgstr "Mehrkopf-Zeitplanung: nicht berechnet."
 
 # AI Translated
 msgid "Normal part construction"
@@ -11187,8 +11191,8 @@ msgid "Orca material profile"
 msgstr "Orca-Materialprofil"
 
 # AI Translated
-msgid "Example: head 1 PETG for the part, head 2 PVA for supports, head 3 PETG-CF for reinforcement. Material suitability and bonding remain unverified."
-msgstr "Beispiel: Kopf 1 PETG für das Bauteil, Kopf 2 PVA für Stützen, Kopf 3 PETG-CF für Verstärkungen. Materialeignung und Haftung sind noch nicht geprüft."
+msgid "Material suitability: not checked."
+msgstr "Materialeignung: nicht geprüft."
 
 # AI Translated
 #, boost-format
@@ -11209,8 +11213,8 @@ msgid "Merge regions to request continuous cross-surface paths."
 msgstr "Fassen Sie Bereiche zusammen, um durchgehende oberflächenübergreifende Bahnen vorzusehen."
 
 # AI Translated
-msgid "Reference edge stored. Path direction not calculated."
-msgstr "Referenzkante gespeichert. Bahnausrichtung noch nicht berechnet."
+msgid "Reference edge stored."
+msgstr "Referenzkante gespeichert."
 
 # AI Translated
 msgid "No reference edge selected."
@@ -11222,20 +11226,16 @@ msgid "Assigned regions: %1%"
 msgstr "Zugewiesene Oberflächenbereiche: %1%"
 
 # AI Translated
-msgid "High-speed prerequisite: three enabled heads with the same PETG profile. Technical approval, collisions and scheduling: not checked."
-msgstr "High-Speed-Voraussetzung: drei aktivierte Köpfe mit demselben PETG-Profil. Technische Freigabe, Kollisionen und Zeitplanung: noch nicht geprüft."
+msgid "Same PETG profile. Technical approval: pending."
+msgstr "Gleiches PETG-Profil. Technische Freigabe: ausstehend."
 
 # AI Translated
-msgid "Three compatible PETG profiles with overlapping temperature ranges selected. Calibration, collisions and scheduling are not checked; high-speed remains a requested strategy without technical approval."
-msgstr "Drei kompatible PETG-Profile mit überlappenden Temperaturbereichen gewählt. Abstimmung, Kollisionen und Zeitplanung sind noch nicht geprüft; High-Speed bleibt eine gewünschte Strategie ohne technische Freigabe."
+msgid "Compatible PETG profiles. Technical approval: pending."
+msgstr "Kompatible PETG-Profile. Technische Freigabe: ausstehend."
 
 # AI Translated
-msgid "High-speed prerequisite not met: assign compatible PETG profiles to all three enabled heads. The selected strategy is only a request."
-msgstr "High-Speed-Voraussetzung nicht erfüllt: Weisen Sie allen drei aktivierten Köpfen kompatible PETG-Profile zu. Die ausgewählte Strategie ist lediglich eine Vorgabe."
-
-# AI Translated
-msgid "Reference edge stored for this region. No path direction has been calculated."
-msgstr "Referenzkante für diesen Bereich gespeichert. Es wurde noch keine Bahnausrichtung berechnet."
+msgid "High-speed prerequisite: not met."
+msgstr "High-Speed-Voraussetzung: nicht erfüllt."
 
 # AI Translated
 msgid "This project's 5D data is unsupported or invalid. It is preserved unchanged; editing is disabled."
@@ -11244,6 +11244,161 @@ msgstr "Die 5D-Daten dieses Projekts werden nicht unterstützt oder sind ungült
 # AI Translated
 msgid "Not assigned"
 msgstr "Nicht zugewiesen"
+
+# AI Translated
+msgid "Model or settings changed. Calculate the preview again."
+msgstr "Modell oder Einstellungen geändert. Vorschau erneut berechnen."
+
+# AI Translated
+msgid "Wait for the current operation to finish."
+msgstr "Warten Sie auf den Abschluss des laufenden Vorgangs."
+
+# AI Translated
+msgid "Calculating 5D preview…"
+msgstr "5D-Vorschau wird berechnet…"
+
+# AI Translated
+msgid "Preview ready. Experimental export remains blocked."
+msgstr "Vorschau bereit. Experimenteller Export bleibt gesperrt."
+
+# AI Translated
+msgid "Preview could not be queued. Try again."
+msgstr "Vorschau konnte nicht gestartet werden. Erneut versuchen."
+
+# AI Translated
+msgid "Open Formorix help"
+msgstr "Formorix-Hilfe öffnen"
+
+# AI Translated
+msgid "Select a painted surface region."
+msgstr "Wählen Sie einen markierten Oberflächenbereich."
+
+# AI Translated
+msgid "Invalid mesh or preview parameters."
+msgstr "Ungültiges Netz oder ungültige Vorschauparameter."
+
+# AI Translated
+msgid "The selected region is not connected."
+msgstr "Der ausgewählte Bereich ist nicht zusammenhängend."
+
+# AI Translated
+msgid "Use one region without holes or branching boundaries."
+msgstr "Wählen Sie einen Bereich ohne Löcher oder verzweigte Ränder."
+
+# AI Translated
+msgid "This surface cannot be mapped to one raster patch."
+msgstr "Diese Fläche lässt sich nicht als ein Rasterbereich abbilden."
+
+# AI Translated
+msgid "Insufficient wall thickness or invalid inward offset."
+msgstr "Zu geringe Wandstärke oder ungültiger Versatz nach innen."
+
+# AI Translated
+msgid "The offset folds or intersects itself."
+msgstr "Der Versatz faltet oder überschneidet sich."
+
+# AI Translated
+msgid "Full-wall preview requires nearly uniform local wall thickness."
+msgstr "Die Vollwandvorschau benötigt eine nahezu gleichmässige lokale Wandstärke."
+
+# AI Translated
+msgid "Enable vertical surfaces for this region."
+msgstr "Lassen Sie senkrechte Flächen für diesen Bereich zu."
+
+# AI Translated
+msgid "Required nozzle tilt exceeds the allowed deviation."
+msgstr "Die nötige Düsenneigung überschreitet die erlaubte Abweichung."
+
+# AI Translated
+msgid "Preview limit exceeded. Reduce the region or layer count."
+msgstr "Vorschaugrenze überschritten. Bereich oder Schichtzahl verkleinern."
+
+# AI Translated
+msgid "Preview calculation canceled."
+msgstr "Vorschauberechnung abgebrochen."
+
+# AI Translated
+msgid "Mesh topology changed. Select the surfaces again."
+msgstr "Netztopologie geändert. Flächen erneut markieren."
+
+# AI Translated
+msgid "Assign exactly one enabled head for this preview."
+msgstr "Weisen Sie dieser Vorschau genau einen aktivierten Kopf zu."
+
+# AI Translated
+msgid "The assigned material profile is missing."
+msgstr "Das zugewiesene Materialprofil fehlt."
+
+# AI Translated
+msgid "Reference edge is missing or ambiguous. Select a custom direction."
+msgstr "Referenzkante fehlt oder ist mehrdeutig. Eigene Richtung festlegen."
+
+# AI Translated
+msgid "Preview unavailable."
+msgstr "Vorschau nicht verfügbar."
+
+# AI Translated
+msgid "Working"
+msgstr "Arbeitet"
+
+# AI Translated
+msgid "Traveling (collision check pending)"
+msgstr "Fährt (Kollisionsprüfung ausstehend)"
+
+# AI Translated
+msgid "Waiting"
+msgstr "Wartet"
+
+# AI Translated
+msgid "Unassigned"
+msgstr "Ohne Aufgabe"
+
+# AI Translated
+msgid "Playback speed"
+msgstr "Wiedergabegeschwindigkeit"
+
+# AI Translated
+msgid "5D process time"
+msgstr "5D-Prozesszeit"
+
+# AI Translated
+msgid "5D shell"
+msgstr "5D-Schale"
+
+# AI Translated
+msgid "Remaining core"
+msgstr "Verbleibender Kern"
+
+# AI Translated
+msgid "Orca preview"
+msgstr "Orca-Vorschau"
+
+# AI Translated
+msgid "5D part only: excludes normal construction, supports and waiting times."
+msgstr "Nur 5D-Teil: ohne normalen Bauteilaufbau, Supports und Wartezeiten."
+
+# AI Translated
+msgid "Layer-change travel: collision check pending."
+msgstr "Verfahrbewegungen beim Lagenwechsel: Kollisionsprüfung ausstehend."
+
+# AI Translated
+#, c-format, boost-format
+msgid "5D: %1$.1f / %2$.1f s (estimate)"
+msgstr "5D: %1$.1f / %2$.1f s (geschätzt)"
+
+# AI Translated
+#, boost-format
+msgid "Head %1%: %2%"
+msgstr "Kopf %1%: %2%"
+
+# AI Translated
+msgid "All 5D layers"
+msgstr "Alle 5D-Schichten"
+
+# AI Translated
+#, boost-format
+msgid "5D layer %1%"
+msgstr "5D-Schicht %1%"
 
 # AI Translated
 msgid "Edit 5D surface selection"
@@ -39491,6 +39646,119 @@ msgid ""
 msgstr ""
 "Verwerfungen vermeiden\n"
 "Wussten Sie, dass beim Drucken von Materialien, die zu Verwerfungen neigen, wie z.B. ABS, durch eine entsprechende Erhöhung der Heizbetttemperatur die Wahrscheinlichkeit von Verwerfungen verringert werden kann?"
+
+# AI Translated
+#~ msgid "Traveling"
+#~ msgstr "Fährt"
+
+# AI Translated
+#, c-format, boost-format
+#~ msgid "%1$.1f / %2$.1f s (estimate)"
+#~ msgstr "%1$.1f / %2$.1f s (geschätzt)"
+
+# AI Translated
+#~ msgid "Merge selected regions"
+#~ msgstr "Ausgewählte Bereiche zusammenfassen"
+
+# AI Translated
+#~ msgid "Regions merged. The active region's settings and head assignment were retained. Continuous paths are requested, not calculated."
+#~ msgstr "Bereiche zusammengefasst. Einstellungen und Kopfzuordnung des aktiven Bereichs wurden übernommen. Durchgehende Bahnen sind vorgemerkt, noch nicht berechnet."
+
+# AI Translated
+#~ msgid "Copy settings to selected regions"
+#~ msgstr "Einstellungen auf ausgewählte Bereiche übertragen"
+
+# AI Translated
+#~ msgid "Show / hide selected regions"
+#~ msgstr "Ausgewählte Bereiche ein-/ausblenden"
+
+# AI Translated
+#~ msgid "Remove selected regions"
+#~ msgstr "Ausgewählte Bereiche entfernen"
+
+# AI Translated
+#~ msgid "The last clicked region supplies settings when merging or copying. Ctrl-click selects multiple regions."
+#~ msgstr "Beim Zusammenfassen oder Übertragen gelten die Einstellungen des zuletzt angeklickten Bereichs. Strg-Klick wählt mehrere Bereiche aus."
+
+# AI Translated
+#~ msgid "Slope is measured between the outward surface normal and global +Z. Left-click paints; Shift-click or right-click erases. Ctrl-drag rotates the view; the wheel zooms."
+#~ msgstr "Die Neigung wird zwischen der äusseren Oberflächennormalen und global +Z gemessen. Linksklick markiert; Umschalt-Klick oder Rechtsklick entfernt. Strg-Ziehen dreht die Ansicht; das Mausrad zoomt."
+
+# AI Translated
+#~ msgid "Section view shows the original model. Shell depth is specified along the local normal; offset geometry is not calculated."
+#~ msgstr "Die Schnittansicht zeigt das Originalmodell. Die Schalentiefe gilt entlang der lokalen Normalen; eine versetzte Geometrie wird noch nicht berechnet."
+
+# AI Translated
+#~ msgid "Add a region and select a surface on the model. Experimental: no 5D paths or executable 5D output."
+#~ msgstr "Fügen Sie einen Bereich hinzu und wählen Sie eine Fläche am Modell. Experimentell: keine 5D-Bahnen und keine ausführbaren 5D-Druckdateien."
+
+# AI Translated
+#~ msgid "Manufacturing intent — not calculated"
+#~ msgstr "Fertigungsvorgaben – noch nicht berechnet"
+
+# AI Translated
+#~ msgid "The requested shell lies inside the nominal geometry. Depth follows the local surface normal, not global Z. No offset geometry has been generated."
+#~ msgstr "Die vorgesehene Schale liegt innerhalb der Sollgeometrie. Ihre Tiefe folgt der lokalen Oberflächennormalen, nicht global Z. Es wurde noch keine versetzte Geometrie erzeugt."
+
+# AI Translated
+#~ msgid "A wall printed entirely in 5D requires a suitable load-bearing structure before 5D printing. Conventional planar supports may be required first."
+#~ msgstr "Für die Herstellung einer vollständig in 5D gedruckten Wand muss vor dem 5D-Druck eine geeignete Tragstruktur vorhanden sein. Gegebenenfalls sind zunächst normale planare Stützstrukturen erforderlich."
+
+# AI Translated
+#~ msgid "A physically continuous extrusion path requires the same head. Different heads use the transition settings. Connectivity and paths are not yet checked."
+#~ msgstr "Eine physisch durchgehende Extrusionsbahn erfordert denselben Druckkopf. Bei unterschiedlichen Köpfen gelten die Übergangseinstellungen. Zusammenhang und Bahnen sind noch nicht geprüft."
+
+# AI Translated
+#~ msgid "Reachability: not checked. A vertical wall normally requires 90° nozzle tilt; the provisional mechanism allows 75°. Up to 15° deviation may help, but only future kinematic checks can confirm this."
+#~ msgstr "Erreichbarkeit: noch nicht geprüft. Eine senkrechte Wand erfordert normalerweise 90° Düsenneigung; die vorläufige Mechanik erlaubt 75°. Bis zu 15° Abweichung können helfen. Die spätere Kinematikprüfung muss dies bestätigen."
+
+# AI Translated
+#~ msgid "5D support structures are not calculated. The following settings are the existing Orca process settings and also affect normal planar printing."
+#~ msgstr "5D-Stützstrukturen werden noch nicht berechnet. Die folgenden Einstellungen sind die bestehenden Orca-Prozesseinstellungen und gelten auch für den normalen planaren Druck."
+
+# AI Translated
+#~ msgid "Speed, line width, flow, temperature and cooling are inherited from the assigned Orca material and process profiles. Surface paths and ironing are not calculated."
+#~ msgstr "Geschwindigkeit, Linienbreite, Flow, Temperatur und Kühlung werden aus den zugeordneten Orca-Material- und Prozessprofilen übernommen. Oberflächenbahnen und Ironing sind noch nicht berechnet."
+
+# AI Translated
+#~ msgid "Fixed: each head stays in its assigned region. Interwoven: the regions interlock in the requested zone. Parallel: two heads travel close together over the complete region. These are intentions only; no paths, spacing or collision safety have been calculated."
+#~ msgstr "Fest: Jeder Kopf bleibt in seinem Bereich. Verwoben: Die Bereiche greifen in der gewünschten Zone ineinander. Parallel: Zwei Köpfe fahren dicht beieinander den gesamten Bereich ab. Dies sind nur Vorgaben; Bahnen, Abstände und Kollisionssicherheit wurden nicht berechnet."
+
+# AI Translated
+#~ msgid "Adjacency and material compatibility: not checked. Some materials do not bond reliably. A later technical check is required before any manufacturing strategy can be released."
+#~ msgstr "Nachbarschaft und Materialverträglichkeit: noch nicht geprüft. Manche Materialien verbinden sich nicht zuverlässig. Jede Fertigungsstrategie erfordert eine spätere technische Freigabe."
+
+# AI Translated
+#~ msgid "Head assignments describe future 5D work. They do not change Orca's normal extruder or support-material assignments."
+#~ msgstr "Die Kopfzuordnungen beschreiben zukünftige 5D-Aufgaben. Orcas normale Extruder- und Stützmaterialzuordnungen bleiben davon unabhängig."
+
+# AI Translated
+#~ msgid "Automatic parallel operation requests simultaneous work when possible; unavailable heads wait. Allocation, timing and collisions are not calculated."
+#~ msgstr "Der automatische Parallelbetrieb sieht möglichst gleichzeitiges Arbeiten vor; nicht einsetzbare Köpfe warten. Aufteilung, Zeitplanung und Kollisionen sind noch nicht berechnet."
+
+# AI Translated
+#~ msgid "Example: head 1 PETG for the part, head 2 PVA for supports, head 3 PETG-CF for reinforcement. Material suitability and bonding remain unverified."
+#~ msgstr "Beispiel: Kopf 1 PETG für das Bauteil, Kopf 2 PVA für Stützen, Kopf 3 PETG-CF für Verstärkungen. Materialeignung und Haftung sind noch nicht geprüft."
+
+# AI Translated
+#~ msgid "Reference edge stored. Path direction not calculated."
+#~ msgstr "Referenzkante gespeichert. Bahnausrichtung noch nicht berechnet."
+
+# AI Translated
+#~ msgid "High-speed prerequisite: three enabled heads with the same PETG profile. Technical approval, collisions and scheduling: not checked."
+#~ msgstr "High-Speed-Voraussetzung: drei aktivierte Köpfe mit demselben PETG-Profil. Technische Freigabe, Kollisionen und Zeitplanung: noch nicht geprüft."
+
+# AI Translated
+#~ msgid "Three compatible PETG profiles with overlapping temperature ranges selected. Calibration, collisions and scheduling are not checked; high-speed remains a requested strategy without technical approval."
+#~ msgstr "Drei kompatible PETG-Profile mit überlappenden Temperaturbereichen gewählt. Abstimmung, Kollisionen und Zeitplanung sind noch nicht geprüft; High-Speed bleibt eine gewünschte Strategie ohne technische Freigabe."
+
+# AI Translated
+#~ msgid "High-speed prerequisite not met: assign compatible PETG profiles to all three enabled heads. The selected strategy is only a request."
+#~ msgstr "High-Speed-Voraussetzung nicht erfüllt: Weisen Sie allen drei aktivierten Köpfen kompatible PETG-Profile zu. Die ausgewählte Strategie ist lediglich eine Vorgabe."
+
+# AI Translated
+#~ msgid "Reference edge stored for this region. No path direction has been calculated."
+#~ msgstr "Referenzkante für diesen Bereich gespeichert. Es wurde noch keine Bahnausrichtung berechnet."
 
 #~ msgid "OrcaSlicer will terminate because of running out of memory. It may be a bug. It will be appreciated if you report the issue to our team."
 #~ msgstr "OrcaSlicer wird wegen Arbeitsspeichermangels beendet, was ein Bug sein kann. Bitte melden Sie diesen Fehler dem technischen Support."

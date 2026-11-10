@@ -1,8 +1,9 @@
 # Formorix surface editor
 
 The **5D Surfaces / 5D-Oberflächen** tab stores surface selection and manufacturing
-intent. It does not generate geometry, nozzle orientations, supports, paths,
-head schedules or machine commands. The experimental printer/export guards
+intent. Its explicit preview action passes the active region to the separate
+[nonplanar preview module](FormorixPreview.md). Supports, head schedules and
+machine commands are not generated. The experimental printer/export guards
 described in [formorix-5d.md](formorix-5d.md) remain authoritative.
 
 ## GUI and selection
@@ -23,7 +24,8 @@ The object selector chooses the instance to paint. Slope selection measures
 transformed outward normals against global +Z. The edge-angle threshold limits
 connected selection. A reference-edge click stores the nearest mesh-triangle
 edge endpoints in volume-local coordinates as a direction reference; this is
-a captured reference, not a live CAD edge constraint. No path direction is solved.
+a captured reference, not a live CAD edge constraint. The preview uses the
+transformed reference direction only when it resolves to a unique volume.
 The section control clips the original model relative to the current camera.
 It does not depict a calculated inward shell or a measured wall thickness.
 
@@ -85,7 +87,7 @@ kinematic, bonding, collision and scheduling checks.
 Neither `Print` nor `GCode` reads these annotations. With the experimental
 printer mode disabled, conventional planar output is unaffected by region
 painting and wishes. Enabling experimental mode retains all existing rejection
-paths. The surface tab itself offers no slice/export action.
+paths. The surface tab offers an internal preview action, with no executable export.
 
 ## Localization and tests
 

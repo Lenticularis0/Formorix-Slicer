@@ -106,6 +106,7 @@ void GLGizmoFormorixSurfaces::on_shutdown()
 }
 void GLGizmoFormorixSurfaces::render_painter_gizmo()
 {
+    if(preview&&preview->result){m_preview_renderer.render(*preview,wxGetApp().plater()->get_camera());return;}
     glsafe(::glEnable(GL_BLEND));
     glsafe(::glEnable(GL_DEPTH_TEST));
     render_triangles(m_parent.get_selection());
@@ -116,6 +117,7 @@ void GLGizmoFormorixSurfaces::render_painter_gizmo()
 }
 bool GLGizmoFormorixSurfaces::on_mouse(const wxMouseEvent &event)
 {
+    if(preview)return false;
     if (m_region == 0) return false;
     if (m_tool == Tool::Edge) {
         if (event.LeftDown() && !event.CmdDown()) return pick_edge(Vec2d(event.GetX(), event.GetY()));
@@ -125,6 +127,7 @@ bool GLGizmoFormorixSurfaces::on_mouse(const wxMouseEvent &event)
 }
 bool GLGizmoFormorixSurfaces::gizmo_event(SLAGizmoEventType action, const Vec2d &mouse, bool shift, bool alt, bool control)
 {
+    if(preview)return false;
     if (m_region == 0 || m_tool == Tool::Edge) return false;
     return GLGizmoPainterBase::gizmo_event(action, mouse, shift, alt, control);
 }

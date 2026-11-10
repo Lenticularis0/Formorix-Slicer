@@ -1,0 +1,62 @@
+[
+  {
+    "target": "index.md",
+    "status": 200,
+    "anchor_verified": true
+  },
+  {
+    "target": "selection.md",
+    "status": 200,
+    "anchor_verified": true
+  },
+  {
+    "target": "layers.md#schichtdicke",
+    "status": 200,
+    "anchor_verified": true
+  },
+  {
+    "target": "layers.md#schalendicke",
+    "status": 200,
+    "anchor_verified": true
+  },
+  {
+    "target": "orientation.md#oberflachennormale",
+    "status": 200,
+    "anchor_verified": true
+  },
+  {
+    "target": "orientation.md#abweichung-und-kippwinkel",
+    "status": 200,
+    "anchor_verified": true
+  },
+  {
+    "target": "supports.md",
+    "status": 200,
+    "anchor_verified": true
+  },
+  {
+    "target": "continuous-paths.md",
+    "status": 200,
+    "anchor_verified": true
+  },
+  {
+    "target": "transitions.md",
+    "status": 200,
+    "anchor_verified": true
+  },
+  {
+    "target": "multi-head.md",
+    "status": 200,
+    "anchor_verified": true
+  },
+  {
+    "target": "high-speed.md",
+    "status": 200,
+    "anchor_verified": true
+  },
+  {
+    "target": "preview.md",
+    "status": 200,
+    "anchor_verified": true
+  }
+]

@@ -8,6 +8,8 @@
 #include <wx/event.h>
 #include <wx/string.h>
 #include "libslic3r/FormorixSurfaces.hpp"
+#include "slic3r/GUI/FormorixPreviewView.hpp"
+#include <memory>
 #include <array>
 #include <functional>
 #include <string>
@@ -23,6 +25,7 @@ public:
     void select_slope(double minimum, double maximum);
     void section(double position);
     std::function<void(const std::array<double, 6> &)> edge_selected;
+    std::shared_ptr<FormorixPreviewState> preview;
     void render_painter_gizmo() override;
     bool on_mouse(const wxMouseEvent &event) override;
     bool gizmo_event(SLAGizmoEventType action, const Vec2d &mouse, bool shift, bool alt, bool control) override;
@@ -49,5 +52,6 @@ private:
     Tool m_tool = Tool::Connected;
     std::vector<ColorRGBA> m_colors;
     bool pick_edge(const Vec2d &mouse);
+    FormorixPreviewRenderer m_preview_renderer;
 };
 }
