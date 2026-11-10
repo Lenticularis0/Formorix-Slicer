@@ -16,7 +16,7 @@
     "Stdlib code is recognized through a symlinked Python home"
   ],
   "failed": [],
-  "time_seconds": 261.87,
+  "time_seconds": 245.37,
   "preview_cases": 7,
   "preview_assertions": 58064,
   "baseline": {
@@ -29,9 +29,12 @@
   "notes": [
     "Linux-only CLI suite is not registered on Windows.",
     "Skipped tests require Windows symlink privileges.",
-    "GUI behavior was checked before the final toolbar/label polish. Final GUI acceptance is pending because computer control repeatedly detected concurrent user input."
+    "Final Windows GUI acceptance completed: slider, +/-1 second, reset, 16x playback, pause, three nozzle labels, help buttons and conventional MK4 cube slicing.",
+    "Browser window approval timed out; opened page titles were observed and all twelve help targets and anchors were independently checked over HTTPS."
   ],
-  "final_windows_dll_sha256": "b5f6747936c89fc4ce0372daeebaf2d0edd112f034f1be4d80202999d5626477",
+  "final_windows_dll_sha256": "1200d63ad3d026cbc3bc920ce46ff513b658da5dff31d4e571b1c671b6420b0b",
   "clang_tidy_changed_cpp_files": 16,
-  "clang_tidy_result": "passed"
+  "clang_tidy_result": "passed",
+  "final_installation": "build/Formorix-Abnahme03",
+  "help_targets_checked": 12
 }

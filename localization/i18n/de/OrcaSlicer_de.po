@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orca Slicer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-10 01:36+0100\n"
+"POT-Creation-Date: 2026-11-10 09:03+0100\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Heiko Liebscher <hliebschergmail.com>\n"
 "Language-Team: \n"
@@ -11342,8 +11342,8 @@ msgid "Working"
 msgstr "Arbeitet"
 
 # AI Translated
-msgid "Traveling"
-msgstr "Fährt"
+msgid "Traveling (collision check pending)"
+msgstr "Fährt (Kollisionsprüfung ausstehend)"
 
 # AI Translated
 msgid "Waiting"
@@ -11374,9 +11374,17 @@ msgid "Orca preview"
 msgstr "Orca-Vorschau"
 
 # AI Translated
+msgid "5D part only: excludes normal construction, supports and waiting times."
+msgstr "Nur 5D-Teil: ohne normalen Bauteilaufbau, Supports und Wartezeiten."
+
+# AI Translated
+msgid "Layer-change travel: collision check pending."
+msgstr "Verfahrbewegungen beim Lagenwechsel: Kollisionsprüfung ausstehend."
+
+# AI Translated
 #, c-format, boost-format
-msgid "%1$.1f / %2$.1f s (estimate)"
-msgstr "%1$.1f / %2$.1f s (geschätzt)"
+msgid "5D: %1$.1f / %2$.1f s (estimate)"
+msgstr "5D: %1$.1f / %2$.1f s (geschätzt)"
 
 # AI Translated
 #, boost-format
@@ -39638,6 +39646,15 @@ msgid ""
 msgstr ""
 "Verwerfungen vermeiden\n"
 "Wussten Sie, dass beim Drucken von Materialien, die zu Verwerfungen neigen, wie z.B. ABS, durch eine entsprechende Erhöhung der Heizbetttemperatur die Wahrscheinlichkeit von Verwerfungen verringert werden kann?"
+
+# AI Translated
+#~ msgid "Traveling"
+#~ msgstr "Fährt"
+
+# AI Translated
+#, c-format, boost-format
+#~ msgid "%1$.1f / %2$.1f s (estimate)"
+#~ msgstr "%1$.1f / %2$.1f s (geschätzt)"
 
 # AI Translated
 #~ msgid "Merge selected regions"

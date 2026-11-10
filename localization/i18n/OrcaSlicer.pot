@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-10 01:36+0100\n"
+"POT-Creation-Date: 2026-11-10 09:03+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -10180,7 +10180,7 @@ msgstr ""
 msgid "Working"
 msgstr ""
 
-msgid "Traveling"
+msgid "Traveling (collision check pending)"
 msgstr ""
 
 msgid "Waiting"
@@ -10204,8 +10204,14 @@ msgstr ""
 msgid "Orca preview"
 msgstr ""
 
+msgid "5D part only: excludes normal construction, supports and waiting times."
+msgstr ""
+
+msgid "Layer-change travel: collision check pending."
+msgstr ""
+
 #, possible-c-format, possible-boost-format
-msgid "%1$.1f / %2$.1f s (estimate)"
+msgid "5D: %1$.1f / %2$.1f s (estimate)"
 msgstr ""
 
 #, possible-boost-format

@@ -67,7 +67,7 @@ static wxString state_name(FP::MotionKind kind)
 {
     switch (kind) {
     case FP::MotionKind::Extrude: return _L("Working");
-    case FP::MotionKind::Travel: return _L("Traveling");
+    case FP::MotionKind::Travel: return _L("Traveling (collision check pending)");
     case FP::MotionKind::Wait: return _L("Waiting");
     default: return _L("Unassigned");
     }
@@ -170,6 +170,12 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
         layout->Add(options, 0, wxEXPAND);
         heads = new wxStaticText(&panel, wxID_ANY, wxEmptyString);
         layout->Add(heads, 0, wxALL, panel.FromDIP(5));
+        auto* scope = new wxStaticText(&panel, wxID_ANY,
+            _L("5D part only: excludes normal construction, supports and waiting times."));
+        layout->Add(scope, 0, wxLEFT | wxRIGHT, panel.FromDIP(5));
+        auto* travel = new wxStaticText(&panel, wxID_ANY,
+            _L("Layer-change travel: collision check pending."));
+        layout->Add(travel, 0, wxLEFT | wxRIGHT, panel.FromDIP(5));
         Bind(
             wxEVT_TIMER,
             [this](wxTimerEvent&) {
@@ -199,7 +205,7 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
         const double total = state->result ? state->result->timeline.duration() : 0.;
         slider->SetValue(total > 0. ? int(10000. * state->seconds / total) : 0);
         slider->Enable(total > 0.);
-        clock->SetLabel(wxString::Format(_L("%1$.1f / %2$.1f s (estimate)"), state->seconds, total));
+        clock->SetLabel(wxString::Format(_L("5D: %1$.1f / %2$.1f s (estimate)"), state->seconds, total));
         wxString text;
         for (int h = 0; h < 3; ++h) {
             if (h)

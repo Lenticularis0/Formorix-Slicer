@@ -16,7 +16,8 @@ wxString formorix_help_url(FormorixHelpTopic topic)
                                                     "orientation.md#oberflachennormale", "orientation.md#abweichung-und-kippwinkel",
                                                     "supports.md", "continuous-paths.md", "transitions.md", "multi-head.md",
                                                     "high-speed.md", "preview.md"}};
-    return "https://github.com/Lenticularis0/Formorix-Slicer/blob/formorix/auftrag-03/docs/formorix/" +
+    // Pin published documentation to a commit: deleting the development branch cannot break help.
+    return "https://github.com/Lenticularis0/Formorix-Slicer/blob/10177f248099015508246693bb67d8a5b0357101/docs/formorix/" +
            wxString::FromUTF8(pages.at(static_cast<std::size_t>(topic)));
 }
 wxWindow* formorix_help_button(wxWindow* parent, FormorixHelpTopic topic)

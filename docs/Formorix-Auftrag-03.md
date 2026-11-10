@@ -33,16 +33,16 @@ Windows Release mit Visual Studio 2026 / MSVC 14.51, Windows SDK 10.0.26100 und 
 | Prüfung | Tatsächliches Ergebnis |
 | --- | --- |
 | Release `ALL_BUILD`, Anwendung und Tests | Erfolgreich. |
-| Getrennte Installation `build/Formorix-Auftrag03-final` | Finaler lokaler Build. |
+| Getrennte Installation `build/Formorix-Abnahme03` | Erneut gebaut, installiert und live geprüft. |
 | Neue `[FormorixPreview]`-Tests | 7 Testfälle, **58’064 Assertions bestanden**. |
-| Gesamte CTest-Auswahl | **3’091 bestanden, 6 übersprungen, 0 fehlgeschlagen**; 3’097 ausgewählt, 261,87 s. |
+| Gesamte CTest-Auswahl | **3’091 bestanden, 6 übersprungen, 0 fehlgeschlagen**; 3’097 ausgewählt, beim abschliessenden Wiederholungslauf 245,37 s. |
 | `run_clang_tidy.ps1` gegen `origin/main` | Erfolgreich für die geänderten C++-Dateien. |
 | Vollständiger gettext-Lauf | Erfolgreich; neue deutsche GUI-Texte kompiliert. |
 | Bestehende Formorix-Speicher-/Exporttests | In der gesamten Testsuite bestanden. |
 
 Die CTest-Auswahl verwendet wie zuvor `-LE 'NotWorking|RequiresApp'`. Sechs Tests benötigen unter Windows nicht verfügbare Symlink-Rechte und werden übersprungen. Die Linux-spezifische CLI-Suite ist unter Windows nicht registriert. NumPy 2.5.3 wurde für die vorhandenen Python-Bridge-Tests im separaten Testinterpreter installiert.
 
-Ein erster Build mit hoher Parallelität erschöpfte den Speicher beim Kompilieren der Test-PCHs. Der erneute vollständige Build mit `--parallel 2 -- /p:CL_MPCount=2` war erfolgreich. MSVC meldet weiterhin Warnungen zu CRT-Bibliotheken (`LNK4098`) und einem unsigned-char/bool-Vergleich im unveränderten Upstreamcode. GUI-Nachbesserungen wurden anschliessend erneut gebaut; die abschliessende Werkzeugleisten-/Beschriftungskorrektur benötigt noch den unten genannten GUI-Nachtest.
+Ein erster Build mit hoher Parallelität erschöpfte den Speicher beim Kompilieren der Test-PCHs. Der erneute vollständige Build mit `--parallel 2 -- /p:CL_MPCount=2` war erfolgreich. MSVC meldet weiterhin Warnungen zu CRT-Bibliotheken (`LNK4098`) und einem unsigned-char/bool-Vergleich im unveränderten Upstreamcode. Die abschliessenden GUI-Nachbesserungen wurden erneut als Windows Release gebaut, installiert und live geprüft.
 
 Die neuen Tests in [test_formorix_preview.cpp](../tests/libslic3r/test_formorix_preview.cpp) prüfen:
 
@@ -68,7 +68,23 @@ Geprüft: tatsächliche Flächenmarkierung, Speichern und Neustart, Wiederladen 
 
 Screenshots und Bedienfolge stehen in der [Demonstration](formorix/demo.md). Die gespeicherte 3MF enthält keine ausführbaren G-Code-Einträge. Die erzeugten Vorschau-Bahnen werden nicht exportiert und nach dem Öffnen erneut berechnet.
 
-**Ausstehender Nachtest:** Nach den letzten Verbesserungen an Düsenbeschriftung, Bearbeitungswerkzeugleiste und Overlay-Cache meldete die Computersteuerung wiederholt gleichzeitige Benutzereingaben und verweigerte Eingriffe. Ein leeres vorhandenes Orca-Schnellwahlfenster erschwerte zusätzlich die Aufnahmen. Deshalb sind die endgültige Werkzeugleistenanzeige, ±1-s-/Geschwindigkeitsbedienung, der Hilfe-Aufruf im Browser und der erneute GUI-Wechsel zur normalen Würfel-Vorschau noch zu bestätigen. Start/Pause, Zeitschieber, Lagen-/Kernanzeige und Wandprüfung wurden zuvor live ausgeführt; die normalen Slicing- und Exportsperrentests bestanden automatisiert. Keine erfolgreiche letzte GUI-Abnahme wird daraus abgeleitet.
+**Abschliessender GUI-Nachtest:** Die separate Testinstallation wurde mit dem gespeicherten Wölbungsprojekt gestartet. Folgende Prüfungen wurden tatsächlich durch die GUI ausgeführt:
+
+| Bedienung | Beobachtung |
+| --- | --- |
+| Zeitschieber | Sprung von 0 auf 109,0 s; Düse 1 und Fortschrittsfarbe bewegen sich. Am Ende bei 213,8 s steht Kopf 1 auf „Wartet“. |
+| +1 s / −1 s / Anfang | 109,0 → 110,0 → 109,0 → 0,0 s. |
+| Geschwindigkeit / Start / Pause | 16× gewählt, gestartet und bei 86,8 s pausiert. Die nächste Aufnahme bestätigt unveränderte 86,8 s. |
+| Beschriftungen und Werkzeuge | Alle drei Düsen tragen lesbare Nummern; die Bearbeitungsgizmos sind während der Bahnvorschau ausgeblendet. |
+| Hilfe | Vorschau- und Schichtdicken-Schaltflächen öffnen die entsprechenden GitHub-Seiten im Browser; die Fenstertitel bestätigen `preview.md` und `layers.md` am festgelegten Commit. |
+| Normale Orca-Vorschau | Umschalten funktioniert; das experimentelle Formorix-Profil bleibt für Slicing/Export gesperrt. |
+| Konventionelles Slicing danach | `cube-planar.3mf`, Prusa MK4, Generic PLA, 0.20mm Standard @MK4: erfolgreich gesliced, 100 Lagen bis 20 mm, normale Bahnen und G-Code-Vorschau vorhanden, Export-Schaltfläche aktiv. |
+
+Die Zeitleiste zeigt dauerhaft **„Nur 5D-Teil: ohne normalen Bauteilaufbau, Supports und Wartezeiten.“** und **„Verfahrbewegungen beim Lagenwechsel: Kollisionsprüfung ausstehend.“** Der Zustand einer Verfahrbewegung enthält ebenfalls den ungeprüften Kollisionsstatus. Diese Verbindungen sind keine freigegebenen Maschinenbewegungen. Die Uhr ist zusätzlich mit **5D** gekennzeichnet.
+
+Die zentrale Hilfezuordnung verweist auf den veröffentlichten Commit `10177f248099015508246693bb67d8a5b0357101`, der beim Merge Teil der Historie bleibt. Das Löschen des Entwicklungsbranches bricht diese Links nicht. Alle zwölf Ziele wurden direkt von GitHub abgerufen (HTTP 200); sämtliche verwendeten expliziten HTML-Anker wurden im abgerufenen Inhalt geprüft. Die separate Freigabe für eine vertiefte Browser-Fensterprüfung lief ab; der tatsächliche GUI-Aufruf, die geladenen Seitentitel sowie Inhalt und Anker wurden auf den beschriebenen Wegen geprüft. [Linkprüfprotokoll](formorix/verification/help-links.json).
+
+Die neuen Screenshots in der Demonstration stammen aus diesem abschliessend geprüften Build. Geöffnete Hydrofoil- und FreeCAD-Benutzerprojekte wurden nicht verändert.
 
 ## Bekannte Grenzen
 

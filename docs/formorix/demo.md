@@ -15,7 +15,17 @@ Nach Neustart wieder geladener Editor:
 
 ![Geladene Markierungen und vier gespeicherte Lagen](images/editor-reloaded.jpg)
 
-Bei der Live-Prüfung wurde die Wölbung auf 108,3 s gestellt und anschliessend per Start/Pause bis 120,3 s abgespielt. Die Düsenspitze und die grüne Fortschrittsdarstellung änderten sich entsprechend. Auch die zweite Lage und die Kernanzeige wurden geprüft. Die untenstehende Aufnahme dokumentiert die gleiche Vorschauoberfläche am separaten Wandbereich; die später hinzugefügten Nummernschilder der Düsen und die ausgeblendete Werkzeugleiste sind darin noch nicht enthalten.
+Abschliessend geprüfter Windows-Release-Build: Start bei 0 s mit drei nummerierten Düsen und den dauerhaften Hinweisen zur begrenzten Zeitabschätzung und ungeprüften Verfahrbewegung:
+
+![5D-Vorschau am Anfang](images/preview-start.jpg)
+
+Nach Ziehen des Zeitschiebers auf 109,0 s stehen Düse 1 und Fortschrittsdarstellung auf dem entsprechenden Bahnabschnitt:
+
+![5D-Vorschau bei 109 Sekunden](images/preview-half.jpg)
+
+Die GUI-Prüfung bestätigte zusätzlich +1 s auf 110,0 s, −1 s zurück auf 109,0 s, Rücksetzen auf 0,0 s sowie Start/Pause mit 16× Wiedergabegeschwindigkeit. Bei 86,8 s blieb die pausierte Uhr stehen. Am Ende bei 213,8 s zeigte Kopf 1 „Wartet“. Die Hilfe-Schaltflächen öffneten Vorschau- und Schichtdickenhilfe. Anschliessend wurde über **Orca-Vorschau** zurückgewechselt und ein normaler 20-mm-Würfel mit Prusa MK4 / Generic PLA / 0,20 mm erfolgreich in 100 Schichten gesliced. Details und Einschränkungen stehen im [Abnahmebericht](../Formorix-Auftrag-03.md).
+
+Lagenfilter, Kernanzeige und Wandprüfung wurden ebenfalls live geprüft. Die folgenden Aufnahmen der senkrechten Wand stammen aus dem früheren Prüfstand ohne die endgültigen Düsenbeschriftungen und Zeitleistenhinweise.
 
 ## Senkrechte Wand
 
