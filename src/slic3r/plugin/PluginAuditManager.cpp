@@ -717,6 +717,11 @@ std::vector<std::string> PluginAuditManager::default_denied_filenames()
         GCODEVIEWER_APP_KEY ".conf",
         SLIC3R_APP_KEY ".ini",
         GCODEVIEWER_APP_KEY ".ini",
+        // Preserve protection for upstream configs copied during a migration, too.
+        "OrcaSlicer.conf",
+        "OrcaSlicer.ini",
+        "OrcaSlicerGcodeViewer.conf",
+        "OrcaSlicerGcodeViewer.ini",
         secret_constants::USER_SECRET_FILENAME,
         ".install_state.json",
     };

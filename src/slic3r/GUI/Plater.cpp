@@ -1,3 +1,4 @@
+#include "libslic3r/Formorix5D.hpp"
 #include "Plater.hpp"
 #include "../Utils/NetworkAgent.hpp"
 #include "IPrinterAgent.hpp"
@@ -321,6 +322,16 @@ static const std::pair<unsigned int, unsigned int> THUMBNAIL_SIZE_3MF = { 512, 5
 
 namespace Slic3r {
 namespace GUI {
+
+// Check the edited preset, including when an already sliced file is loaded.
+static bool block_formorix_print_job(wxWindow* parent)
+{
+    const auto* bundle = wxGetApp().preset_bundle;
+    if (!bundle || !Formorix5D::enabled(bundle->printers.get_edited_preset().config))
+        return false;
+    show_error(parent, _L(Formorix5D::export_block_reason()));
+    return true;
+}
 
 // A textured mesh is only worth routing through the import dialog when it actually carries
 // decoded image data; UV-only meshes have nothing to sample.
@@ -11950,6 +11961,8 @@ bool Plater::priv::restart_background_process(unsigned int state)
 
 void Plater::priv::export_gcode(fs::path output_path, bool output_path_on_removable_media)
 {
+    if (block_formorix_print_job(q))
+        return;
     wxCHECK_RET(!(output_path.empty()), "export_gcode: output_path and upload_job empty");
 
     BOOST_LOG_TRIVIAL(trace) << boost::format("export_gcode: output_path %1%")%output_path.string();
@@ -11983,6 +11996,8 @@ void Plater::priv::export_gcode(fs::path output_path, bool output_path_on_remova
 }
 void Plater::priv::export_gcode(fs::path output_path, bool output_path_on_removable_media, PrintHostJob upload_job)
 {
+    if (block_formorix_print_job(q))
+        return;
     wxCHECK_RET(!(output_path.empty() && upload_job.empty()), "export_gcode: output_path and upload_job empty");
 
     if (model.objects.empty())
@@ -14140,6 +14155,8 @@ void Plater::priv::on_action_print_plate(SimpleEvent&)
 
 void Plater::priv::open_machine_select_dialog(int plate_idx, PrintFromType print_type)
 {
+    if (block_formorix_print_job(q))
+        return;
     // BBS
     if (!m_select_machine_dlg)
         m_select_machine_dlg = new SelectMachineDialog(q);
@@ -14150,6 +14167,8 @@ void Plater::priv::open_machine_select_dialog(int plate_idx, PrintFromType print
 
 void Plater::priv::on_action_send_to_multi_machine(SimpleEvent&)
 {
+    if (block_formorix_print_job(q))
+        return;
     if (!m_send_multi_dlg)
         m_send_multi_dlg = new SendMultiMachinePage(q);
     m_send_multi_dlg->prepare(partplate_list.get_curr_plate_index());
@@ -14254,6 +14273,8 @@ int Plater::priv::update_print_required_data(Slic3r::DynamicPrintConfig config, 
 
 void Plater::priv::on_action_send_to_printer(bool isall)
 {
+    if (block_formorix_print_job(q))
+        return;
 	if (!m_send_to_sdcard_dlg) m_send_to_sdcard_dlg = new SendToPrinterDialog(q);
     if (isall) {
         m_send_to_sdcard_dlg->prepare(PLATE_ALL_IDX);
@@ -14767,7 +14788,7 @@ void Plater::priv::set_project_name(const wxString& project_name)
     if (!m_project_name.IsEmpty())
         wxGetApp().mainframe->update_title_colour_after_set_title();
 #else
-    wxGetApp().mainframe->SetTitle(m_project_name + " - OrcaSlicer");
+    wxGetApp().mainframe->SetTitle(m_project_name + " - " + SLIC3R_APP_NAME);
     wxGetApp().mainframe->topbar()->SetTitle(m_project_name);
 #endif
 }
@@ -14787,7 +14808,7 @@ void Plater::priv::update_title_dirty_status()
     wxGetApp().mainframe->SetTitle(title);
     wxGetApp().mainframe->update_title_colour_after_set_title();
 #else
-    wxGetApp().mainframe->SetTitle(title + " - OrcaSlicer");
+    wxGetApp().mainframe->SetTitle(title + " - " + SLIC3R_APP_NAME);
     wxGetApp().mainframe->topbar()->SetTitle(title);
 #endif    
 }
@@ -19907,6 +19928,8 @@ void Plater::apply_cut_object_to_model(size_t obj_idx, const ModelObjectPtrs& ne
 
 void Plater::export_gcode(bool prefer_removable)
 {
+    if (block_formorix_print_job(this))
+        return;
     if (p->model.objects.empty())
         return;
 
@@ -20013,6 +20036,8 @@ void Plater::send_to_printer(bool isall)
 //BBS export gcode 3mf to file
 void Plater::export_gcode_3mf(bool export_all)
 {
+    if (block_formorix_print_job(this))
+        return;
     if (p->model.objects.empty())
         return;
 
@@ -20872,6 +20897,22 @@ void publish(Model &model, SaveStrategy strategy) {
 // BBS: backup
 int Plater::export_3mf(const boost::filesystem::path& output_path, SaveStrategy strategy, int export_plate_idx, Export3mfProgressFn proFn)
 {
+    // Project saving remains available, but never carries stale executable toolpaths.
+    const bool formorix_5d = Formorix5D::enabled(wxGetApp().preset_bundle->printers.get_edited_preset().config);
+    if (formorix_5d) {
+        if (strategy & SaveStrategy::SkipModel) {
+            block_formorix_print_job(this);
+            return -1;
+        }
+        // Backup is a composite flag including WithGcode. Preserve its identity for
+        // mesh references; the 3MF writer suppresses backup G-code and its metadata.
+        if (!(strategy & SaveStrategy::Backup))
+            strategy = static_cast<SaveStrategy>(static_cast<unsigned int>(strategy) &
+                ~static_cast<unsigned int>(SaveStrategy::WithGcode) &
+                ~static_cast<unsigned int>(SaveStrategy::WithSliceInfo) &
+                ~static_cast<unsigned int>(SaveStrategy::WithStatistics));
+    }
+
     int ret = 0;
     //if (p->model.objects.empty()) {
     //    MessageDialog dialog(nullptr, _L("No objects to export."), _L("Save project"), wxYES);
@@ -20985,8 +21026,9 @@ int Plater::export_3mf(const boost::filesystem::path& output_path, SaveStrategy 
 
     //BBS: add bbs 3mf logic
     PlateDataPtrs plate_data_list;
-    p->partplate_list.store_to_3mf_structure(plate_data_list, (strategy & SaveStrategy::WithGcode || strategy & SaveStrategy::WithSliceInfo), export_plate_idx,
-                                             strategy & SaveStrategy::WithStatistics);
+    p->partplate_list.store_to_3mf_structure(plate_data_list,
+        !formorix_5d && (strategy & SaveStrategy::WithGcode || strategy & SaveStrategy::WithSliceInfo), export_plate_idx,
+        !formorix_5d && (strategy & SaveStrategy::WithStatistics));
 
     // Orca: non-BBL G-code isn't post-processed in place, so run the scripts on a copy before packing it.
     std::vector<std::string> pp_tmp_files;
@@ -21418,6 +21460,8 @@ void Plater::reslice_SLA_until_step(SLAPrintObjectStep step, const ModelObject &
 }
 void Plater::send_gcode_legacy(int plate_idx, Export3mfProgressFn proFn)
 {
+    if (block_formorix_print_job(this))
+        return;
     // if physical_printer is selected, send gcode for this printer
     // DynamicPrintConfig* physical_printer_config = wxGetApp().preset_bundle->physical_printers.get_selected_printer_config();
     DynamicPrintConfig* physical_printer_config = &Slic3r::GUI::wxGetApp().preset_bundle->printers.get_edited_preset().config;
@@ -21625,6 +21669,8 @@ void Plater::send_gcode_legacy(int plate_idx, Export3mfProgressFn proFn)
 }
 int Plater::send_gcode(int plate_idx, Export3mfProgressFn proFn)
 {
+    if (block_formorix_print_job(this))
+        return -1;
     int result = 0;
     /* generate 3mf */
     set_print_job_plate_idx(plate_idx);

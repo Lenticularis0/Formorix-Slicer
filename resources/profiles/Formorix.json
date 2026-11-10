@@ -1,0 +1,25 @@
+{
+	"name": "Formorix",
+	"version": "01.00.00.00",
+	"force_update": "0",
+	"description": "Experimental Formorix 5D configuration; no executable 5D output.",
+	"machine_model_list": [
+		{
+			"name": "Formorix 5D",
+			"sub_path": "machine/Formorix 5D.json"
+		}
+	],
+	"machine_list": [
+		{
+			"name": "Formorix 5D 0.4 nozzle",
+			"sub_path": "machine/Formorix 5D 0.4 nozzle.json"
+		}
+	],
+	"process_list": [
+		{
+			"name": "0.20mm Standard @Formorix 5D",
+			"sub_path": "process/0.20mm Standard @Formorix 5D.json"
+		}
+	],
+	"filament_list": []
+}

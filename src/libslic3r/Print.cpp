@@ -4,6 +4,8 @@
 #include <Windows.h>
 #endif
 
+#include "Formorix5D.hpp"
+#include <stdexcept>
 #include "PrintBase.hpp"
 #include <utility>
 #include <string>
@@ -445,7 +447,13 @@ bool Print::invalidate_state_by_config_options(const ConfigOptionResolver & /* n
     bool invalidated = false;
 
     for (const t_config_option_key &opt_key : opt_keys) {
-        if (steps_exclusion_geometry.find(opt_key) != steps_exclusion_geometry.end()) {
+        if (opt_key == "formorix_5d_enabled") {
+            // Switching modes invalidates cached output even if no geometry changed.
+            invalidated |= this->invalidate_all_steps();
+        } else if (opt_key.rfind("formorix_5d_", 0) == 0) {
+            // Configuration-only values have no effect on conventional slicing.
+            continue;
+        } else if (steps_exclusion_geometry.find(opt_key) != steps_exclusion_geometry.end()) {
             // Exclusions are consumed while generating brims, support, tree
             // support and wipe-tower geometry, not only during final export.
             steps.emplace_back(psWipeTower);
@@ -2146,6 +2154,18 @@ bool Print::wipe_tower_certain_before_slicing() const
 
 StringObjectException Print::validate(std::vector<StringObjectException> *warnings, Polygons* collison_polygons, std::vector<std::pair<Polygon, float>>* height_polygons) const
 {
+    if (Formorix5D::enabled(m_config)) {
+        StringObjectException error;
+        try {
+            error.string = Formorix5D::validate(Formorix5D::from_config(m_config));
+        } catch (const std::invalid_argument&) {
+            error.string = L("Formorix 5D configuration is incomplete or uses an unsupported schema.");
+        }
+        if (error.string.empty())
+            error.string = Formorix5D::export_block_reason();
+        error.opt_key = "formorix_5d_enabled";
+        return error;
+    }
     auto add_warning = [warnings](StringObjectException w) {
         w.is_warning = true;
         if (warnings != nullptr)
@@ -3400,6 +3420,7 @@ std::map<ObjectID, unsigned int> getObjectExtruderMap(const Print& print) {
 // Slicing process, running at a background thread.
 void Print::process(long long *time_cost_with_cache, bool use_cache)
 {
+    Formorix5D::require_planar_mode(m_config);
     long long start_time = 0, end_time = 0;
     if (time_cost_with_cache)
         *time_cost_with_cache = 0;
@@ -4133,6 +4154,7 @@ void Print::process(long long *time_cost_with_cache, bool use_cache)
 // It is up to the caller to show an error message.
 std::string Print::export_gcode(const std::string& path_template, GCodeProcessorResult* result, ThumbnailsGeneratorCallback thumbnail_cb)
 {
+    Formorix5D::require_planar_mode(m_config);
     // output everything to a G-code file
     // The following call may die if the filename_format template substitution fails.
     std::string path = this->output_filepath(path_template);
@@ -5876,6 +5898,7 @@ void Print::set_gcode_file_invalidated()
 //BBS: add gcode file preload logic
 void Print::export_gcode_from_previous_file(const std::string& file, GCodeProcessorResult* result, ThumbnailsGeneratorCallback thumbnail_cb)
 {
+    Formorix5D::require_planar_mode(m_config);
     {
         LifecycleEventContext ctx;
         ctx.id = std::to_string(m_model.id().id);

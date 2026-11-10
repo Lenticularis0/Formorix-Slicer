@@ -1,0 +1,12 @@
+{
+	"type": "process",
+	"name": "0.20mm Standard @Formorix 5D",
+	"from": "system",
+	"setting_id": "ftkw4LxaDk2J9pyk",
+	"instantiation": "true",
+	"layer_height": "0.2",
+	"initial_layer_print_height": "0.2",
+	"compatible_printers": [
+		"Formorix 5D 0.4 nozzle"
+	]
+}

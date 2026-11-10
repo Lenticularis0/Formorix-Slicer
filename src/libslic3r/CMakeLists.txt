@@ -27,6 +27,8 @@ if (SLIC3R_CAD)
 endif ()
 
 set(lisbslic3r_sources
+    Formorix5D.cpp
+    Formorix5D.hpp
     AABBMesh.cpp
     AABBMesh.hpp
     AABBTreeIndirect.hpp

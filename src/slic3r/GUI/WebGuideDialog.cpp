@@ -95,8 +95,8 @@ static json guide_strings()
         {"loading", _u8L("Loading…")},
         // TRN Sidebar entry of the printer selection page for the group of custom (user-defined) printers.
         {"custom_vendor", _u8L_CONTEXT("Custom", "Printer vendor")},
-        {"welcome", _u8L("Welcome to Orca Slicer")},
-        {"setup_intro", _u8L("Orca Slicer will be set up in several steps. Let's start!")},
+        {"welcome", _u8L("Welcome to Formorix Slicer")},
+        {"setup_intro", _u8L("Formorix Slicer will be set up in several steps. Let's start!")},
         {"get_started", _u8L("Get Started")},
         {"login_region", _u8L("Please select your login region")},
         {"asia_pacific", _u8L("Asia-Pacific")},
