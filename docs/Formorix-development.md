@@ -7,8 +7,11 @@ Formorix additions are supplied under AGPL-3.0-or-later. See the About dialog
 and [5D architecture](HLSD/formorix-5d.md).
 The integrated surface editor is described in
 [surface editor architecture](HLSD/formorix-surfaces.md).
-The Windows build, GUI acceptance checks and remaining limits are recorded in
-[Auftrag 02 acceptance report](Formorix-Auftrag-02.md).
+The experimental nonplanar preview is described in
+[preview architecture](HLSD/FormorixPreview.md). The latest Windows build,
+GUI acceptance checks and remaining limits are recorded in
+[Auftrag 03 acceptance report](Formorix-Auftrag-03.md).
+User help and a reproducible example start at [Formorix help](formorix/index.md).
 
 ## Remotes and branches
 
@@ -55,6 +58,11 @@ compatibility. The running application identifies itself as Formorix Slicer.
 Local build trees, downloaded dependency sources and logs are not source artifacts.
 Close test instances before building/installing: the upstream post-build step
 refreshes the bundled Python runtime, which Windows cannot replace while loaded.
+For incremental Windows builds with limited memory, use
+`cmake --build build --config Release --target ALL_BUILD --parallel 2 -- /p:CL_MPCount=2`.
+Limit both MSBuild and compiler parallelism; the upstream `/MP` setting can otherwise
+exhaust the commit budget while compiling precompiled headers. A separate installation
+can be made with `cmake --install build --config Release --prefix build/Formorix-Auftrag03`.
 NumPy above is installed only in the isolated test interpreter for the existing
 Python bridge tests. Windows skips symlink tests when the current process lacks
 symlink privileges; the Linux-only CLI suite is not registered on Windows.

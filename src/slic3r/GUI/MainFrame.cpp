@@ -1525,13 +1525,15 @@ void MainFrame::init_tabpanel() {
         wxWindow* panel = m_tabpanel->GetCurrentPage();
         //wxString page_text = m_tabpanel->GetPageText(sel);
         m_last_selected_tab = m_tabpanel->GetSelectedPageName();
-        m_plater->show_formorix_surfaces(m_last_selected_tab == TAB_ID_FORMORIX_SURFACES);
+        const bool formorix_preview=m_last_selected_tab==TAB_ID_PREVIEW&&m_plater->has_formorix_preview();
+        m_plater->show_formorix_surfaces(m_last_selected_tab == TAB_ID_FORMORIX_SURFACES||formorix_preview);
+        m_plater->show_formorix_preview(formorix_preview);
         if (panel == m_plater) {
             if (m_last_selected_tab == TAB_ID_PREPARE) {
                 wxPostEvent(m_plater, SimpleEvent(EVT_GLVIEWTOOLBAR_3D));
                 m_param_panel->OnActivate();
             }
-            else if (m_last_selected_tab == TAB_ID_PREVIEW) {
+            else if (m_last_selected_tab == TAB_ID_PREVIEW&&!formorix_preview) {
                 m_plater->reset_check_status();
                 if (!m_plater->check_ams_status(m_slice_select == eSliceAll))
                     return;
@@ -1575,7 +1577,7 @@ void MainFrame::init_tabpanel() {
 
         if (panel)
             panel->SetFocus();
-        show_option(panel == m_plater && m_last_selected_tab != TAB_ID_FORMORIX_SURFACES);
+        show_option(panel == m_plater && m_last_selected_tab != TAB_ID_FORMORIX_SURFACES&&!formorix_preview);
         fit_tab_labels();
     });
 

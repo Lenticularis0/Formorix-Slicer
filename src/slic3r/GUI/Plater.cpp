@@ -8715,8 +8715,9 @@ void Plater::priv::reset_window_layout()
             pane.Show(dock_pane_visible(dock_pane, pane));
     sidebar_layout.is_collapsed = false;
     if (formorix_editor) {
-        m_aui_mgr.GetPane(formorix_editor->left()).Show(formorix_mode);
-        m_aui_mgr.GetPane(formorix_editor->right()).Show(formorix_mode);
+        m_aui_mgr.GetPane(formorix_editor->left()).Show(formorix_mode&&!formorix_editor->preview_visible());
+        m_aui_mgr.GetPane(formorix_editor->right()).Show(formorix_mode&&!formorix_editor->preview_visible());
+        m_aui_mgr.GetPane(formorix_editor->bottom()).Show(formorix_mode&&formorix_editor->preview_visible());
     }
     update_sidebar(true);
 }
@@ -19573,6 +19574,9 @@ void Plater::show_formorix_surfaces(bool show)
         p->select_view_3D("3D");
         if (!p->formorix_editor) {
             p->formorix_editor = std::make_unique<FormorixSurfaceEditor>(*this);
+            p->m_aui_mgr.AddPane(p->formorix_editor->bottom(),wxAuiPaneInfo().Name("formorix_timeline")
+                .Bottom().Layer(1).CaptionVisible(false).CloseButton(false).Floatable(false).Movable(false)
+                .BestSize(FromDIP(wxSize(700,165))).MinSize(FromDIP(wxSize(500,145))).Hide());
             p->m_aui_mgr.AddPane(p->formorix_editor->left(), wxAuiPaneInfo().Name("formorix_regions")
                 .Left().CaptionVisible(false).CloseButton(false).Floatable(false).Movable(false)
                 .BestSize(FromDIP(wxSize(260, 600))).MinSize(FromDIP(wxSize(220, 180))));
@@ -19585,8 +19589,21 @@ void Plater::show_formorix_surfaces(bool show)
         p->m_aui_mgr.GetPane(p->formorix_editor->left()).Show(show);
         p->m_aui_mgr.GetPane(p->formorix_editor->right()).Show(show);
         p->formorix_editor->show(show);
+        if(!show)p->m_aui_mgr.GetPane(p->formorix_editor->bottom()).Hide();
     }
     p->update_sidebar(true);
+}
+
+bool Plater::has_formorix_preview(){return p->formorix_editor&&p->formorix_editor->has_preview();}
+void Plater::show_formorix_preview(bool show)
+{
+    if(!p->formorix_editor)return;
+    p->formorix_editor->show_preview(show);
+    p->m_aui_mgr.GetPane(p->formorix_editor->left()).Show(p->formorix_mode&&!show);
+    p->m_aui_mgr.GetPane(p->formorix_editor->right()).Show(p->formorix_mode&&!show);
+    p->m_aui_mgr.GetPane(p->formorix_editor->bottom()).Show(p->formorix_mode&&show);
+    p->m_aui_mgr.Update();
+    get_view3D_canvas3D()->set_as_dirty();
 }
 
 bool Plater::commit_formorix_surface_edit()

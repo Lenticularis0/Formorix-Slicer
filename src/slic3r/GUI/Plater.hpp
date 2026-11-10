@@ -523,6 +523,8 @@ public:
     bool is_sidebar_enabled() const;
     void enable_sidebar(bool enabled);
     void show_formorix_surfaces(bool show);
+    void show_formorix_preview(bool show);
+    bool has_formorix_preview();
     bool commit_formorix_surface_edit();
     bool is_sidebar_collapsed() const;
     void collapse_sidebar(bool collapse);

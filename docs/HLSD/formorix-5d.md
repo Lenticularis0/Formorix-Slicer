@@ -70,7 +70,9 @@ they can still appear as metadata in the normal serialized configuration block.
 
 ## Output boundary
 
-Experimental mode is configuration-only. `Print::validate` reports the reason,
+Experimental mode is configuration-only to the executable print pipeline.
+The separate [internal preview](FormorixPreview.md) can generate nonplanar
+geometry and TCP poses without passing them to that pipeline. `Print::validate` reports the reason,
 and `Print::process`, both Print G-code export paths and `GCode::do_export`
 reject it before writing an output file. This also protects CLI callers and
 callers bypassing normal GUI validation.
@@ -81,8 +83,8 @@ and statistics flags, allowing editable geometry/configuration projects.
 The 3MF writer additionally refuses an executable archive with experimental
 configuration. Automatic backups retain their mesh references while omitting
 G-code and G-code references, including any from an earlier conventional job.
-There is no 5D path planner, simultaneous-head scheduler,
-collision solver, Klipper integration or 5D machine-command generator.
+There is no simultaneous-head scheduler, collision solver, Klipper integration
+or 5D machine-command generator. The single-head preview does not lift these restrictions.
 
 ## Checks
 

@@ -175,6 +175,8 @@ src/slic3r/GUI/IMEXFilamentPickerPopover.cpp
 src/slic3r/GUI/PartPlate.cpp
 src/slic3r/GUI/Plater.cpp
 src/slic3r/GUI/FormorixSurfaceEditor.cpp
+src/slic3r/GUI/FormorixHelp.cpp
+src/slic3r/GUI/FormorixPreviewView.cpp
 src/slic3r/GUI/Gizmos/GLGizmoFormorixSurfaces.cpp
 src/slic3r/GUI/Preferences.cpp
 src/slic3r/GUI/PresetComboBoxes.cpp

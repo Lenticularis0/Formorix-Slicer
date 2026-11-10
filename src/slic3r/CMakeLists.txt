@@ -461,6 +461,10 @@ set(SLIC3R_GUI_SOURCES
     GUI/Plater.cpp
     GUI/FormorixSurfaceEditor.cpp
     GUI/FormorixSurfaceEditor.hpp
+    GUI/FormorixHelp.cpp
+    GUI/FormorixHelp.hpp
+    GUI/FormorixPreviewView.cpp
+    GUI/FormorixPreviewView.hpp
     GUI/Plater.hpp
     GUI/PlateSettingsDialog.cpp
     GUI/PlateSettingsDialog.hpp

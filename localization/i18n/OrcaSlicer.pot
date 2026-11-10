@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-09 04:52+0100\n"
+"POT-Creation-Date: 2026-11-10 01:36+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -9719,6 +9719,9 @@ msgstr ""
 msgid "Add model…"
 msgstr ""
 
+msgid "Calculate 5D preview"
+msgstr ""
+
 msgid "Add region"
 msgstr ""
 
@@ -9735,7 +9738,7 @@ msgstr ""
 msgid "Enter a region name before saving."
 msgstr ""
 
-msgid "Merge selected regions"
+msgid "Merge regions"
 msgstr ""
 
 msgid "Use Ctrl-click to select at least two regions."
@@ -9744,25 +9747,25 @@ msgstr ""
 msgid "Merge 5D surface regions"
 msgstr ""
 
-msgid "Regions merged. The active region's settings and head assignment were retained. Continuous paths are requested, not calculated."
+msgid "Regions merged. Calculate the preview to check continuity."
 msgstr ""
 
-msgid "Copy settings to selected regions"
+msgid "Copy settings"
 msgstr ""
 
 msgid "Use Ctrl-click to select the source and destination regions."
 msgstr ""
 
-msgid "Show / hide selected regions"
+msgid "Show / hide regions"
 msgstr ""
 
-msgid "Remove selected regions"
+msgid "Remove regions"
 msgstr ""
 
 msgid "Remove 5D surface regions"
 msgstr ""
 
-msgid "The last clicked region supplies settings when merging or copying. Ctrl-click selects multiple regions."
+msgid "Ctrl-click: select multiple regions."
 msgstr ""
 
 msgid "Selection tool"
@@ -9801,7 +9804,7 @@ msgstr ""
 msgid "Minimum slope must not exceed maximum slope."
 msgstr ""
 
-msgid "Slope is measured between the outward surface normal and global +Z. Left-click paints; Shift-click or right-click erases. Ctrl-drag rotates the view; the wheel zooms."
+msgid "Ctrl-drag: rotate. Wheel: zoom."
 msgstr ""
 
 msgid "Section position (0–1)"
@@ -9810,13 +9813,13 @@ msgstr ""
 msgid "Reset section"
 msgstr ""
 
-msgid "Section view shows the original model. Shell depth is specified along the local normal; offset geometry is not calculated."
+msgid "Section: original model."
 msgstr ""
 
-msgid "Add a region and select a surface on the model. Experimental: no 5D paths or executable 5D output."
+msgid "Select surfaces, then calculate the preview."
 msgstr ""
 
-msgid "Manufacturing intent — not calculated"
+msgid "Experimental 5D preview"
 msgstr ""
 
 msgid "5D layers"
@@ -9843,16 +9846,16 @@ msgstr ""
 msgid "Preserve original model dimensions"
 msgstr ""
 
-msgid "The requested shell lies inside the nominal geometry. Depth follows the local surface normal, not global Z. No offset geometry has been generated."
+msgid "Offsets follow the local normal."
 msgstr ""
 
-msgid "A wall printed entirely in 5D requires a suitable load-bearing structure before 5D printing. Conventional planar supports may be required first."
+msgid "Full-wall 5D requires a supporting structure."
 msgstr ""
 
 msgid "Restrict region to one print head"
 msgstr ""
 
-msgid "A physically continuous extrusion path requires the same head. Different heads use the transition settings. Connectivity and paths are not yet checked."
+msgid "Preview: one head per region."
 msgstr ""
 
 msgid "Nozzle orientation"
@@ -9870,7 +9873,7 @@ msgstr ""
 msgid "Allow vertical surfaces"
 msgstr ""
 
-msgid "Reachability: not checked. A vertical wall normally requires 90° nozzle tilt; the provisional mechanism allows 75°. Up to 15° deviation may help, but only future kinematic checks can confirm this."
+msgid "Machine reachability: not checked."
 msgstr ""
 
 msgid "Underlay and supports"
@@ -9903,7 +9906,7 @@ msgstr ""
 msgid "Automatic from configured materials"
 msgstr ""
 
-msgid "5D support structures are not calculated. The following settings are the existing Orca process settings and also affect normal planar printing."
+msgid "Shared Orca settings. 5D supports: not calculated."
 msgstr ""
 
 msgid "Surface properties"
@@ -9959,7 +9962,7 @@ msgstr ""
 msgid "Request 5D ironing (future function)"
 msgstr ""
 
-msgid "Speed, line width, flow, temperature and cooling are inherited from the assigned Orca material and process profiles. Surface paths and ironing are not calculated."
+msgid "Orca profiles inherited. 5D ironing: not calculated."
 msgstr ""
 
 msgid "Transitions between regions"
@@ -9995,10 +9998,10 @@ msgstr ""
 msgid "Alternating between layers"
 msgstr ""
 
-msgid "Fixed: each head stays in its assigned region. Interwoven: the regions interlock in the requested zone. Parallel: two heads travel close together over the complete region. These are intentions only; no paths, spacing or collision safety have been calculated."
+msgid "Multi-head transitions: not calculated."
 msgstr ""
 
-msgid "Adjacency and material compatibility: not checked. Some materials do not bond reliably. A later technical check is required before any manufacturing strategy can be released."
+msgid "Material compatibility: not checked."
 msgstr ""
 
 msgid "Head assignment"
@@ -10008,7 +10011,7 @@ msgstr ""
 msgid "Assign to head %1%"
 msgstr ""
 
-msgid "Head assignments describe future 5D work. They do not change Orca's normal extruder or support-material assignments."
+msgid "One assigned head is planned in the preview."
 msgstr ""
 
 msgid "Multi-head operation"
@@ -10035,7 +10038,7 @@ msgstr ""
 msgid "High-speed mode requires three enabled heads with compatible PETG profiles. Check the multi-head group."
 msgstr ""
 
-msgid "Automatic parallel operation requests simultaneous work when possible; unavailable heads wait. Allocation, timing and collisions are not calculated."
+msgid "Multi-head scheduling: not calculated."
 msgstr ""
 
 msgid "Normal part construction"
@@ -10063,7 +10066,7 @@ msgstr ""
 msgid "Orca material profile"
 msgstr ""
 
-msgid "Example: head 1 PETG for the part, head 2 PVA for supports, head 3 PETG-CF for reinforcement. Material suitability and bonding remain unverified."
+msgid "Material suitability: not checked."
 msgstr ""
 
 #, possible-boost-format
@@ -10080,7 +10083,7 @@ msgstr ""
 msgid "Merge regions to request continuous cross-surface paths."
 msgstr ""
 
-msgid "Reference edge stored. Path direction not calculated."
+msgid "Reference edge stored."
 msgstr ""
 
 msgid "No reference edge selected."
@@ -10090,22 +10093,130 @@ msgstr ""
 msgid "Assigned regions: %1%"
 msgstr ""
 
-msgid "High-speed prerequisite: three enabled heads with the same PETG profile. Technical approval, collisions and scheduling: not checked."
+msgid "Same PETG profile. Technical approval: pending."
 msgstr ""
 
-msgid "Three compatible PETG profiles with overlapping temperature ranges selected. Calibration, collisions and scheduling are not checked; high-speed remains a requested strategy without technical approval."
+msgid "Compatible PETG profiles. Technical approval: pending."
 msgstr ""
 
-msgid "High-speed prerequisite not met: assign compatible PETG profiles to all three enabled heads. The selected strategy is only a request."
-msgstr ""
-
-msgid "Reference edge stored for this region. No path direction has been calculated."
+msgid "High-speed prerequisite: not met."
 msgstr ""
 
 msgid "This project's 5D data is unsupported or invalid. It is preserved unchanged; editing is disabled."
 msgstr ""
 
 msgid "Not assigned"
+msgstr ""
+
+msgid "Model or settings changed. Calculate the preview again."
+msgstr ""
+
+msgid "Wait for the current operation to finish."
+msgstr ""
+
+msgid "Calculating 5D preview…"
+msgstr ""
+
+msgid "Preview ready. Experimental export remains blocked."
+msgstr ""
+
+msgid "Preview could not be queued. Try again."
+msgstr ""
+
+msgid "Open Formorix help"
+msgstr ""
+
+msgid "Select a painted surface region."
+msgstr ""
+
+msgid "Invalid mesh or preview parameters."
+msgstr ""
+
+msgid "The selected region is not connected."
+msgstr ""
+
+msgid "Use one region without holes or branching boundaries."
+msgstr ""
+
+msgid "This surface cannot be mapped to one raster patch."
+msgstr ""
+
+msgid "Insufficient wall thickness or invalid inward offset."
+msgstr ""
+
+msgid "The offset folds or intersects itself."
+msgstr ""
+
+msgid "Full-wall preview requires nearly uniform local wall thickness."
+msgstr ""
+
+msgid "Enable vertical surfaces for this region."
+msgstr ""
+
+msgid "Required nozzle tilt exceeds the allowed deviation."
+msgstr ""
+
+msgid "Preview limit exceeded. Reduce the region or layer count."
+msgstr ""
+
+msgid "Preview calculation canceled."
+msgstr ""
+
+msgid "Mesh topology changed. Select the surfaces again."
+msgstr ""
+
+msgid "Assign exactly one enabled head for this preview."
+msgstr ""
+
+msgid "The assigned material profile is missing."
+msgstr ""
+
+msgid "Reference edge is missing or ambiguous. Select a custom direction."
+msgstr ""
+
+msgid "Preview unavailable."
+msgstr ""
+
+msgid "Working"
+msgstr ""
+
+msgid "Traveling"
+msgstr ""
+
+msgid "Waiting"
+msgstr ""
+
+msgid "Unassigned"
+msgstr ""
+
+msgid "Playback speed"
+msgstr ""
+
+msgid "5D process time"
+msgstr ""
+
+msgid "5D shell"
+msgstr ""
+
+msgid "Remaining core"
+msgstr ""
+
+msgid "Orca preview"
+msgstr ""
+
+#, possible-c-format, possible-boost-format
+msgid "%1$.1f / %2$.1f s (estimate)"
+msgstr ""
+
+#, possible-boost-format
+msgid "Head %1%: %2%"
+msgstr ""
+
+msgid "All 5D layers"
+msgstr ""
+
+#, possible-boost-format
+msgid "5D layer %1%"
 msgstr ""
 
 msgid "Edit 5D surface selection"

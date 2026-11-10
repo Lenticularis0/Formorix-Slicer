@@ -11,6 +11,10 @@ public:
     ~FormorixSurfaceEditor();
     wxWindow *left() const;
     wxWindow *right() const;
+    wxWindow *bottom() const;
+    bool has_preview();
+    bool preview_visible() const;
+    void show_preview(bool visible);
     void show(bool visible);
     bool commit_pending_edit();
     void sys_color_changed();

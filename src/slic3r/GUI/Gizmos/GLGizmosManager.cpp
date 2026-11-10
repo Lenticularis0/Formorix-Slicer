@@ -89,6 +89,8 @@ GLGizmosManager::GLGizmosManager(GLCanvas3D& parent)
 
 std::vector<size_t> GLGizmosManager::get_selectable_idxs() const
 {
+    if (!m_toolbar_enabled)
+        return {};
     std::vector<size_t> out;
     out.reserve(m_gizmos.size());
     if (m_parent.get_canvas_type() == GLCanvas3D::CanvasAssembleView) {
@@ -548,7 +550,7 @@ bool GLGizmosManager::is_running() const
 
 bool GLGizmosManager::open_gizmo_by_shortcut(Shortcut shortcut)
 {
-    if (!m_enabled || m_gizmos.empty())
+    if (!m_enabled || !m_toolbar_enabled || m_gizmos.empty())
         return false;
 
     // The text tool opens without a selection because it creates its own object.
@@ -716,6 +718,7 @@ size_t GLGizmosManager::get_overlay_state_hash() const
 {
     size_t hash = 0;
     boost::hash_combine(hash, m_enabled);
+    boost::hash_combine(hash, m_toolbar_enabled);
     boost::hash_combine(hash, (int)m_hover);
     boost::hash_combine(hash, (int)m_current);
     boost::hash_combine(hash, (int)m_highlight.first);
@@ -873,6 +876,8 @@ bool GLGizmosManager::on_mouse(const wxMouseEvent &mouse_event)
 
 bool GLGizmosManager::on_char(wxKeyEvent& evt)
 {
+    if (!m_toolbar_enabled)
+        return evt.GetKeyCode() == WXK_ESCAPE;
     // see include/wx/defs.h enum wxKeyCode
     int keyCode = evt.GetKeyCode();
     int ctrlMask = wxMOD_CONTROL;

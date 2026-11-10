@@ -133,6 +133,7 @@ private:
 
     GLCanvas3D& m_parent;
     bool m_enabled;
+    bool m_toolbar_enabled = true;
     std::vector<std::unique_ptr<GLGizmoBase>> m_gizmos;
     GLTexture m_icons_texture;
     bool m_icons_texture_dirty;
@@ -278,6 +279,8 @@ public:
     // ORCA
     bool is_mouse_over_toolbar_icon(const Vec2d& mouse_pos) const { return get_gizmo_from_mouse(mouse_pos) != Undefined; }
     void set_enabled(bool enable) { m_enabled = enable; }
+    // A display-only gizmo may keep rendering while ordinary editing tools are hidden.
+    void set_toolbar_enabled(bool enable) { m_toolbar_enabled = enable; }
 
     void set_icon_dirty() { m_icons_texture_dirty = true; }
     void set_overlay_icon_size(float size);
