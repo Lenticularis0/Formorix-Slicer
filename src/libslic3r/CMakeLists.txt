@@ -28,6 +28,8 @@ endif ()
 
 set(lisbslic3r_sources
     Formorix5D.cpp
+    FormorixSurfaces.cpp
+    FormorixSurfaces.hpp
     Formorix5D.hpp
     AABBMesh.cpp
     AABBMesh.hpp

@@ -1252,6 +1252,9 @@ void MainFrame::update_layout()
 #endif
         m_tabpanel->InsertPage(prepare_pos, TAB_ID_PREPARE, m_plater, _L("Prepare"), "tab_3d_active");
         m_tabpanel->InsertPage(prepare_pos + 1, TAB_ID_PREVIEW, m_plater, _L("Preview"), "tab_preview_active");
+        // Like Prepare/Preview, this page is a mode of the existing Plater and GL canvas.
+        // Its two side panes are constructed lazily on first activation.
+        m_tabpanel->InsertPage(prepare_pos + 2, TAB_ID_FORMORIX_SURFACES, m_plater, _L("5D Surfaces"), "tab_3d_active");
         m_main_sizer->Add(m_tabpanel, 1, wxEXPAND | wxTOP, 0);
 
         m_tabpanel->Bind(wxCUSTOMEVT_NOTEBOOK_SEL_CHANGED, [this](wxCommandEvent& evt)
@@ -1522,6 +1525,7 @@ void MainFrame::init_tabpanel() {
         wxWindow* panel = m_tabpanel->GetCurrentPage();
         //wxString page_text = m_tabpanel->GetPageText(sel);
         m_last_selected_tab = m_tabpanel->GetSelectedPageName();
+        m_plater->show_formorix_surfaces(m_last_selected_tab == TAB_ID_FORMORIX_SURFACES);
         if (panel == m_plater) {
             if (m_last_selected_tab == TAB_ID_PREPARE) {
                 wxPostEvent(m_plater, SimpleEvent(EVT_GLVIEWTOOLBAR_3D));
@@ -1556,7 +1560,7 @@ void MainFrame::init_tabpanel() {
             design->on_tab_hidden();
 #endif
 #ifndef __APPLE__
-        if (m_last_selected_tab == TAB_ID_PREPARE) {
+        if (m_last_selected_tab == TAB_ID_PREPARE || m_last_selected_tab == TAB_ID_FORMORIX_SURFACES) {
             m_topbar->EnableUndoRedoItems();
         }
         else {
@@ -1571,6 +1575,8 @@ void MainFrame::init_tabpanel() {
 
         if (panel)
             panel->SetFocus();
+        show_option(panel == m_plater && m_last_selected_tab != TAB_ID_FORMORIX_SURFACES);
+        fit_tab_labels();
     });
 
     if (wxGetApp().is_editor()) {
@@ -1688,7 +1694,7 @@ void MainFrame::show_device(bool should_use_native) {
                 m_tabpanel->RemovePage(idx);
             }
             m_monitor_page->Show(false);
-            m_tabpanel->InsertPage(m_tabpanel->PositionAfter({TAB_ID_PREVIEW}), TAB_ID_MONITOR, m_monitor_page,
+            m_tabpanel->InsertPage(m_tabpanel->PositionAfter({TAB_ID_FORMORIX_SURFACES, TAB_ID_PREVIEW}), TAB_ID_MONITOR, m_monitor_page,
                                    _L("Device"), "tab_monitor_active");
         }
 
@@ -1743,7 +1749,7 @@ void MainFrame::show_device(bool should_use_native) {
 
         // Insert monitor page
         m_monitor_page->Show(false);
-        m_tabpanel->InsertPage(m_tabpanel->PositionAfter({TAB_ID_PREVIEW}), TAB_ID_MONITOR, m_monitor_page,
+        m_tabpanel->InsertPage(m_tabpanel->PositionAfter({TAB_ID_FORMORIX_SURFACES, TAB_ID_PREVIEW}), TAB_ID_MONITOR, m_monitor_page,
                                _L("Device"), "tab_monitor_active");
 
         if (wxGetApp().is_enable_multi_machine()) {
@@ -1780,7 +1786,7 @@ void MainFrame::show_device(bool should_use_native) {
             m_tabpanel->RemovePage(idx);
         }
         m_printer_view_page->Show(false);
-        m_tabpanel->InsertPage(m_tabpanel->PositionAfter({TAB_ID_PREVIEW}), TAB_ID_MONITOR, m_printer_view_page,
+        m_tabpanel->InsertPage(m_tabpanel->PositionAfter({TAB_ID_FORMORIX_SURFACES, TAB_ID_PREVIEW}), TAB_ID_MONITOR, m_printer_view_page,
                                _L("Device"), "tab_monitor_active");
     }
     fit_tab_labels(); // ORCA on printer change
@@ -1809,6 +1815,10 @@ void MainFrame::fit_tab_labels()
         ctrl->SetCompact(i, false);
     m_tabpanel->Refresh();
     Layout();
+
+    // The surface editor has no print actions; its tab label can use that space.
+    if (m_tabpanel->GetSelectedPageName() == TAB_ID_FORMORIX_SURFACES)
+        return;
 
     // Compact (last to first)
     for (size_t i = count - 1; i >= 1; --i) {
@@ -1997,6 +2007,7 @@ void MainFrame::save_project()
 
 bool MainFrame::save_project_as(const wxString& filename)
 {
+    if (m_plater && !m_plater->commit_formorix_surface_edit()) return false;
     bool ret = (m_plater != nullptr) ? m_plater->export_3mf(into_path(filename)) : false;
     if (ret) {
 //        wxGetApp().update_saved_preset_from_current_preset();

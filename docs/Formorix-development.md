@@ -5,6 +5,10 @@ This repository is the Formorix fork of
 `LICENSE.txt`, third-party license files and upstream credits are retained.
 Formorix additions are supplied under AGPL-3.0-or-later. See the About dialog
 and [5D architecture](HLSD/formorix-5d.md).
+The integrated surface editor is described in
+[surface editor architecture](HLSD/formorix-surfaces.md).
+The Windows build, GUI acceptance checks and remaining limits are recorded in
+[Auftrag 02 acceptance report](Formorix-Auftrag-02.md).
 
 ## Remotes and branches
 

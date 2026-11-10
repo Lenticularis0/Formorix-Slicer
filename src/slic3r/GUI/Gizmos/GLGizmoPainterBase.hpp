@@ -38,7 +38,8 @@ enum class PainterGizmoType {
     SEAM,
     MM_SEGMENTATION,
     FUZZY_SKIN,
-    TEXTURE_DISPLACEMENT
+    TEXTURE_DISPLACEMENT,
+    FORMORIX_SURFACES
 };
 
 class TriangleSelectorGUI : public TriangleSelector {

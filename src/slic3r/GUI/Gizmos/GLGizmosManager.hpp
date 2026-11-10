@@ -102,6 +102,7 @@ public:
         Assembly,
         Simplify,
         BrimEars,
+        FormorixSurfaces,
         //SlaSupports,
         // BBS
         //FaceRecognition,
