@@ -1,0 +1,8 @@
+Windows x64 Release
+Source commit: 8a2159e9f56aa2663dee513b0f303119d4a23d8b
+Build: ALL_BUILD, exit 0
+Install: cmake --install build --config Release --prefix build/Formorix-Auftrag04, exit 0
+Local executable: C:\Formorix Slicer\Formorix-Slicer\build\Formorix-Auftrag04\orca-slicer.exe
+SHA256:
+A0599FFED4D1BCE55DC821B912727A06B6430AC562B07A8CDDB8505B6548EF42  orca-slicer.exe
+8D21152ACEA750DE2DD3290437C85D5ED177CD967F1422DAF0345E8CCF74104D  OrcaSlicer.dll
