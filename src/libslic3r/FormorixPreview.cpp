@@ -286,7 +286,7 @@ Vec3d nozzle_axis(const Vec3d& normal, const FormorixSurfaces::Settings& s, doub
         throw Issue::TiltExceeded;
     return tilt <= limit ? normal : interpolate_axis(normal, Vec3d::UnitZ(), (tilt - limit) / tilt);
 }
-std::vector<Vec2d> raster(const Patch& p, double width, double margin, const std::function<bool()>& cancel)
+std::vector<Vec2d> raster(const Patch& p, double width, double margin, double longitudinal_spacing, const std::function<bool()>& cancel)
 {
     std::vector<Vec2d> boundary = p.outline;
     if (margin > 0.) {
@@ -313,7 +313,7 @@ std::vector<Vec2d> raster(const Patch& p, double width, double margin, const std
     const int rows = std::max(1, int(std::ceil((high - low) / (width * steep))));
     if (rows > 2000)
         throw Issue::TooLarge;
-    const double sample = std::min(.5, width);
+    const double sample = longitudinal_spacing > 0. ? longitudinal_spacing : std::min(.5, width);
     std::vector<Vec2d> path;
     auto line = [&](const Vec2d& a, const Vec2d& b) {
         const int n = std::max(1, int(std::ceil((b - a).norm() / sample)));
@@ -546,7 +546,8 @@ Result generate(const Input& input, const FormorixSurfaces::Settings& s, const O
     result.selected = input.surface;
     try {
         if (o.head < 0 || o.head > 2 || !std::isfinite(o.line_width) || o.line_width < .05 || !std::isfinite(o.speed) || o.speed <= 0. ||
-            !std::isfinite(o.travel_speed) || o.travel_speed <= 0. || !std::isfinite(o.max_tilt) || o.max_tilt <= 0. || o.max_tilt > 180.)
+            !std::isfinite(o.travel_speed) || o.travel_speed <= 0. || !std::isfinite(o.max_tilt) || o.max_tilt <= 0. || o.max_tilt > 180. ||
+            !std::isfinite(o.longitudinal_spacing) || o.longitudinal_spacing < 0. || o.longitudinal_spacing > .5)
             throw Issue::InvalidMesh;
         FormorixSurfaces::Project validation;
         validation.regions = {{o.region, "Preview", true, false, s}};
@@ -578,7 +579,7 @@ Result generate(const Input& input, const FormorixSurfaces::Settings& s, const O
                 throw Issue::Canceled;
             const Vec3d point = patch.mesh.vertices[i].cast<double>(), normal = patch.normals[i];
             nozzle_axis(normal, s, o.max_tilt);
-            thickness[i] = raycaster.thickness(point, normal);
+            thickness[i] = o.validate_wall ? raycaster.thickness(point, normal) : std::numeric_limits<double>::infinity();
             minimum      = std::min(minimum, thickness[i]);
             maximum      = std::max(maximum, thickness[i]);
         }
@@ -601,14 +602,14 @@ Result generate(const Input& input, const FormorixSurfaces::Settings& s, const O
         result.shell_depth = s.shell_mode == FormorixSurfaces::ShellMode::Layers ? depth : requested;
         if (result.shell_depth > minimum + 1e-4)
             throw Issue::ThinWall;
-        auto path2d = follow_facets(patch, raster(patch, o.line_width, s.boundary_margin, cancel), cancel);
+        auto path2d = follow_facets(patch, raster(patch, o.line_width, s.boundary_margin, o.longitudinal_spacing, cancel), cancel);
         if (path2d.size() * depths.size() > o.max_segments)
             throw Issue::TooLarge;
         std::vector<Pose> outer;
         outer.reserve(path2d.size());
         for (const auto& point : path2d) {
             const auto pose = patch.at(point);
-            if (raycaster.thickness(pose.position, pose.axis) < result.shell_depth - 1e-4)
+            if (o.validate_wall && raycaster.thickness(pose.position, pose.axis) < result.shell_depth - 1e-4)
                 throw Issue::ThinWall;
             outer.push_back(pose);
         }

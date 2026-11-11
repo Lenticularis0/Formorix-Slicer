@@ -50,6 +50,9 @@ Mesh shell_cutter(const ShellRequest&);
 // Exact predicates/constructions until final double materialisation. Overlapping
 // region interiors and cutters leaving the source solid are rejected, not repaired.
 Partition partition(const Mesh& solid, const std::vector<ShellRequest>&);
+// Hybrid boundary policy: trim the requested sweep to the ORIGINAL solid. Region
+// overlap is still rejected. Caller must separately audit requested wall thickness.
+Partition partition_clipped(const Mesh& solid, const std::vector<ShellRequest>&);
 
 struct Deviation
 {

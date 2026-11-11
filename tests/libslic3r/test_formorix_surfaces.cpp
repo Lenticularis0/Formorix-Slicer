@@ -85,6 +85,8 @@ TEST_CASE("Per-head deposition profiles survive native project archives", "[Form
     REQUIRE(project);
     for (int h = 0; h < 3; ++h) {
         project->heads[h].material_preset = "Orca material " + std::to_string(h);
+        project->heads[h].printer_preset = "Orca nozzle source " + std::to_string(h);
+        project->heads[h].nozzle_index = unsigned(h);
         Slic3r::FormorixProcess::Profile process;
         process.material_id = "material-" + std::to_string(h);
         process.nozzle_profile = "nozzle-" + std::to_string(h);

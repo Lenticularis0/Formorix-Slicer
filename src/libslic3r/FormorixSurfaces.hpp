@@ -12,9 +12,10 @@ namespace Slic3r {
 class Model;
 class ModelVolume;
 
-// Project annotations only. Nothing in the print pipeline consumes these manufacturing wishes.
+// Project annotations for the experimental preview; the normal print pipeline
+// never treats these manufacturing wishes as executable movements.
 namespace FormorixSurfaces {
-constexpr int schema_version = 2;
+constexpr int schema_version = 3;
 // Reuse Orca's subdivision-aware painting codec, independently of filament painting.
 constexpr int max_regions = 32;
 constexpr const char *archive_path = "Metadata/formorix_surfaces.json";
@@ -69,9 +70,15 @@ struct Head {
     bool enabled = true;
     std::string material_preset;
     unsigned tasks = HeadTask::Automatic;
-    // Optional resolved/overridden per-head values. Absent in v1; never invent a material binding.
+    // Optional informational snapshot. Re-resolve current Orca bindings before
+    // every calculation; a persisted snapshot is never an authoritative source.
     std::optional<FormorixProcess::Profile> process;
     void assign_material(const std::string& preset);
+    // Empty printer name explicitly follows the currently edited Orca printer.
+    // This is a nozzle-source binding, not a separate printer/process manager.
+    std::string printer_preset;
+    unsigned nozzle_index = 0;
+    void assign_nozzle(const std::string& printer, unsigned index);
 };
 
 struct Transition {

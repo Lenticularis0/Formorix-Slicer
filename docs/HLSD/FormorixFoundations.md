@@ -28,7 +28,7 @@ This is not a symmetric Hausdorff/coverage certificate: missing CAD regions, ope
 
 ## Nominal deposition
 
-`FormorixProcess::Profile` owns a material ID and nozzle-profile ID, diameter, actual line width, layer height, temperature, volumetric ceiling, speed, flow ratio, three shrink-compensation ratios and width/height calibration factors. Every head and motion can carry a different profile. The Orca adapter resolves explicit nozzle and filament indices; it does not default to nozzle zero. Material preset names remain the existing `FormorixSurfaces::Head::material_preset` reference. Optional resolved process values are persisted in surface schema 2. Schema 1 migrates without inventing process/material data; unknown future schemas retain the existing opaque preservation behavior.
+`FormorixProcess::Profile` owns a material ID and nozzle-profile ID, diameter, actual line width, layer height, temperature, volumetric ceiling, speed, flow ratio, three shrink-compensation ratios and width/height calibration factors. Every head and motion can carry a different profile. The Orca adapter resolves explicit nozzle and filament indices; it does not default to nozzle zero. Material preset names remain the existing `FormorixSurfaces::Head::material_preset` reference. Optional resolved process values and explicit nozzle bindings are persisted in surface schema 3. Schemas 1 and 2 migrate without inventing material data; unknown future schemas retain the existing opaque preservation behavior.
 
 The nominal cross-section is an ellipse normal to the travel tangent. Its half-axes are a = corrected line width / 2 and b = corrected layer height / 2. The height axis is the nozzle axis projected into that plane, so cross-track tilt changes the deposited ellipse. Longitudinal tilt deformation, die swell, wetting and rheology are not simulated. Diameter constrains the allowed layer height but is not substituted for the actual line width.
 
@@ -42,7 +42,7 @@ These cross-sections do not constitute a volume-conserving fluid simulation. Int
 
 Shrinkage compensation is metadata; it is not automatically applied as three conflicting global scales to one shared CAD model. Material-pair compatibility has its own Unknown/Compatible/Incompatible state. Geometrically coincident materials can still be incompatible.
 
-Resolved process data are snapshots. Changing the assigned Orca material name clears them; changing values inside an existing Orca preset does not automatically resolve a fresh snapshot yet. A future hybrid consumer must resolve/revalidate these values against the active configuration. The legacy GUI preview does not consume the new snapshots.
+Resolved process data are snapshots. The [profile resolver](FormorixProfiles.md) invalidates them when current source contents change, including edits under the same preset name, and resolves them again before hybrid calculation. Persisted process snapshots are never authoritative inputs. Changing a head's material or nozzle binding also clears the snapshot immediately.
 
 ## Complex surfaces and continuity
 

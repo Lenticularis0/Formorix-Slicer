@@ -23,6 +23,12 @@ void Head::assign_material(const std::string& preset)
     if (preset != material_preset) process.reset();
     material_preset = preset;
 }
+void Head::assign_nozzle(const std::string& printer, unsigned index)
+{
+    if (printer != printer_preset || index != nozzle_index) process.reset();
+    printer_preset = printer;
+    nozzle_index = index;
+}
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Settings, shell_mode, layers, shell_thickness, layer_height,
     preserve_dimensions, use_infill, inherit_infill_first, dense_underlay, underlay_density,
     additional_support, support_material, allow_deviation, max_deviation, allow_vertical,
@@ -31,12 +37,17 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Settings, shell_mode, layers, shell_thickness
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Region, id, name, visible, continuous, settings)
 void to_json(json& j, const Head& h)
 {
-    j = json{{"enabled", h.enabled}, {"material_preset", h.material_preset}, {"tasks", h.tasks}};
+    j = json{{"enabled", h.enabled}, {"material_preset", h.material_preset}, {"tasks", h.tasks},
+        {"printer_preset", h.printer_preset}, {"nozzle_index", h.nozzle_index}};
     if (h.process) j["process"] = *h.process;
 }
 void from_json(const json& j, Head& h)
 {
     j.at("enabled").get_to(h.enabled); j.at("material_preset").get_to(h.material_preset); j.at("tasks").get_to(h.tasks);
+    h.printer_preset = j.value("printer_preset", std::string{});
+    if (j.contains("nozzle_index") && (!j.at("nozzle_index").is_number_integer() || j.at("nozzle_index") < 0 || j.at("nozzle_index") > 255))
+        throw std::invalid_argument("Invalid Formorix nozzle slot");
+    h.nozzle_index = j.value("nozzle_index", 0u);
     h.process.reset();
     if (j.contains("process")) h.process = j.at("process").get<FormorixProcess::Profile>();
 }
@@ -97,8 +108,8 @@ static void validate(const Project &p)
             if (!in_range(v, -1e9, 1e9)) throw std::invalid_argument("Invalid reference edge");
     }
     for (const Head &h : p.heads)
-        if (h.tasks == 0 || h.tasks > 31 || h.material_preset.size() > 4096 ||
-            (h.process && (h.material_preset.empty() || !FormorixProcess::valid(*h.process))))
+        if (h.tasks == 0 || h.tasks > 31 || h.material_preset.size() > 4096 || h.printer_preset.size() > 4096 || h.nozzle_index > 255 ||
+            (h.process && !FormorixProcess::valid(*h.process)))
             throw std::invalid_argument("Invalid Formorix head assignment");
     std::set<std::pair<int, int>> pairs;
     for (const Transition &t : p.transitions)
@@ -117,7 +128,8 @@ std::optional<Project> Project::decode(const std::string &text, std::string &err
         if (text.size() > 4 * 1024 * 1024) throw std::invalid_argument("Formorix settings exceed size limit");
         auto data = json::parse(text);
         if (!data.is_object()) throw std::invalid_argument("Invalid Formorix surface object");
-        if (data.at("version").get<int>() == 1) data["version"] = schema_version;
+        const int version = data.at("version").get<int>();
+        if (version == 1 || version == 2) data["version"] = schema_version;
         if (data.at("version").get<int>() != schema_version)
             throw std::invalid_argument("Unsupported Formorix surface schema");
         if (data.contains("heads") && (!data["heads"].is_array() || data["heads"].size() != 3))

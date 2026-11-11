@@ -1,0 +1,39 @@
+#pragma once
+#include "FormorixProcess.hpp"
+#include "FormorixSurfaces.hpp"
+#include "Preset.hpp"
+#include "PrintConfig.hpp"
+#include <array>
+#include <cstddef>
+#include <string>
+
+namespace Slic3r {
+class PresetBundle;
+}
+namespace Slic3r::FormorixProfiles {
+// Current source copies, taken on the GUI thread. Worker code never reads PresetBundle.
+struct Source
+{
+    Preset printer{Preset::TYPE_PRINTER, ""};
+    Preset material{Preset::TYPE_FILAMENT, ""};
+    Preset process{Preset::TYPE_PRINT, ""};
+    DynamicPrintConfig project;
+    DynamicPrintConfig machine; // actual active machine; empty in standalone sources
+    std::size_t nozzle_index = 0;
+    double layer_height      = 0.; // zero inherits the current Orca process
+};
+struct Resolved
+{
+    DynamicPrintConfig config;
+    std::size_t nozzle_index = 0, material_index = 0;
+    FormorixProcess::Profile process;
+    std::string source_signature;
+};
+Source source(const PresetBundle&, const FormorixSurfaces::Head&, double layer_height = 0.);
+std::string signature(const Source&);
+Resolved resolve(const Source&);
+// Clear before attempting resolution: a missing/invalid source cannot leave a usable stale snapshot.
+Resolved refresh(const PresetBundle&, FormorixSurfaces::Head&);
+// GUI refresh hook. An empty cache also invalidates snapshots loaded from a project.
+bool invalidate_changed(FormorixSurfaces::Project&, const PresetBundle&, std::array<std::string, 3>& source_signatures);
+} // namespace Slic3r::FormorixProfiles

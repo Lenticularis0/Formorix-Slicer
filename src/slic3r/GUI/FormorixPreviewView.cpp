@@ -7,8 +7,12 @@
 #include "Widgets/Button.hpp"
 #include "Widgets/CheckBox.hpp"
 #include "Widgets/ComboBox.hpp"
+#include "Widgets/Label.hpp"
 #include "libslic3r/Color.hpp"
 #include "libslic3r/Point.hpp"
+#include "libslic3r/FormorixHybrid.hpp"
+#include "libslic3r/FormorixCorePreview.hpp"
+#include "libslic3r/FormorixGeometry.hpp"
 #include "slic3r/GUI/GUI.hpp"
 #include "slic3r/GUI/GLCanvas3D.hpp"
 #include "slic3r/GUI/Plater.hpp"
@@ -21,13 +25,14 @@
 #include <slic3r/GUI/GLModel.hpp>
 #include <wx/event.h>
 #include <wx/gdicmn.h>
-#include <wx/panel.h>
+#include <wx/scrolwin.h>
 #include <wx/sizer.h>
 #include <wx/slider.h>
 #include <wx/stattext.h>
 #include <wx/string.h>
 #include <wx/timer.h>
 #include <wx/tglbtn.h>
+#include <wx/wrapsizer.h>
 #include <glad/gl.h>
 #include <algorithm>
 #include <array>
@@ -78,9 +83,10 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
     std::shared_ptr<FormorixPreviewState> state = std::make_shared<FormorixPreviewState>();
     std::function<void()> changed;
     wxSlider* slider;
-    wxStaticText *clock, *heads;
+    wxStaticText *clock, *heads, *validation;
     ::ComboBox *layers, *speed;
     std::vector<Button*> buttons;
+    std::vector<wxSizerItem*> hybrid_controls;
     wxTimer timer;
     std::chrono::steady_clock::time_point last;
     double rate = 1.;
@@ -88,6 +94,7 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
         : panel(owner), changed(std::move(on_change)), timer(this)
     {
         panel.SetBackgroundColour(wxGetApp().get_window_default_clr());
+        panel.SetScrollRate(0, panel.FromDIP(10));
         auto* layout = new wxBoxSizer(wxVERTICAL);
         panel.SetSizer(layout);
         auto* row   = new wxBoxSizer(wxHORIZONTAL);
@@ -141,7 +148,7 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
                 seek(state->result->timeline.duration() * slider->GetValue() / 10000.);
         });
         layout->Add(slider, 0, wxEXPAND | wxLEFT | wxRIGHT, panel.FromDIP(8));
-        auto* options = new wxBoxSizer(wxHORIZONTAL);
+        auto* options = new wxWrapSizer(wxHORIZONTAL);
         layers        = new ::ComboBox(&panel, wxID_ANY, wxEmptyString, wxDefaultPosition, panel.FromDIP(wxSize(170, 30)), 0, nullptr,
                                        wxCB_READONLY);
         layers->Bind(wxEVT_COMBOBOX, [this](wxCommandEvent&) {
@@ -149,30 +156,47 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
             changed();
         });
         options->Add(layers, 0, wxALL, panel.FromDIP(3));
-        auto flag = [&](const wxString& name, bool FormorixPreviewState::* field) {
+        auto flag = [&](const wxString& name, bool FormorixPreviewState::* field, bool hybrid_only = false) {
+            auto* item = new wxBoxSizer(wxHORIZONTAL);
             auto* c = new ::CheckBox(&panel);
             c->SetName(name);
+            c->SetValue(state.get()->*field);
             c->Bind(wxEVT_TOGGLEBUTTON, [this, c, field](wxCommandEvent& e) {
                 state.get()->*field = c->GetValue();
                 changed();
                 e.Skip();
             });
-            options->Add(c, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, panel.FromDIP(8));
-            options->Add(new wxStaticText(&panel, wxID_ANY, name), 0, wxALIGN_CENTER_VERTICAL | wxLEFT, panel.FromDIP(4));
+            item->Add(c, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, panel.FromDIP(8));
+            item->Add(new wxStaticText(&panel, wxID_ANY, name), 0, wxALIGN_CENTER_VERTICAL | wxLEFT, panel.FromDIP(4));
+            auto* entry = options->Add(item, 0, wxALIGN_CENTER_VERTICAL | wxTOP | wxBOTTOM, panel.FromDIP(3));
+            if (hybrid_only) hybrid_controls.push_back(entry);
         };
-        flag(_L("5D shell"), &FormorixPreviewState::shell);
+        flag(_L("Original model"), &FormorixPreviewState::original, true);
         flag(_L("Remaining core"), &FormorixPreviewState::core);
+        flag(_L("Orca core paths"), &FormorixPreviewState::core_paths, true);
+        flag(_L("5D shell"), &FormorixPreviewState::shell);
+        flag(_L("5D paths"), &FormorixPreviewState::surface_paths);
+        flag(_L("Shared interfaces"), &FormorixPreviewState::interfaces, true);
+        flag(_L("Missing underlay"), &FormorixPreviewState::missing_underlay, true);
+        flag(_L("Unverified regions"), &FormorixPreviewState::unverified, true);
         auto* normal = new Button(&panel, _L("Orca preview"));
         normal->SetStyle(ButtonStyle::Regular, ButtonType::Compact);
         normal->Bind(wxEVT_BUTTON, [ordinary](wxCommandEvent&) { ordinary(); });
         options->Add(normal, 0, wxALL, panel.FromDIP(3));
         buttons.push_back(normal);
+        auto* report = new Button(&panel, _L("Geometry report"));
+        report->SetStyle(ButtonStyle::Regular, ButtonType::Compact);
+        report->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) { show_report(); });
+        hybrid_controls.push_back(options->Add(report, 0, wxALL, panel.FromDIP(3)));
+        buttons.push_back(report);
         layout->Add(options, 0, wxEXPAND);
+        validation = new Label(&panel, wxEmptyString, LB_AUTO_WRAP);
+        layout->Add(validation, 0, wxEXPAND | wxLEFT | wxRIGHT, panel.FromDIP(5));
         heads = new wxStaticText(&panel, wxID_ANY, wxEmptyString);
         layout->Add(heads, 0, wxALL, panel.FromDIP(5));
-        auto* scope = new wxStaticText(&panel, wxID_ANY,
-            _L("5D part only: excludes normal construction, supports and waiting times."));
-        layout->Add(scope, 0, wxLEFT | wxRIGHT, panel.FromDIP(5));
+        auto* scope = new Label(&panel,
+            _L("Time: 5D part only. Orca core paths are not synchronized; supports and waiting times are excluded."), LB_AUTO_WRAP);
+        layout->Add(scope, 0, wxEXPAND | wxLEFT | wxRIGHT, panel.FromDIP(5));
         auto* travel = new wxStaticText(&panel, wxID_ANY,
             _L("Layer-change travel: collision check pending."));
         layout->Add(travel, 0, wxLEFT | wxRIGHT, panel.FromDIP(5));
@@ -192,6 +216,45 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
         update();
     }
     ~Impl() override { timer.Stop(); }
+    void show_report()
+    {
+        if (!state->hybrid) return;
+        const auto& h = *state->hybrid;
+        wxString text = _L("Numerical preview only. Physical accuracy, adhesion and collisions are unverified.");
+        text += "\n\n" + format_wxstr(_L("Original volume: %1% mm³; partition residual: %2% mm³."),
+            wxString::Format("%.9g", h.partition.input_volume), wxString::Format("%.9g", h.partition.volume_residual));
+        if (!h.error.empty()) text += "\n" + from_u8(h.error);
+        for (const auto& r : h.regions) {
+            text += "\n\n" + format_wxstr(_L("Region %1%, head %2%: nominal volume / shell volume = %3%."),
+                r.id, r.head + 1, wxString::Format("%.4g", r.volume_ratio));
+            text += "\n" + format_wxstr(_L("Material %1%; nozzle %2% mm; line width %3% mm; layer height %4% mm; temperature %5% °C; volumetric limit %6% mm³/s; speed %7% mm/s."),
+                from_u8(r.process.material_id), wxString::Format("%.4g", r.process.nozzle_diameter),
+                wxString::Format("%.4g", r.process.line_width), wxString::Format("%.4g", r.process.layer_height),
+                wxString::Format("%.4g", r.process.temperature), wxString::Format("%.4g", r.process.volumetric_limit),
+                wxString::Format("%.4g", r.process.speed));
+            text += "\n" + format_wxstr(_L("Coverage samples: %1%; uncovered fraction: %2%. Sample error max / mean / RMS: %3% / %4% / %5% mm."),
+                r.coverage.samples, wxString::Format("%.3g", r.coverage.uncovered_fraction),
+                wxString::Format("%.6g", r.coverage.sampled_maximum), wxString::Format("%.6g", r.coverage.sampled_mean),
+                wxString::Format("%.6g", r.coverage.sampled_rms));
+            text += "\n" + format_wxstr(_L("Nominal footprint outside the selected region: %1%; sampled overlap into the core: %2% mm. This may overlap conventional material."),
+                wxString::Format("%.6g", r.coverage.outside_fraction), wxString::Format("%.6g", r.nominal_core_overlap));
+            text += "\n" + format_wxstr(_L("Error bounds (mm), CAD / shell / conversion / path / nominal material: %1% / %2% / %3% / %4% / %5%. Infinity means unverified."),
+                wxString::Format("%.6g", r.accuracy.bounds[0]), wxString::Format("%.6g", r.accuracy.bounds[1]),
+                wxString::Format("%.6g", r.accuracy.bounds[2]), wxString::Format("%.6g", r.accuracy.bounds[3]), wxString::Format("%.6g", r.accuracy.bounds[4]));
+            text += "\n" + format_wxstr(_L("Underlay: %1% missing samples of %2%; maximum gap: %3% mm. Full footprint and material adhesion remain unverified."),
+                r.underlay.missing, r.underlay.samples, wxString::Format("%.6g", r.underlay.maximum_gap));
+        }
+        for (const auto& warning : h.warnings) text += "\n" + from_u8(warning);
+        if (state->conventional) {
+            const auto& c = *state->conventional;
+            text += "\n\n" + format_wxstr(_L("Orca conversion bound: %1% mm; coordinate quantization: %2% mm; volume residual: %3% mm³."),
+                wxString::Format("%.9g", c.float_conversion_bound), wxString::Format("%.9g", c.coordinate_quantization_bound),
+                wxString::Format("%.9g", c.converted_volume_residual));
+            if (!c.error.empty()) text += "\n" + from_u8(c.error);
+            for (const auto& warning : c.warnings) text += "\n" + from_u8(warning);
+        }
+        show_info(&panel, text, _L("Hybrid geometry report"));
+    }
     void seek(double t)
     {
         state->seconds = std::clamp(t, 0., state->result ? state->result->timeline.duration() : 0.);
@@ -202,6 +265,7 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
     }
     void update()
     {
+        for (auto* control : hybrid_controls) control->Show(bool(state->hybrid));
         const double total = state->result ? state->result->timeline.duration() : 0.;
         slider->SetValue(total > 0. ? int(10000. * state->seconds / total) : 0);
         slider->Enable(total > 0.);
@@ -219,11 +283,26 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
         if (!state->result)
             text = _L("Model or settings changed. Calculate the preview again.");
         heads->SetLabel(text);
+        wxString assessment;
+        if (state->hybrid) {
+            const auto& h = *state->hybrid;
+            if (!h.error.empty()) assessment = format_wxstr(_L("Hybrid geometry failed: %1%"), from_u8(h.error));
+            else if (state->conventional && !state->conventional->error.empty())
+                assessment = format_wxstr(_L("Orca core preview failed: %1%"), from_u8(state->conventional->error));
+            else {
+                const bool plausible = std::all_of(h.regions.begin(), h.regions.end(), [](const auto& r) { return r.accuracy.material_volume_plausible; });
+                assessment = plausible ? _L("Nominal material volume plausible. CAD accuracy and full surface coverage: see geometry report.") :
+                    _L("Nominal material volume implausible; flow unchanged. CAD accuracy and full surface coverage are unverified.");
+                if (!h.missing_underlay.empty()) assessment += " " + _L("Geometric underlay is missing at sampled points.");
+            }
+        }
+        validation->SetLabel(assessment);
         panel.Layout();
+        panel.FitInside();
     }
 };
 FormorixPreviewPanel::FormorixPreviewPanel(wxWindow* p, std::function<void()> changed, std::function<void()> ordinary)
-    : wxPanel(p), m_impl(std::make_unique<Impl>(*this, std::move(changed), std::move(ordinary)))
+    : wxScrolledWindow(p), m_impl(std::make_unique<Impl>(*this, std::move(changed), std::move(ordinary)))
 {}
 FormorixPreviewPanel::~FormorixPreviewPanel() = default;
 std::shared_ptr<FormorixPreviewState> FormorixPreviewPanel::state() const { return m_impl->state; }
@@ -233,6 +312,8 @@ void FormorixPreviewPanel::set_result(std::shared_ptr<const FP::Result> result)
     pause();
     auto& p          = *m_impl;
     p.state->result  = std::move(result);
+    p.state->hybrid.reset();
+    p.state->conventional.reset();
     p.state->seconds = 0.;
     p.state->layer   = -1;
     p.layers->Clear();
@@ -243,6 +324,16 @@ void FormorixPreviewPanel::set_result(std::shared_ptr<const FP::Result> result)
     p.layers->SetSelection(0);
     p.update();
     p.changed();
+}
+void FormorixPreviewPanel::set_hybrid(std::shared_ptr<const FormorixHybrid::Result> hybrid,
+                                    std::shared_ptr<const FormorixCorePreview::Result> conventional)
+{
+    if (!hybrid) { set_result({}); return; }
+    set_result(std::shared_ptr<const FP::Result>(hybrid, &hybrid->preview));
+    m_impl->state->hybrid = std::move(hybrid);
+    m_impl->state->conventional = std::move(conventional);
+    m_impl->update();
+    m_impl->changed();
 }
 void FormorixPreviewPanel::rescale()
 {
@@ -296,15 +387,19 @@ void FormorixPreviewRenderer::rebuild(const FP::Result& r)
             GLModel::Geometry path, arrows;
             path.format   = {GLModel::Geometry::EPrimitiveType::Lines, GLModel::Geometry::EVertexLayout::P3};
             arrows.format = {GLModel::Geometry::EPrimitiveType::Triangles, GLModel::Geometry::EVertexLayout::P3};
+            const bool centers = layer >= 0 && std::size_t(layer) < r.layers.size() &&
+                                 r.layers[layer].path.size() == segments.size() + 1;
             for (std::size_t j = 0; j < segments.size(); ++j) {
                 const auto& m = *segments[j];
+                const Vec3d from = centers ? r.layers[layer].path[j].position : m.from.position;
+                const Vec3d to = centers ? r.layers[layer].path[j + 1].position : m.to.position;
                 unsigned base = unsigned(path.vertices_count());
-                path.add_vertex(Vec3f(m.from.position.cast<float>()));
-                path.add_vertex(Vec3f(m.to.position.cast<float>()));
+                path.add_vertex(Vec3f(from.cast<float>()));
+                path.add_vertex(Vec3f(to.cast<float>()));
                 path.add_line(base, base + 1);
                 display->ends.push_back(m.end);
                 if (j % std::max(std::size_t(1), segments.size() / 12) == 0) {
-                    Vec3d d = m.to.position - m.from.position;
+                    Vec3d d = to - from;
                     if (d.norm() < 1e-8)
                         continue;
                     d.normalize();
@@ -313,7 +408,7 @@ void FormorixPreviewRenderer::rebuild(const FP::Result& r)
                         continue;
                     side.normalize();
                     base          = unsigned(arrows.vertices_count());
-                    const auto& p = m.to.position;
+                    const auto& p = to;
                     arrows.add_vertex(Vec3f((p + .55 * d).cast<float>()));
                     arrows.add_vertex(Vec3f((p - .35 * d + .25 * side).cast<float>()));
                     arrows.add_vertex(Vec3f((p - .35 * d - .25 * side).cast<float>()));
@@ -323,8 +418,8 @@ void FormorixPreviewRenderer::rebuild(const FP::Result& r)
             display->path.init_from(std::move(path));
             if (!arrows.is_empty())
                 display->arrows.init_from(std::move(arrows));
-            display->start  = segments.front()->from.position;
-            display->finish = segments.back()->to.position;
+            display->start  = centers ? r.layers[layer].path.front().position : segments.front()->from.position;
+            display->finish = centers ? r.layers[layer].path.back().position : segments.back()->to.position;
             m_paths.push_back(std::move(display));
         }
     }
@@ -335,6 +430,58 @@ void FormorixPreviewRenderer::rebuild(const FP::Result& r)
     if (!m_marker.is_initialized())
         m_marker.init_from(smooth_sphere(12, .45f));
 }
+void FormorixPreviewRenderer::rebuild_hybrid(const FormorixPreviewState& s)
+{
+    m_original.reset(); m_interfaces.reset(); m_missing_underlay.reset(); m_unverified.reset();
+    m_core_paths.clear();
+    if (!s.hybrid) return;
+    const auto& h = *s.hybrid;
+    auto mesh = [](GLModel& model, const FormorixGeometry::Mesh& source) {
+        model.reset();
+        if (!source.faces.empty()) model.init_from(FormorixHybrid::to_float(source).mesh);
+    };
+    mesh(m_original, h.original);
+    mesh(m_core, h.core);
+    m_shells.clear();
+    for (const auto& part : h.partition.parts) if (part.region != 0) {
+        auto display = std::make_unique<GLModel>();
+        mesh(*display, part.mesh);
+        m_shells.push_back(std::move(display));
+    }
+    GLModel::Geometry interfaces;
+    interfaces.format = {GLModel::Geometry::EPrimitiveType::Triangles, GLModel::Geometry::EVertexLayout::P3};
+    for (const auto& boundary : h.partition.interfaces) {
+        const unsigned first = unsigned(interfaces.vertices_count());
+        for (const auto& p : boundary.mesh.vertices) interfaces.add_vertex(Vec3f(p.cast<float>()));
+        for (const auto& f : boundary.mesh.faces) interfaces.add_triangle(first + f[0], first + f[1], first + f[2]);
+    }
+    if (!interfaces.is_empty()) m_interfaces.init_from(std::move(interfaces));
+    auto points = [](GLModel& model, const std::vector<Vec3d>& source) {
+        GLModel::Geometry g;
+        g.format = {GLModel::Geometry::EPrimitiveType::Lines, GLModel::Geometry::EVertexLayout::P3};
+        for (const auto& p : source) for (int axis = 0; axis < 3; ++axis) {
+            const unsigned first = unsigned(g.vertices_count());
+            const Vec3d delta = .22 * Vec3d::Unit(axis);
+            g.add_vertex(Vec3f((p - delta).cast<float>())); g.add_vertex(Vec3f((p + delta).cast<float>()));
+            g.add_line(first, first + 1);
+        }
+        if (!g.is_empty()) model.init_from(std::move(g));
+    };
+    points(m_missing_underlay, h.missing_underlay);
+    points(m_unverified, h.unverified);
+    if (s.conventional) for (int head = 0; head < 3; ++head) {
+        GLModel::Geometry g;
+        g.format = {GLModel::Geometry::EPrimitiveType::Lines, GLModel::Geometry::EVertexLayout::P3};
+        for (const auto& path : s.conventional->paths) if (path.head == head) {
+            const unsigned first = unsigned(g.vertices_count());
+            for (const auto& p : path.points) g.add_vertex(Vec3f(p.cast<float>()));
+            for (std::size_t i = 1; i < path.points.size(); ++i) g.add_line(first + unsigned(i - 1), first + unsigned(i));
+        }
+        auto display = std::make_unique<GLModel>();
+        if (!g.is_empty()) display->init_from(std::move(g));
+        m_core_paths.push_back(std::move(display));
+    }
+}
 void FormorixPreviewRenderer::render(const FormorixPreviewState& s, const Camera& camera)
 {
     if (!s.result)
@@ -342,6 +489,11 @@ void FormorixPreviewRenderer::render(const FormorixPreviewState& s, const Camera
     if (m_result != s.result) {
         m_result = s.result;
         rebuild(*m_result);
+    }
+    if (m_hybrid != s.hybrid || m_conventional != s.conventional) {
+        m_hybrid = s.hybrid;
+        m_conventional = s.conventional;
+        rebuild_hybrid(s);
     }
     auto* shader = wxGetApp().get_shader("flat");
     if (!shader)
@@ -351,7 +503,13 @@ void FormorixPreviewRenderer::render(const FormorixPreviewState& s, const Camera
     shader->set_uniform("view_model_matrix", camera.get_view_matrix());
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    if (s.original && s.hybrid) {
+        glDepthMask(GL_FALSE);
+        m_original.set_color(ColorRGBA(.55f, .6f, .65f, .18f));
+        m_original.render();
+        glDepthMask(GL_TRUE);
+    }
     if (s.core) {
         m_core.set_color(ColorRGBA(.55f, .57f, .6f, .35f));
         m_core.render();
@@ -359,7 +517,7 @@ void FormorixPreviewRenderer::render(const FormorixPreviewState& s, const Camera
     if (s.shell) {
         glDepthMask(GL_FALSE);
         for (std::size_t l = 0; l < m_shells.size(); ++l) {
-            if (s.layer >= 0 && int(l) != s.layer)
+            if (!s.hybrid && s.layer >= 0 && int(l) != s.layer)
                 continue;
             auto& mesh = *m_shells[l];
             mesh.set_color(ColorRGBA(.2f, .75f, .85f, .12f));
@@ -367,11 +525,33 @@ void FormorixPreviewRenderer::render(const FormorixPreviewState& s, const Camera
         }
         glDepthMask(GL_TRUE);
     }
+    if (s.interfaces) {
+        glDepthMask(GL_FALSE);
+        m_interfaces.set_color(ColorRGBA(.85f, .25f, .9f, .5f));
+        m_interfaces.render();
+        glDepthMask(GL_TRUE);
+    }
     m_invalid.set_color(ColorRGBA(1.f, .15f, .1f, .7f));
     m_invalid.render();
     // Lines are a preview overlay, so inner layers remain visible through the context mesh.
     glDisable(GL_DEPTH_TEST);
+    if (s.core_paths) {
+        const std::array<ColorRGBA, 3> colors{{{.15f,.5f,1.f,1.f}, {.15f,.8f,.9f,1.f}, {.55f,.35f,1.f,1.f}}};
+        for (std::size_t i = 0; i < m_core_paths.size(); ++i) {
+            m_core_paths[i]->set_color(colors[i % colors.size()]);
+            m_core_paths[i]->render();
+        }
+    }
+    if (s.missing_underlay) {
+        m_missing_underlay.set_color(ColorRGBA(1.f, .1f, .12f, 1.f));
+        m_missing_underlay.render();
+    }
+    if (s.unverified) {
+        m_unverified.set_color(ColorRGBA(1.f, .35f, .85f, 1.f));
+        m_unverified.render();
+    }
     for (auto& display : m_paths) {
+        if (!s.surface_paths) continue;
         if (s.layer >= 0 && display->layer != s.layer)
             continue;
         auto& model = display->path;
@@ -385,7 +565,7 @@ void FormorixPreviewRenderer::render(const FormorixPreviewState& s, const Camera
         }
     }
     for (auto& display : m_paths)
-        if (s.layer < 0 || display->layer == s.layer) {
+        if (s.surface_paths && (s.layer < 0 || display->layer == s.layer)) {
             display->arrows.set_color(wxGetApp().dark_mode() ? ColorRGBA(.9f, .9f, .9f, 1.f) : ColorRGBA(.15f, .2f, .25f, 1.f));
             display->arrows.render();
         }
@@ -426,7 +606,8 @@ void FormorixPreviewRenderer::render(const FormorixPreviewState& s, const Camera
             m_axis.set_color(color);
             m_axis.render();
             const auto& track = s.result->timeline.heads[h];
-            if (state.segment < track.size() && state.kind != FP::MotionKind::Wait) {
+            if (s.surface_paths && state.segment < track.size() && state.kind != FP::MotionKind::Wait &&
+                (s.layer < 0 || track[state.segment].layer == s.layer)) {
                 m_active.reset();
                 m_active.init_from(lines({track[state.segment].from, track[state.segment].to}));
                 m_active.set_color(ColorRGBA(1.f, 1.f, 1.f, 1.f));
@@ -434,6 +615,7 @@ void FormorixPreviewRenderer::render(const FormorixPreviewState& s, const Camera
             }
         }
     for (const auto& display : m_paths) {
+        if (!s.surface_paths) continue;
         if (s.layer >= 0 && display->layer != s.layer)
             continue;
         marker(display->start, ColorRGBA(.1f, 1.f, .1f, 1.f));

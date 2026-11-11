@@ -16,7 +16,7 @@
 namespace Slic3r::FormorixGeometry {
 // Keep the CGAL archive independent of libslic3r to avoid a static-library
 // link cycle on platforms with order-sensitive archive resolution.
-Partition partition_meshes(const Mesh&, const std::vector<std::pair<int, Mesh>>&);
+Partition partition_meshes(const Mesh&, const std::vector<std::pair<int, Mesh>>&, bool clip);
 namespace {
 void check_mesh(const Mesh& m)
 {
@@ -96,7 +96,23 @@ Partition partition(const Mesh& solid, const std::vector<ShellRequest>& requests
         std::vector<std::pair<int, Mesh>> cutters;
         for (const auto& request : requests)
             cutters.emplace_back(request.region, shell_cutter(request));
-        return partition_meshes(solid, cutters);
+        return partition_meshes(solid, cutters, false);
+    } catch (const std::exception& e) {
+        Partition out;
+        out.error = e.what();
+        return out;
+    }
+}
+
+Partition partition_clipped(const Mesh& solid, const std::vector<ShellRequest>& requests)
+{
+    try {
+        if (requests.empty() || requests.size() > 32)
+            throw std::invalid_argument("Invalid region count");
+        std::vector<std::pair<int, Mesh>> cutters;
+        for (const auto& request : requests)
+            cutters.emplace_back(request.region, shell_cutter(request));
+        return partition_meshes(solid, cutters, true);
     } catch (const std::exception& e) {
         Partition out;
         out.error = e.what();
