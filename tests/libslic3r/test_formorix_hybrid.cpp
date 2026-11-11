@@ -267,6 +267,97 @@ TEST_CASE("A fixed profile leaves an explicit noncommensurate boundary remainder
     CHECK_THAT(result.regions[0].minimum_local_width, WithinAbs(input.regions[0].process.line_width, 0.));
     metrics("fixed_boundary_remainder", result);
 }
+TEST_CASE("Spatial contours cover a planar region with a hole without extruding across the hole", "[FormorixHybrid][SurfaceContours]")
+{
+    auto input = fixture(0);
+    auto& region = input.regions[0];
+    region.process.line_width = .75 + .2 * (1. - std::acos(-1.) / 4.);
+    auto& surface = region.surface;
+    surface.faces.erase(std::remove_if(surface.faces.begin(), surface.faces.end(), [&](const Vec3i32& face) {
+        const Vec3d center = (surface.vertices[face[0]] + surface.vertices[face[1]] + surface.vertices[face[2]]) / 3.;
+        return std::abs(center.x()) < .75 && std::abs(center.y()) < .75;
+    }), surface.faces.end());
+    surface = pack(surface);
+    const auto original = input.solid;
+    const auto result = FH::generate(input);
+    INFO(result.error);
+    INFO(result.material.error);
+    REQUIRE(result.ok());
+    REQUIRE(result.material.ok());
+    CHECK(result.regions[0].contour_runs > 2);
+    CHECK(result.regions[0].accuracy.verified());
+    CHECK_THAT(result.material.union_volume, WithinAbs((9. - 2.25) * .4, 1e-10));
+    CHECK_THAT(result.material.missing_volume, WithinAbs(0., 0.));
+    CHECK_THAT(result.material.outside_volume, WithinAbs(0., 0.));
+    bool has_travel = false;
+    for (const auto& motion : result.preview.timeline.heads[0]) {
+        if (!motion.extrusion) {
+            has_travel = true;
+            CHECK_THAT(motion.mm3_per_mm, WithinAbs(0., 0.));
+        } else {
+            const Vec3d midpoint = (motion.from.position + motion.to.position) / 2.;
+            const bool in_hole = std::abs(midpoint.x()) < .75 && std::abs(midpoint.y()) < .75;
+            CHECK_FALSE(in_hole);
+        }
+    }
+    CHECK(has_travel);
+    CHECK(input.solid.vertices == original.vertices);
+    CHECK(input.solid.faces == original.faces);
+    metrics("planar_hole", result);
+}
+TEST_CASE("A wrapped hybrid surface retains explicit cyclic extrusion without machine clearance", "[FormorixHybrid][SurfaceContours]")
+{
+    FH::Input input;
+    constexpr int count = 32;
+    constexpr double radius = 3.;
+    for (int i = 0; i < count; ++i) {
+        const double angle = 2. * std::acos(-1.) * i / count;
+        for (double y : {0., 3.})
+            input.solid.vertices.emplace_back(radius * std::cos(angle), y, radius * std::sin(angle) + radius);
+    }
+    for (int i = 0; i < count; ++i) {
+        const int next = (i + 1) % count;
+        input.solid.faces.emplace_back(2 * i, 2 * i + 1, 2 * next);
+        input.solid.faces.emplace_back(2 * next, 2 * i + 1, 2 * next + 1);
+    }
+    FH::RegionInput region;
+    region.id = 1;
+    region.surface = input.solid;
+    region.process = profile();
+    region.process.line_width = .75 + .2 * (1. - std::acos(-1.) / 4.);
+    region.settings.layers = 1;
+    region.settings.layer_height = .2;
+    region.settings.allow_vertical = true;
+    // Geometric-only reference. The real machine's 75-degree profile is tested
+    // separately and cannot inherit this explicitly enlarged analytical limit.
+    region.max_tilt = 180.;
+    input.regions.push_back(region);
+    input.solid.vertices.emplace_back(0., 0., radius);
+    input.solid.vertices.emplace_back(0., 3., radius);
+    for (int i = 0; i < count; ++i) {
+        const int next = (i + 1) % count;
+        input.solid.faces.emplace_back(2 * count, 2 * i, 2 * next);
+        input.solid.faces.emplace_back(2 * count + 1, 2 * next + 1, 2 * i + 1);
+    }
+    const auto result = FH::generate(input);
+    INFO(result.error);
+    REQUIRE(result.ok());
+    CHECK(result.regions[0].closed_contours > 0);
+    CHECK(std::any_of(result.material_runs.begin(), result.material_runs.end(), [](const auto& run) { return run.closed; }));
+    for (const auto& run : result.material_runs)
+        if (run.closed) CHECK(run.supplied_volumes.size() == run.stations.size());
+    CHECK_FALSE(result.regions[0].accuracy.verified()); // no CAD reference or machine clearance
+    metrics("wrapped_geometric_only", result);
+    input.regions[0].max_tilt = 75.;
+    const auto inaccessible = FH::generate(input);
+    CHECK_FALSE(inaccessible.ok());
+    CHECK(inaccessible.preview.layers.empty());
+    input.regions[0].max_tilt = 180.;
+    input.regions[0].settings.boundary_margin = .1;
+    const auto unsupported_margin = FH::generate(input);
+    CHECK_FALSE(unsupported_margin.ok()); // never silently ignore the requested margin
+    CHECK_FALSE(unsupported_margin.error.empty());
+}
 TEST_CASE("Every hybrid deposition run retains its actual layer head material and supplied volume", "[FormorixHybrid]")
 {
     auto input = fixture(0, true);

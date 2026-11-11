@@ -531,7 +531,7 @@ void append_roof(FormorixGeometry::Mesh& output, const FormorixGeometry::Mesh& c
 }
 } // namespace
 
-std::vector<Station> simplify_stations(const std::vector<Station>& input)
+std::vector<Station> simplify_stations(const std::vector<Station>& input, bool closed, const std::function<bool()>& canceled)
 {
     std::vector<Station> result;
     auto same_section = [](const Station& a, const Station& b) {
@@ -539,30 +539,47 @@ std::vector<Station> simplify_stations(const std::vector<Station>& input)
                bool(a.height_endpoints) == bool(b.height_endpoints) && bool(a.lateral_endpoints) == bool(b.lateral_endpoints);
     };
     auto point = [](const Vec3d& p) { return Point(p.x(), p.y(), p.z()); };
-    for (const auto& s : input) {
-        if (result.size() >= 2 && same_section(result[result.size() - 2], result.back()) && same_section(result.back(), s)) {
-            const auto a = point(result[result.size() - 2].center), b = point(result.back().center), c = point(s.center);
-            bool collinear = a != b && b != c && CGAL::collinear(a, b, c) && CGAL::collinear_are_ordered_along_line(a, b, c);
-            if (collinear && s.height_endpoints)
-                for (int k = 0; k < 2; ++k) {
-                    const auto x = point((*result[result.size() - 2].height_endpoints)[k]);
-                    const auto y = point((*result.back().height_endpoints)[k]);
-                    const auto z = point((*s.height_endpoints)[k]);
-                    collinear    = collinear && CGAL::collinear(x, y, z) && CGAL::collinear_are_ordered_along_line(x, y, z);
-                }
-            if (collinear && s.lateral_endpoints)
-                for (int k = 0; k < 2; ++k) {
-                    const auto x = point((*result[result.size() - 2].lateral_endpoints)[k]);
-                    const auto y = point((*result.back().lateral_endpoints)[k]);
-                    const auto z = point((*s.lateral_endpoints)[k]);
-                    collinear    = collinear && CGAL::collinear(x, y, z) && CGAL::collinear_are_ordered_along_line(x, y, z);
-                }
-            if (collinear) {
-                result.back() = s;
-                continue;
+    auto removable = [&](const Station& first, const Station& middle, const Station& last) {
+        if (canceled && canceled())
+            throw Failure(Status::Canceled, "Material station simplification canceled");
+        if (!same_section(first, middle) || !same_section(middle, last))
+            return false;
+        const auto a = point(first.center), b = point(middle.center), c = point(last.center);
+        bool collinear = a != b && b != c && CGAL::collinear(a, b, c) && CGAL::collinear_are_ordered_along_line(a, b, c);
+        if (collinear && last.height_endpoints)
+            for (int k = 0; k < 2; ++k) {
+                const auto x = point((*first.height_endpoints)[k]);
+                const auto y = point((*middle.height_endpoints)[k]);
+                const auto z = point((*last.height_endpoints)[k]);
+                collinear    = collinear && CGAL::collinear(x, y, z) && CGAL::collinear_are_ordered_along_line(x, y, z);
             }
+        if (collinear && last.lateral_endpoints)
+            for (int k = 0; k < 2; ++k) {
+                const auto x = point((*first.lateral_endpoints)[k]);
+                const auto y = point((*middle.lateral_endpoints)[k]);
+                const auto z = point((*last.lateral_endpoints)[k]);
+                collinear    = collinear && CGAL::collinear(x, y, z) && CGAL::collinear_are_ordered_along_line(x, y, z);
+            }
+        return collinear;
+    };
+    for (const auto& s : input) {
+        if (result.size() >= 2 && removable(result[result.size() - 2], result.back(), s)) {
+            result.back() = s;
+            continue;
         }
         result.push_back(s);
+    }
+    if (closed) {
+        // The selected starting station is not a geometric seam. Reduce exact
+        // collinear triples across it as well, preserving at least three stations.
+        while (result.size() > 3) {
+            if (removable(result.back(), result.front(), result[1]))
+                result.erase(result.begin());
+            else if (removable(result[result.size() - 2], result.back(), result.front()))
+                result.pop_back();
+            else
+                break;
+        }
     }
     return result;
 }
@@ -594,8 +611,10 @@ void audit_exact(Result& out,
         target_meshes.emplace(target.region, std::move(mesh));
     }
     for (const auto& run : runs)
-        for (double supply : run.supplied_volumes)
+        for (double supply : run.supplied_volumes) {
+            control.check();
             add_exact(supply_volumes.at(run.region), K::FT(supply));
+        }
     for (std::size_t index = 0; index < cells.size(); ++index) {
         const auto& cell = cells[index];
         control.check();

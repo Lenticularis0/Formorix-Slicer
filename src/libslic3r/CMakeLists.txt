@@ -29,6 +29,9 @@ endif ()
 set(lisbslic3r_sources
     FormorixBoundary.cpp
     FormorixBoundary.hpp
+    FormorixSurfacePaths.cpp
+    FormorixSurfacePaths.hpp
+    FormorixSurfacePathsInternal.hpp
     FormorixCorePreview.cpp
     FormorixCorePreview.hpp
     FormorixHybrid.cpp
@@ -657,6 +660,7 @@ cmake_policy(POP)
 add_library(libslic3r_cgal STATIC
     FormorixGeometryCGAL.cpp
     FormorixMaterialCGAL.cpp
+    FormorixSurfacePathsCGAL.cpp
     CutSurface.hpp CutSurface.cpp
     IntersectionPoints.hpp IntersectionPoints.cpp
     MeshBoolean.hpp MeshBoolean.cpp

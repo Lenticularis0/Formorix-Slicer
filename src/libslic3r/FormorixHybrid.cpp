@@ -7,6 +7,7 @@
 #include "FormorixPreview.hpp"
 #include "FormorixProcess.hpp"
 #include "FormorixSurfaces.hpp"
+#include "FormorixSurfacePaths.hpp"
 #include "Point.hpp"
 #include "Config.hpp"
 #include "PrintConfig.hpp"
@@ -17,7 +18,10 @@
 #include "Model.hpp"
 #include "TriangleSelector.hpp"
 #include "libslic3r.h"
+#include "I18N.hpp"
 #include <Eigen/Geometry>
+#include <Eigen/Core>
+#include <Eigen/Eigenvalues>
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -33,6 +37,8 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+
+#define L(s) Slic3r::I18N::translate(s)
 
 namespace Slic3r::FormorixHybrid {
 namespace FG = FormorixGeometry;
@@ -702,12 +708,22 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
             const double path_step      = std::array<double, 3>{1., .5, .2}[r.settings.quality];
             const double midpoint_error = std::array<double, 3>{.002, .0005, .0001}[r.settings.quality];
             const double axis_delta     = std::array<double, 3>{.04, .015, .005}[r.settings.quality];
+            std::vector<double> boundaries{0.};
+            for (double height : heights[index])
+                boundaries.push_back(boundaries.back() + height);
+            // The last shared boundary is the allocated shell interface, not a
+            // separately rounded repeated sum of nominal layer heights.
+            boundaries.back() = rr.shell_depth;
             struct OuterPath
             {
                 std::vector<PV::Pose> poses;
                 std::vector<std::array<Vec3d, 2>> lateral;
+                std::vector<bool> extruding;
                 PS::Profile profile;
                 double construction_bound = 0.;
+                double interpolation_bound = INFINITY;
+                bool direct_carriers = false;
+                std::size_t contour_runs = 0, closed_contours = 0;
             };
             std::map<double, OuterPath> outer_cache;
             auto outer_for = [&](double h) -> const OuterPath& {
@@ -727,7 +743,7 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                                   r.settings.edge[5] - r.settings.edge[2]);
                     u -= normal * u.dot(normal);
                     if (u.norm() < 1e-10)
-                        throw std::runtime_error("The requested raster direction is perpendicular to the surface");
+                        throw std::runtime_error(L("The requested raster direction is perpendicular to the surface"));
                     u.normalize();
                     const Vec3d v = normal.cross(u), origin = r.surface.vertices.front();
                     FormorixBoundary::Domain domain;
@@ -746,6 +762,7 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                         throw std::runtime_error(boundary.reason);
                     if (boundary.ok()) {
                         planned.profile = boundary.local_profile;
+                        planned.direct_carriers = true;
                         planned.construction_bound = boundary.construction_bound + boundary.boundary_deviation_bound;
                         auto lift = [&](const Vec2d& point) -> Vec3d { return origin + point.x() * u + point.y() * v; };
                         for (const auto& point : boundary.path)
@@ -773,7 +790,98 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                 options.validate_wall        = false;
                 options.longitudinal_spacing = std::min(.5, path_step);
                 options.compacted_ribbon     = true;
-                const auto seed              = PV::generate({selected.mesh, source.mesh, {}}, settings, options, cancel);
+                const auto seed = PV::generate({selected.mesh, source.mesh, {}}, settings, options, cancel);
+                const bool requires_spatial = !seed.ok() && !seed.errors.empty() &&
+                    (seed.errors.front() == PV::Issue::NonDisk || seed.errors.front() == PV::Issue::NotHeightField ||
+                     seed.errors.front() == PV::Issue::Disconnected);
+                // Retain connected raster turns and finite boundary termination
+                // where the existing planner applies. Actual 3D contour families
+                // extend it to topologies that have no single height projection.
+                if (requires_spatial && r.settings.boundary_margin == 0.) {
+                    // A family of actual 3D cuts supports holes and wrapped
+                    // surfaces without flattening the selected mesh to a height field.
+                    Vec3d mean = Vec3d::Zero();
+                    Eigen::Matrix3d covariance = Eigen::Matrix3d::Zero();
+                    for (const auto& n : surface.normals) {
+                        mean += n;
+                        covariance += n * n.transpose();
+                    }
+                    Vec3d plane_axis;
+                    if (!flat && r.settings.direction == FS::Direction::Automatic) {
+                        const Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eigen(covariance);
+                        if (eigen.info() != Eigen::Success)
+                            throw std::runtime_error(L("Cannot determine a stable surface contour direction"));
+                        plane_axis = eigen.eigenvectors().col(0);
+                    } else {
+                        if (mean.norm() < 1e-8)
+                            throw std::runtime_error(L("This wrapped surface requires automatic contour direction"));
+                        mean.normalize();
+                        Vec3d direction = std::abs(mean.x()) < .8 ? Vec3d::UnitX() : Vec3d::UnitY();
+                        if (r.settings.direction == FS::Direction::Custom)
+                            direction = Vec3d(r.settings.custom_direction[0], r.settings.custom_direction[1], r.settings.custom_direction[2]);
+                        if (r.settings.direction == FS::Direction::Edge && r.settings.edge_selected)
+                            direction = Vec3d(r.settings.edge[3] - r.settings.edge[0], r.settings.edge[4] - r.settings.edge[1],
+                                              r.settings.edge[5] - r.settings.edge[2]);
+                        plane_axis = mean.cross(direction);
+                        if (plane_axis.norm() < 1e-10)
+                            throw std::runtime_error(L("The requested raster direction is perpendicular to the surface"));
+                    }
+                    plane_axis.normalize();
+                    Eigen::Index dominant = 0;
+                    plane_axis.cwiseAbs().maxCoeff(&dominant);
+                    if (plane_axis[dominant] < 0.) plane_axis = -plane_axis;
+                    if (r.settings.direction == FS::Direction::Automatic) {
+                        const Vec3d coordinate_axis = Vec3d::Unit(dominant);
+                        // The plane family is a free planning choice. Use an
+                        // exact coordinate direction for a numerically axial
+                        // eigenvector; no source vertex or material body moves.
+                        if ((plane_axis - coordinate_axis).norm() <= 64. * std::numeric_limits<double>::epsilon())
+                            plane_axis = coordinate_axis;
+                    }
+                    double low = INFINITY, high = -INFINITY;
+                    for (const auto& p : r.surface.vertices) {
+                        const double coordinate = p.dot(plane_axis);
+                        low = std::min(low, coordinate);
+                        high = std::max(high, coordinate);
+                    }
+                    const double count = std::floor((high - low) / section.compacted_width);
+                    FormorixSurfacePaths::Options contour_options;
+                    if (!std::isfinite(count) || count < 1.)
+                        throw std::runtime_error(L("The selected span cannot fit this fixed-width ribbon; use a smaller nozzle or another direction"));
+                    if (count > double(contour_options.max_planes))
+                        throw std::runtime_error(L("Surface contour row budget exceeded"));
+                    contour_options.plane_normal = plane_axis;
+                    const double middle = low + (high - low) / 2.;
+                    for (std::size_t row = 0; row < std::size_t(count); ++row)
+                        contour_options.plane_offsets.push_back(middle + (double(row) - (count - 1.) / 2.) * section.compacted_width);
+                    contour_options.max_segment_length = path_step;
+                    contour_options.normal_offset_distance = rr.shell_depth + std::abs(profile.contact_to_tcp);
+                    contour_options.interpolation_tolerance = midpoint_error;
+                    const auto contours = FormorixSurfacePaths::trace({r.surface, surface.normals}, contour_options, cancel);
+                    if (!contours.ok()) throw std::runtime_error(contours.reason);
+                    if (contours.runs.empty())
+                        throw std::runtime_error(L("The selected surface has no usable spatial contour"));
+                    planned.direct_carriers = true;
+                    planned.construction_bound = contours.position_rounding_bound +
+                        contour_options.normal_offset_distance * contours.normal_rounding_bound;
+                    planned.interpolation_bound = contours.interpolation_bounded ? contours.offset_interpolation_bound : INFINITY;
+                    for (const auto& run : contours.runs) {
+                        if (run.knots.size() < 2) continue;
+                        ++planned.contour_runs;
+                        if (run.closed) ++planned.closed_contours;
+                        const std::size_t size = run.knots.size() + std::size_t(run.closed);
+                        for (std::size_t i = 0; i < size; ++i) {
+                            const auto& knot = run.knots[i % run.knots.size()];
+                            const Vec3d axis = orientation(knot.normal, r.settings, r.max_tilt);
+                            if (axis.dot(knot.normal) < 1. - 1e-8)
+                                throw std::runtime_error(L("The rigid tilted nozzle-section does not fit the requested normal layer thickness; the compacted ribbon requires a perpendicular nozzle"));
+                            if (!planned.poses.empty()) planned.extruding.push_back(i != 0);
+                            planned.poses.push_back({knot.position, knot.normal});
+                        }
+                    }
+                    for (const auto& warning : contours.warnings) out.warnings.push_back(warning);
+                    return outer_cache.emplace(h, std::move(planned)).first->second;
+                }
                 if (!seed.ok())
                     throw std::runtime_error(preview_issue(seed.errors.front()));
                 std::vector<PV::Pose> outer;
@@ -810,12 +918,10 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
             };
             if (flat)
                 rr.accuracy.bounds[3] = seed_conversion + 1e-9 + 2. * plane_error + 2. * rr.shell_depth * normal_spread;
-            std::vector<double> boundaries{0.};
-            for (double height : heights[index])
-                boundaries.push_back(boundaries.back() + height);
             bool all_layers_covered = true, all_supplies_match = true;
             double material_bound = 0.;
             double construction_bound = 0.;
+            double contour_interpolation_bound = 0.;
             size_t terminated     = 0;
             for (size_t rev = heights[index].size(); rev > 0; --rev) {
                 canceled(cancel);
@@ -825,6 +931,10 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                 const auto& profile  = planned.profile;
                 const auto section   = PS::ribbon_section(profile);
                 const auto& outer    = planned.poses;
+                rr.contour_runs += planned.contour_runs;
+                rr.closed_contours += planned.closed_contours;
+                if (planned.contour_runs > 0)
+                    contour_interpolation_bound = std::max(contour_interpolation_bound, planned.interpolation_bound);
                 rr.minimum_local_width = std::min(rr.minimum_local_width, profile.line_width);
                 rr.maximum_local_width = std::max(rr.maximum_local_width, profile.line_width);
                 if (rev == 1) {
@@ -845,8 +955,8 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                     PV::Pose center, tcp, contact;
                     Vec3d normal;
                 };
-                auto node = [&](const Vec3d& p) {
-                    const auto [q, n]   = lateral.empty() ? surface.at(p) : std::make_pair(p, normal);
+                auto node = [&](const PV::Pose& p) {
+                    const auto [q, n]   = planned.direct_carriers ? std::make_pair(p.position, p.axis) : surface.at(p.position);
                     const Vec3d axis    = orientation(n, r.settings, r.max_tilt);
                     const Vec3d contact = q - depth * n;
                     return Node{{contact - h * .5 * n, axis}, {contact + axis * profile.contact_to_tcp, axis}, {q, axis}, n};
@@ -879,25 +989,31 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                     if (!extrusion)
                         ++terminated;
                 };
-                append(node(outer.front().position), true);
+                append(node(outer.front()), true);
                 for (size_t i = 1; i < outer.size(); ++i) {
                     if (!lateral.empty()) {
                         // The finite planar construction already terminates at
                         // its exact rectangle. Spatial containment remains audited.
-                        append(node(outer[i].position), true);
+                        append(node(outer[i]), true);
+                        continue;
+                    }
+                    if (!planned.extruding.empty() && !planned.extruding[i - 1]) {
+                        append(node(outer[i]), false);
                         continue;
                     }
                     const Vec3d direction                          = outer[i].position - outer[i - 1].position;
                     std::function<void(Node, Node, int)> terminate = [&](Node a, Node b, int level) {
-                        const Node middle = node((a.contact.position + b.contact.position) * .5);
+                        const Node middle = node({(a.contact.position + b.contact.position) * .5,
+                                                  PV::interpolate_axis(a.normal, b.normal, .5)});
                         const bool fa = fits(a, direction), fm = fits(middle, direction), fb = fits(b, direction);
-                        if (level < 10 && (fa != fm || fm != fb) && (a.center.position - b.center.position).norm() > .001) {
+                        if (!planned.direct_carriers && level < 10 && (fa != fm || fm != fb) &&
+                            (a.center.position - b.center.position).norm() > .001) {
                             terminate(a, middle, level + 1);
                             terminate(middle, b, level + 1);
                         } else
                             append(b, fa && fm && fb);
                     };
-                    terminate(node(outer[i - 1].position), node(outer[i].position), 0);
+                    terminate(node(outer[i - 1]), node(outer[i]), 0);
                 }
                 if (r.settings.alternate_directions && rev % 2) {
                     std::reverse(layer.path.begin(), layer.path.end());
@@ -929,8 +1045,16 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                     run.outer_layer = rev == 1;
                 };
                 const auto flush_run = [&] {
-                    if (run.stations.size() > 1)
+                    if (run.stations.size() > 1) {
+                        // Preview loops repeat their first pose for the closing
+                        // movement; the material model owns one cyclic ring only.
+                        if (run.stations.size() > 3 && run.stations.front().center == run.stations.back().center &&
+                            run.stations.front().axis == run.stations.back().axis) {
+                            run.closed = true;
+                            run.stations.pop_back();
+                        }
                         out.material_runs.push_back(std::move(run));
+                    }
                     begin_run();
                 };
                 const auto station = [&](size_t i) {
@@ -996,7 +1120,17 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
             }
             if (rr.deposited_volume <= 0.)
                 throw std::runtime_error("No ribbon extrusion fits inside the allocated shell");
+            if (rr.contour_runs > 0)
+                rr.accuracy.bounds[3] = contour_interpolation_bound;
             rr.accuracy.bounds[3] += construction_bound;
+            double coordinate_bound = 1.;
+            for (const auto& point : r.surface.vertices)
+                coordinate_bound = std::max(coordinate_bound, point.cwiseAbs().maxCoeff());
+            coordinate_bound = std::nextafter(coordinate_bound + rr.shell_depth, INFINITY);
+            coordinate_bound = std::nextafter(coordinate_bound + std::abs(r.process.contact_to_tcp), INFINITY);
+            // Conservative L1 allowance for the finite multiply/add chains that
+            // materialize contact, center and TCP offsets from the proven knots.
+            rr.accuracy.bounds[3] += std::nextafter(96. * std::numeric_limits<double>::epsilon() * coordinate_bound, INFINITY);
             rr.accuracy.whole_surface_covered       = all_layers_covered;
             rr.accuracy.bounds[4]                   = material_bound;
             rr.accuracy.material_partition_verified = all_layers_covered && all_supplies_match &&
@@ -1054,6 +1188,8 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                 material_targets.push_back({part.region, region->process.material_id, part.mesh, region->surface});
             }
         out.material = FormorixMaterial::audit(material_targets, out.core, out.material_runs, input.material_options, cancel);
+        if (out.material.status == FormorixMaterial::Status::Canceled)
+            throw std::runtime_error("Hybrid calculation canceled");
         canceled(cancel);
         if (!out.material.ok())
             out.warnings.push_back("Three-dimensional nominal material audit is incomplete: " + out.material.error);

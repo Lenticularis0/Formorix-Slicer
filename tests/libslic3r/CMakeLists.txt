@@ -31,6 +31,8 @@ add_executable(${_TEST_NAME}_tests
     test_config.cpp
     test_formorix_5d.cpp
     test_formorix_boundary.cpp
+    test_formorix_surface_paths.cpp
+    test_formorix_hydrofoil.cpp
     test_formorix_surfaces.cpp
     test_formorix_preview.cpp
     test_formorix_foundations.cpp

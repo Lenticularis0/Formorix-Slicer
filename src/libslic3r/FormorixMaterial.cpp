@@ -2,8 +2,10 @@
 #include "FormorixMaterialInternal.hpp"
 #include "FormorixGeometry.hpp"
 #include "Point.hpp"
+#include "I18N.hpp"
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <cstddef>
 #include <exception>
@@ -11,6 +13,7 @@
 #include <limits>
 #include <set>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -58,13 +61,15 @@ Ring ring(const SweepRun& run, std::size_t i, const Options& options)
         return cross.normalized();
     };
     Vec3d lateral;
-    if (i == 0)
+    if (!run.closed && i == 0)
         lateral = side(run.stations[1].center - s.center);
-    else if (i + 1 == run.stations.size())
+    else if (!run.closed && i + 1 == run.stations.size())
         lateral = side(s.center - run.stations[i - 1].center);
     else {
-        const Vec3d incoming = side(s.center - run.stations[i - 1].center);
-        const Vec3d outgoing = side(run.stations[i + 1].center - s.center);
+        const auto previous = (i + run.stations.size() - 1) % run.stations.size();
+        const auto next     = (i + 1) % run.stations.size();
+        const Vec3d incoming = side(s.center - run.stations[previous].center);
+        const Vec3d outgoing = side(run.stations[next].center - s.center);
         const Vec3d sum      = incoming + outgoing;
         if (sum.norm() < 1e-8)
             throw detail::Failure(Status::InvalidSweep, "Reversing material turn has no finite miter");
@@ -119,13 +124,25 @@ Result audit(const std::vector<Target>& targets,
              const Options& options,
              const std::function<bool()>& cancel)
 {
+    const auto started = std::chrono::steady_clock::now();
+    const std::function<bool()> bounded_cancel = [&] {
+        if (cancel && cancel())
+            return true;
+        if (std::chrono::duration<double>(std::chrono::steady_clock::now() - started).count() >= options.max_elapsed_seconds)
+            throw detail::Failure(
+                Status::ResourceLimit,
+                _u8L("Material audit elapsed time budget exceeded at a cooperative checkpoint; individual CGAL operations are not immediately interruptible"));
+        return false;
+    };
     Result out;
     try {
         if (targets.empty() || targets.size() > 32 || options.max_stations < 2 || options.max_sweep_faces < 12 ||
             options.max_boolean_faces < 12 || options.max_boolean_operations == 0 || options.max_distance_leaves == 0 ||
             options.max_distance_queries == 0 || !std::isfinite(options.distance_slack) || options.distance_slack <= 0. ||
-            !std::isfinite(options.miter_limit) || options.miter_limit < 1.)
+            !std::isfinite(options.miter_limit) || options.miter_limit < 1. || !std::isfinite(options.max_elapsed_seconds) ||
+            options.max_elapsed_seconds < 0.)
             throw detail::Failure(Status::InvalidInput, "Invalid material audit targets or resource limits");
+        check_cancel(bounded_cancel);
         std::set<int> ids;
         for (const auto& target : targets)
             if (target.region <= 0 || target.material.empty() || target.mesh.faces.empty() || !ids.insert(target.region).second)
@@ -147,31 +164,43 @@ Result audit(const std::vector<Target>& targets,
         std::vector<detail::Cell> cells;
         std::size_t stations = 0;
         for (std::size_t r = 0; r < runs.size(); ++r) {
-            check_cancel(cancel);
+            check_cancel(bounded_cancel);
             const auto& run   = runs[r];
             const auto target = std::find_if(targets.begin(), targets.end(), [&](const Target& t) { return t.region == run.region; });
-            if (run.head < 0 || run.head > 2 || run.layer < 0 || run.stations.size() < 2 ||
-                run.supplied_volumes.size() + 1 != run.stations.size() || target == targets.end() || run.material != target->material)
+            if (run.head < 0 || run.head > 2 || run.layer < 0 || run.stations.size() < (run.closed ? 3u : 2u) ||
+                run.supplied_volumes.size() != run.stations.size() - (run.closed ? 0u : 1u) ||
+                target == targets.end() || run.material != target->material)
                 throw detail::Failure(Status::InvalidInput, "Material run has invalid ownership or segment supply");
             if (run.stations.size() > options.max_stations - std::min(stations, options.max_stations))
                 throw detail::Failure(Status::ResourceLimit, "Material station budget exceeded");
             stations += run.stations.size();
-            for (const auto& station : run.stations)
+            std::set<std::tuple<double, double, double>> unique_centers;
+            for (const auto& station : run.stations) {
+                check_cancel(bounded_cancel);
                 (void) height_centers(station); // validate even stations removed by exact collinear reduction
+                if (run.closed && !unique_centers.emplace(station.center.x(), station.center.y(), station.center.z()).second)
+                    throw detail::Failure(Status::InvalidInput, "Closed material runs require distinct station centers, without a repeated endpoint");
+            }
             for (std::size_t i = 0; i < run.stations.size(); ++i)
-                if (run.stations[i].lateral_endpoints)
+                if (run.stations[i].lateral_endpoints) {
+                    check_cancel(bounded_cancel);
                     (void) ring(run, i, options); // validate original rails before any station is removed
+                }
             for (double supply : run.supplied_volumes)
                 if (!std::isfinite(supply) || supply <= 0.)
                     throw detail::Failure(Status::InvalidInput, "Extruding material segment requires positive finite supply");
             SweepRun reduced;
-            reduced.stations = detail::simplify_stations(run.stations);
-            if (reduced.stations.size() - 1 > options.max_sweep_faces / 12 - std::min(cells.size(), options.max_sweep_faces / 12))
+            reduced.closed   = run.closed;
+            reduced.stations = detail::simplify_stations(run.stations, run.closed, bounded_cancel);
+            const std::size_t segments = reduced.stations.size() - (run.closed ? 0u : 1u);
+            if (segments > options.max_sweep_faces / 12 - std::min(cells.size(), options.max_sweep_faces / 12))
                 throw detail::Failure(Status::ResourceLimit, "Material sweep face budget exceeded");
-            Ring previous = ring(reduced, 0, options);
-            for (std::size_t i = 1; i < reduced.stations.size(); ++i) {
-                check_cancel(cancel);
-                const Ring next = ring(reduced, i, options);
+            const Ring first = ring(reduced, 0, options);
+            Ring previous = first;
+            for (std::size_t i = 1; i <= segments; ++i) {
+                check_cancel(bounded_cancel);
+                // Reuse exactly the initial cyclic miter at closure, with no butt-cap restart.
+                const Ring next = i == reduced.stations.size() ? first : ring(reduced, i, options);
                 auto mesh       = cell(previous, next);
                 append(out.diagnostic_cells, mesh);
                 cells.push_back({r, std::move(mesh)});
@@ -179,7 +208,8 @@ Result audit(const std::vector<Target>& targets,
             }
         }
         out.cells = cells.size();
-        detail::audit_exact(out, targets, core, runs, cells, options, cancel);
+        detail::audit_exact(out, targets, core, runs, cells, options, bounded_cancel);
+        check_cancel(bounded_cancel);
         out.status = Status::Complete;
     } catch (const detail::Failure& e) {
         const auto status    = e.status;
@@ -197,6 +227,7 @@ Result audit(const std::vector<Target>& targets,
         out.status           = Status::BooleanFailure;
         out.error            = e.what();
     }
+    out.elapsed_seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - started).count();
     return out;
 }
 } // namespace Slic3r::FormorixMaterial

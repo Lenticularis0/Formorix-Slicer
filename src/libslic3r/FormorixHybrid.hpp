@@ -80,6 +80,7 @@ struct RegionResult
     double maximum_boundary_remainder = 0.;
     bool adaptive_boundary = false;
     std::string boundary_diagnostic;
+    std::size_t contour_runs = 0, closed_contours = 0;
     bool inadmissible_material        = false;
     double excess_material_volume_mm3 = 0.;
     // Projected diagnostics, not certified 3D volumes on curved surfaces.

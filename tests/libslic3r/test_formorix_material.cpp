@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_message.hpp>
+#include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include "libslic3r/FormorixMaterial.hpp"
 #include "libslic3r/FormorixGeometry.hpp"
@@ -48,6 +49,54 @@ FM::SweepRun run(double from = 0., double to = 2., int region = 1, const std::st
     r.outer_layer      = true;
     return r;
 }
+FG::Mesh annular_prism(const std::vector<Vec2d>& outer, const std::vector<Vec2d>& inner, double lower, double upper)
+{
+    FG::Mesh mesh;
+    const int n = int(outer.size());
+    for (double z : {lower, upper})
+        for (const auto* contour : {&outer, &inner})
+            for (const auto& p : *contour)
+                mesh.vertices.emplace_back(p.x(), p.y(), z);
+    auto quad = [&](int a, int b, int c, int d) {
+        mesh.faces.emplace_back(a, b, c);
+        mesh.faces.emplace_back(a, c, d);
+    };
+    for (int i = 0; i < n; ++i) {
+        const int j = (i + 1) % n;
+        quad(2 * n + i, 2 * n + j, 3 * n + j, 3 * n + i);
+        quad(i, n + i, n + j, j);
+        quad(i, j, 2 * n + j, 2 * n + i);
+        quad(n + i, 3 * n + i, 3 * n + j, n + j);
+    }
+    return mesh;
+}
+FM::Target square_ring_target()
+{
+    auto t = target();
+    t.mesh = annular_prism({{-.5, -.5}, {4.5, -.5}, {4.5, 4.5}, {-.5, 4.5}},
+                           {{.5, .5}, {3.5, .5}, {3.5, 3.5}, {.5, 3.5}}, 0., 1.);
+    t.outer_surface = {};
+    return t;
+}
+void ring_supply(FM::SweepRun& r)
+{
+    r.supplied_volumes.clear();
+    for (std::size_t i = 0; i < r.stations.size(); ++i) {
+        const auto& a = r.stations[i];
+        const auto& b = r.stations[(i + 1) % r.stations.size()];
+        r.supplied_volumes.push_back((b.center - a.center).norm() * a.width * a.height);
+    }
+}
+FM::SweepRun square_ring()
+{
+    auto r = run();
+    r.closed = true;
+    r.stations.clear();
+    for (const Vec3d& p : std::vector<Vec3d>{{0., 0., .5}, {4., 0., .5}, {4., 4., .5}, {0., 4., .5}})
+        r.stations.push_back({p, Vec3d::UnitZ(), 1., 1.});
+    ring_supply(r);
+    return r;
+}
 void require_complete(const FM::Result& result)
 {
     INFO(result.error);
@@ -59,10 +108,170 @@ void require_complete(const FM::Result& result)
 }
 } // namespace
 
+TEST_CASE("Closed material rings have one cyclic miter at every station and no artificial seam", "[FormorixMaterial]")
+{
+    const auto t = square_ring_target();
+    REQUIRE(FG::valid_solid(t.mesh));
+    for (bool reverse : {false, true})
+        for (int start : {0, 1, 5}) {
+            auto r = square_ring();
+            const auto corners = r.stations;
+            r.stations.clear();
+            for (std::size_t i = 0; i < corners.size(); ++i) {
+                r.stations.push_back(corners[i]);
+                auto mid = corners[i];
+                mid.center = .5 * (corners[i].center + corners[(i + 1) % corners.size()].center);
+                r.stations.push_back(mid);
+            }
+            if (reverse)
+                std::reverse(r.stations.begin(), r.stations.end());
+            std::rotate(r.stations.begin(), r.stations.begin() + start, r.stations.end());
+            ring_supply(r);
+            const auto result = FM::audit({t}, {}, {r});
+            require_complete(result);
+            CHECK(result.cells == 4);
+            CHECK(result.regions.front().coverage == FM::Coverage::Full);
+            CHECK_THAT(result.union_volume, WithinAbs(16., 1e-12));
+            CHECK_THAT(result.supplied_volume, WithinAbs(16., 1e-12));
+            CHECK_THAT(result.missing_volume, WithinAbs(0., 1e-12));
+            CHECK_THAT(result.outside_volume, WithinAbs(0., 1e-12));
+            CHECK_THAT(result.duplicate_volume, WithinAbs(0., 1e-12));
+            CHECK(result.boundary_distance.bounded);
+        }
+}
+
+TEST_CASE("A closed polygonal cylinder ring retains radial nozzle axes and its independent supply ledger", "[FormorixMaterial]")
+{
+    const std::vector<Vec2d> directions{{1., 0.}, {0., 1.}, {-1., 0.}, {0., -1.}};
+    std::vector<Vec2d> outer, inner;
+    auto r = square_ring();
+    r.stations.clear();
+    for (const auto& d : directions) {
+        outer.push_back(2.125 * d);
+        inner.push_back(1.875 * d);
+        const Vec3d axis(d.x(), d.y(), 0.);
+        r.stations.push_back({2. * axis, axis, .5, .25});
+    }
+    ring_supply(r);
+    auto t = target();
+    t.mesh = annular_prism(outer, inner, -.25, .25);
+    t.outer_surface = {};
+    REQUIRE(FG::valid_solid(t.mesh));
+    const auto result = FM::audit({t}, {}, {r});
+    require_complete(result);
+    CHECK(result.cells == 4);
+    CHECK(result.regions.front().coverage == FM::Coverage::Full);
+    CHECK_THAT(result.union_volume, WithinAbs(1., 1e-12));
+    CHECK_THAT(result.supplied_volume, WithinAbs(std::sqrt(2.), 1e-12));
+    CHECK_THAT(result.supply_geometry_residual, WithinAbs(std::sqrt(2.) - 1., 1e-12));
+    CHECK_THAT(result.missing_volume, WithinAbs(0., 1e-12));
+    CHECK_THAT(result.outside_volume, WithinAbs(0., 1e-12));
+    CHECK_THAT(result.duplicate_volume, WithinAbs(0., 1e-12));
+}
+
+TEST_CASE("Open material paths do not acquire an implicit closing extrusion", "[FormorixMaterial]")
+{
+    auto r = square_ring();
+    r.closed = false;
+    r.supplied_volumes.pop_back();
+    const auto result = FM::audit({square_ring_target()}, {}, {r});
+    require_complete(result);
+    CHECK(result.cells == 3);
+    CHECK(result.regions.front().coverage == FM::Coverage::Partial);
+    CHECK_THAT(result.union_volume, WithinAbs(12., 1e-12));
+    CHECK_THAT(result.supplied_volume, WithinAbs(12., 1e-12));
+    CHECK_THAT(result.missing_volume, WithinAbs(4., 1e-12));
+}
+
+TEST_CASE("Closed material inputs validate the closing supply and original endpoint definitions", "[FormorixMaterial]")
+{
+    const auto t = square_ring_target();
+    auto r = square_ring();
+    r.supplied_volumes.pop_back();
+    CHECK(FM::audit({t}, {}, {r}).status == FM::Status::InvalidInput);
+    r = square_ring();
+    r.stations.push_back(r.stations.front());
+    r.supplied_volumes.push_back(1.);
+    CHECK(FM::audit({t}, {}, {r}).status == FM::Status::InvalidInput);
+    r = square_ring();
+    r.stations.front().lateral_endpoints = std::array<Vec3d, 2>{{Vec3d(-.5, -.5, .5), Vec3d(.5, .5, .5)}};
+    require_complete(FM::audit({t}, {}, {r}));
+    (*r.stations.front().lateral_endpoints)[0].x() += .01;
+    CHECK(FM::audit({t}, {}, {r}).status == FM::Status::InvalidInput);
+    r = square_ring();
+    r.supplied_volumes.back() = 0.;
+    CHECK(FM::audit({t}, {}, {r}).status == FM::Status::InvalidInput);
+    r.stations.resize(2);
+    r.supplied_volumes.assign(2, 1.);
+    CHECK(FM::audit({t}, {}, {r}).status == FM::Status::InvalidInput);
+}
+
+TEST_CASE("Closed sweep budgets include the closing cell and cancellation discards evidence", "[FormorixMaterial]")
+{
+    const auto t = square_ring_target();
+    const auto r = square_ring();
+    FM::Options options;
+    options.max_sweep_faces = 36; // target has 32 faces; four cells require 48 faces.
+    CHECK(FM::audit({t}, {}, {r}, options).status == FM::Status::ResourceLimit);
+    options = {};
+    options.max_stations = 3;
+    CHECK(FM::audit({t}, {}, {r}, options).status == FM::Status::ResourceLimit);
+    std::size_t checks = 0;
+    const auto canceled = FM::audit({t}, {}, {r}, {}, [&] { return ++checks > 8; });
+    CHECK(canceled.status == FM::Status::Canceled);
+    CHECK(canceled.regions.empty());
+    CHECK(canceled.deposited.faces.empty());
+}
+
+TEST_CASE("Material time budgets expire without waiting and retain no accepted evidence", "[FormorixMaterial]")
+{
+    FM::Options options;
+    CHECK_THAT(options.max_elapsed_seconds, WithinAbs(60., 0.));
+    options.max_elapsed_seconds = 0.;
+    const auto result = FM::audit({target()}, {}, {run()}, options);
+    CHECK(result.status == FM::Status::ResourceLimit);
+    CHECK(result.error.find("elapsed time budget") != std::string::npos);
+    CHECK(std::isfinite(result.elapsed_seconds));
+    CHECK(result.elapsed_seconds >= 0.);
+    CHECK_FALSE(result.ok());
+    CHECK(result.regions.empty());
+    CHECK(result.deposited.faces.empty());
+    CHECK(result.material_overlaps.empty());
+    CHECK_FALSE(result.boundary_distance.bounded);
+    CHECK_FALSE(result.nominal_outer_distance.bounded);
+    CHECK(std::isinf(result.boundary_distance.upper_bound));
+    CHECK(std::isinf(result.nominal_outer_distance.upper_bound));
+
+    // Explicit user cancellation takes priority over the simultaneous deadline.
+    const auto canceled = FM::audit({target()}, {}, {run()}, options, [] { return true; });
+    CHECK(canceled.status == FM::Status::Canceled);
+    CHECK(canceled.regions.empty());
+    CHECK(canceled.deposited.faces.empty());
+    CHECK(std::isfinite(canceled.elapsed_seconds));
+    CHECK(canceled.elapsed_seconds >= 0.);
+}
+
+TEST_CASE("Material time limits require finite nonnegative seconds", "[FormorixMaterial]")
+{
+    for (double invalid : {-1., std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::infinity()}) {
+        CAPTURE(invalid);
+        FM::Options options;
+        options.max_elapsed_seconds = invalid;
+        const auto result = FM::audit({target()}, {}, {run()}, options);
+        CHECK(result.status == FM::Status::InvalidInput);
+        CHECK(result.regions.empty());
+        CHECK_FALSE(result.boundary_distance.bounded);
+        CHECK(std::isfinite(result.elapsed_seconds));
+        CHECK(result.elapsed_seconds >= 0.);
+    }
+}
+
 TEST_CASE("An exact finite material prism fills its target and separately bounds its outer sheet", "[FormorixMaterial]")
 {
     const auto result = FM::audit({target()}, {}, {run()});
     require_complete(result);
+    CHECK(std::isfinite(result.elapsed_seconds));
+    CHECK(result.elapsed_seconds >= 0.);
     REQUIRE(result.regions.size() == 1);
     CHECK(result.regions[0].coverage == FM::Coverage::Full);
     CHECK_THAT(result.cell_volume, WithinAbs(2., 1e-12));

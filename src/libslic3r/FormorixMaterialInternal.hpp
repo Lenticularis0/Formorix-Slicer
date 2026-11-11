@@ -1,6 +1,7 @@
 #pragma once
 #include "FormorixMaterial.hpp"
 #include <cstddef>
+#include <functional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -17,7 +18,7 @@ struct Cell
     std::size_t run = 0;
     FormorixGeometry::Mesh mesh;
 };
-std::vector<Station> simplify_stations(const std::vector<Station>&);
+std::vector<Station> simplify_stations(const std::vector<Station>&, bool closed, const std::function<bool()>&);
 void audit_exact(Result&,
                  const std::vector<Target>&,
                  const FormorixGeometry::Mesh&,

@@ -32,6 +32,9 @@ struct SweepRun
     std::vector<Station> stations;
     std::vector<double> supplied_volumes; // one physical nominal supply per segment, mm^3
     bool outer_layer = false;
+    // Closed runs have N distinct stations and N supplies, including last -> first.
+    // Never duplicate the first station at the end. Open runs retain N-1 supplies.
+    bool closed = false;
 };
 struct Target
 {
@@ -50,6 +53,9 @@ struct Options
     std::size_t max_distance_queries   = 50000;
     double distance_slack              = .001; // requested interval width, mm
     double miter_limit                 = 4.;
+    // Soft elapsed-time budget. Checked at cancellation/CGAL visitor checkpoints,
+    // not a hard deadline for individual non-interruptible CGAL operations.
+    double max_elapsed_seconds         = 60.;
 };
 enum class Status { Complete, InvalidInput, InvalidSweep, BooleanFailure, ResourceLimit, Canceled };
 enum class Coverage { Empty, Partial, Full }; // Full means target-minus-material is exactly empty
@@ -85,6 +91,7 @@ struct Result
 {
     Status status = Status::InvalidInput;
     std::string error;
+    double elapsed_seconds = 0.; // observed audit duration, including failure/cancellation cleanup
     // The untrimmed nominal sweep remains diagnostic geometry if its audit fails.
     // It is a collection of closed cells, NOT an already-unioned manifold solid.
     FormorixGeometry::Mesh diagnostic_cells;
