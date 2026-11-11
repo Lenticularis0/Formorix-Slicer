@@ -157,6 +157,22 @@ TEST_CASE("Planar shell and core share an exact interface without volume loss", 
     REQUIRE(full_wall.parts.size() == 1);
     CHECK_THAT(full_wall.parts[0].volume, WithinAbs(500., 1e-10));
 }
+TEST_CASE("Representable planar interfaces retain double precision without unnecessary output quantization", "[FormorixFoundations]")
+{
+    const double x = GENERATE(0., 1590.);
+    const auto source = box(x, x + 10.);
+    const auto result = FG::partition(source, {request(plane_patch(x, x + 10., 0., 10., 5.), .4)});
+    INFO(result.error);
+    REQUIRE(result.ok());
+    REQUIRE(result.interfaces.size() == 1);
+    CHECK(result.output_topology_preserved);
+    // Tangential Boolean intersection vertices at 1600 mm can round by an ULP;
+    // the common horizontal interface must still retain its exact Z plane.
+    CHECK(result.rounding_bound < 1e-12);
+    for (const auto& p : result.interfaces.front().mesh.vertices)
+        CHECK_THAT(p.z(), WithinAbs(5. - .4, 1e-14));
+    CHECK_THAT(result.volume_residual, WithinAbs(0., 1e-10));
+}
 TEST_CASE("Adjacent shell regions retain distinct depths and conserve their common solid", "[FormorixFoundations]")
 {
     auto result = FG::partition(box(),
@@ -422,6 +438,9 @@ TEST_CASE("A circumferential shell supports vertical faces and overhangs without
     auto result     = FG::partition(solid, {r});
     INFO(result.error);
     REQUIRE(result.ok());
+    // This fixture requires the common-grid fallback. Its small vertex rounding
+    // does not prove that topological repair preserves the complete boundary.
+    CHECK_FALSE(result.output_topology_preserved);
     double expected = 32. * std::sin(2 * pi / 64.) * (9. - 2.75 * 2.75) * 3.;
     // Output vertices share a 2^-30 mm grid. This volume tolerance (mm^3)
     // includes the resulting sub-nanometre boundary displacement.

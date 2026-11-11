@@ -12,6 +12,7 @@ The principal modules are:
 | --- | --- |
 | `FormorixProfiles` | Resolve each head's current Orca material, nozzle and process settings; detect stale saved process snapshots. |
 | `FormorixHybrid` | Extract marked surfaces, partition shell/core volumes, compensate nominal material placement, generate surface paths, and audit coverage, volume and underlay. |
+| `FormorixMaterial` | Construct the actual nominal spatial deposition cells and audit their all-layer unions, deficits, excess, overlap and two-sided boundary distances. |
 | `FormorixCorePreview` | Process the actual partitioned core through native Orca slicing and copy its extrusion geometry into source coordinates. |
 
 `FormorixGeometry` supplies double-precision meshes, reference measurements and CGAL Boolean partitioning. `FormorixProcess` supplies the nominal extrusion cross-section and placement model. `FormorixPreview` supplies surface raster seeds and three independent time-indexed head tracks. The renderer consumes immutable shared results; its float/OpenGL geometry is display data, not the calculation reference.
@@ -36,7 +37,7 @@ Surface raster seeds are refined according to midpoint displacement, orientation
 
 Finite ribbon footprints use mitered turns and flat endcaps. Raster rows use the derived compacted width, with explicit accounting for turns, unfilled remainder strips, overlap and outside material. Local boundary termination marks unsafe deposition segments as non-extruding travel; it does not claim a collision-free connection. Every layer carries an extrusion mask. Motion supply is its material-center segment volume divided by TCP travel length, so the volume ledger and volumetric speed limit remain consistent when those lengths differ. This is a geometric coordinate conversion, not a change to the configured flow.
 
-Coverage tests examine the marked area, including points between contact curves. Every layer contributes its finite footprint to the volume ledger. Coarse volume plausibility is separate from a strict material-partition verification required for any positive accuracy status. Projected union, missing, outside and overlap volumes are not a certified three-dimensional partition on a curved surface. A failed volume balance is reported; the implementation does not invent an automatic flow correction. Material adhesion, cooling, shrinkage calibration and the actual deposited shape require separate evidence. Adaptive refinement on a curved mesh remains a sampling procedure rather than a proven global error bound.
+Projected coverage tests examine the marked area, including points between contact curves, and retain their per-layer diagnostics. They cannot grant a spatial accuracy certificate. The same actual extrusion masks and per-segment supply create independent head/material/layer runs for the [spatial material audit](FormorixMaterial.md). Its untrimmed nominal bodies are compared with the allocated shell and core. Incomplete audits retain explicit diagnostic status; they never inherit a previously positive projection result. Regional supply residuals are checked separately so errors in different materials cannot cancel. Material adhesion, cooling, shrinkage calibration and the actual deposited shape require separate evidence.
 
 ## Native core slicing and export isolation
 
@@ -56,7 +57,7 @@ The shared preview can display the original solid, core, native core/support pat
 
 ## Accuracy contract and limits
 
-The accuracy record separates CAD import, shell construction, float/Orca conversion, path interpolation and nominal material placement. An unknown bound is infinite. A 0.01-mm verification additionally requires whole-surface coverage, plausible material volume and strict all-layer material-partition evidence. A small relative missing-area fraction is not a maximum-distance bound. Maximum, mean and RMS sampled errors are evidence, not substitutes for a maximum-error bound. No physical printing accuracy is promised.
+The accuracy record separates CAD import, shell construction, float/Orca conversion, path interpolation and nominal material placement. An unknown bound is infinite. A 0.01-mm verification additionally requires a completed all-layer spatial material audit, whole-surface coverage, consistent regional material supply and no inadmissible occupation. A small relative missing-area fraction is not a maximum-distance bound. Maximum, mean and RMS sampled errors are evidence, not substitutes for a bound covering the surfaces between samples. Mesh-relative evidence remains separate from an unknown CAD reference. No physical printing accuracy is promised.
 
 The adapter's coordinate-grid allowance covers input, centering and output quantization only. It does not bound every Orca perimeter simplification, offset or conventional deposited surface. Mesh conversion can be measured even when the original CAD reference is unavailable; a small conversion error alone never certifies the complete hybrid result.
 

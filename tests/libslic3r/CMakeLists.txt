@@ -34,6 +34,7 @@ add_executable(${_TEST_NAME}_tests
     test_formorix_preview.cpp
     test_formorix_foundations.cpp
     test_formorix_hybrid.cpp
+    test_formorix_material.cpp
     test_formorix_profiles.cpp
     test_config_variant_expansion.cpp
     test_locales_utils.cpp

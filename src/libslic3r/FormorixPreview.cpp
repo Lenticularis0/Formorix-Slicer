@@ -147,6 +147,7 @@ struct Patch
     std::vector<int> boundary;
     std::vector<Vec2d> outline;
     Vec3d u, v, axis;
+    int constant_axis = -1;
     Vec2d lo, hi;
     int cells = 1;
     std::vector<std::vector<int>> grid;
@@ -164,6 +165,14 @@ struct Patch
             const double y = cross(p - a, c - a) / area, z = cross(b - a, p - a) / area, x = 1. - y - z;
             if (std::min({x, y, z}) < -2e-5)
                 continue;
+            // On an axis-aligned plane, retain the analytically constructed
+            // raster coordinates. Barycentric reconstruction can introduce a
+            // tiny zigzag whose short segments fold a finite-width miter.
+            if (constant_axis >= 0) {
+                Vec3d position = u * p.x() + v * p.y();
+                position[constant_axis] = mesh.vertices.front()[constant_axis];
+                return {position, axis};
+            }
             return {x * mesh.vertices[t[0]].cast<double>() + y * mesh.vertices[t[1]].cast<double>() + z * mesh.vertices[t[2]].cast<double>(),
                     (x * normals[t[0]] + y * normals[t[1]] + z * normals[t[2]]).normalized()};
         }
@@ -251,6 +260,11 @@ Patch parameterize(const Input& input, const FormorixSurfaces::Settings& s)
         throw Issue::NotHeightField;
     p.u.normalize();
     p.v  = p.axis.cross(p.u);
+    for (int a = 0; a < 3; ++a)
+        if (std::abs(p.axis[a]) == 1. &&
+            std::all_of(p.mesh.vertices.begin(), p.mesh.vertices.end(),
+                        [&](const Vec3f& vertex) { return vertex[a] == p.mesh.vertices.front()[a]; }))
+            p.constant_axis = a;
     p.lo = Vec2d::Constant(std::numeric_limits<double>::max());
     p.hi = -p.lo;
     for (const auto& v : p.mesh.vertices) {

@@ -185,9 +185,13 @@ RibbonSection ribbon_section(const Profile& p)
     out.height          = height;
     // Same non-bridge stadium formula as Orca Flow, evaluated in double rather
     // than converting the profile dimensions through Flow's float members.
-    out.area_before_flow = height * (width - height) + pi * height * height / 4.;
-    out.supplied_area    = out.area_before_flow * p.flow_ratio;
-    out.compacted_width  = out.supplied_area / height;
+    // Evaluate the reduced width directly. Multiplying by height and dividing
+    // again can perturb an exactly commensurate pitch and invert a zero-width
+    // inner miter rail. This is the same formula, with unchanged profile Flow.
+    const double reduced_width = width - height * (1. - pi / 4.);
+    out.area_before_flow = height * reduced_width;
+    out.compacted_width  = reduced_width * p.flow_ratio;
+    out.supplied_area    = height * out.compacted_width;
     return out;
 }
 double ribbon_speed(const Profile& p)

@@ -1,5 +1,6 @@
 #pragma once
 #include "FormorixGeometry.hpp"
+#include "FormorixMaterial.hpp"
 #include "FormorixPreview.hpp"
 #include "FormorixProcess.hpp"
 #include "FormorixSurfaces.hpp"
@@ -30,6 +31,7 @@ struct Input
 {
     FormorixGeometry::Mesh solid;
     std::vector<RegionInput> regions;
+    FormorixMaterial::Options material_options;
 };
 struct FloatMesh
 {
@@ -87,6 +89,8 @@ struct Result
 {
     FormorixGeometry::Mesh original, core;
     FormorixGeometry::Partition partition;
+    FormorixMaterial::Result material; // actual nominal 3D cells; diagnostic failures never confer accuracy
+    std::vector<FormorixMaterial::SweepRun> material_runs;
     FormorixPreview::Result preview; // material centers in layers; actual TCPs in the 5D-only timeline
     std::vector<RegionResult> regions;
     std::vector<Vec3d> missing_underlay, unverified;

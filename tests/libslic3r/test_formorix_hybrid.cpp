@@ -22,13 +22,11 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
-#include <cstddef>
 #include <iomanip>
 #include <iostream>
 #include <limits>
 #include <map>
 #include <string>
-#include <utility>
 #include <utility>
 #include <vector>
 
@@ -139,7 +137,27 @@ FH::Input fixture(int shape, bool split = false, bool whole = false)
 }
 void metrics(const char* name, const FH::Result& result)
 {
+    const auto& material = result.material;
+    std::cout << "MATERIAL3D " << name << ",status=" << int(material.status) << ",supplied=" << std::setprecision(17)
+              << material.supplied_volume << ",union=" << material.union_volume << ",missing=" << material.missing_volume
+              << ",outside=" << material.outside_volume << ",duplicate=" << material.duplicate_volume
+              << ",core_overlap=" << material.core_overlap_volume << ",supply_residual=" << material.supply_geometry_residual
+              << ",maximum=" << material.boundary_distance.maximum << ",mean=" << material.boundary_distance.mean
+              << ",rms=" << material.boundary_distance.rms << ",upper=" << material.boundary_distance.upper_bound
+              << ",bounded=" << material.boundary_distance.bounded << ",cells=" << material.cells
+              << ",queries=" << material.distance_queries << ",error=" << material.error << "\n";
+    for (const auto& r : material.regions)
+        std::cout << "MATERIAL3D_REGION " << name << ",region=" << r.region << ",coverage=" << int(r.coverage)
+                  << ",missing=" << r.missing_volume << ",outside=" << r.outside_volume
+                  << ",supply_residual=" << r.supply_geometry_residual << ",boundary_bounded=" << r.boundary_distance.bounded
+                  << ",outer_bounded=" << r.nominal_outer_distance.bounded << ",outer_upper=" << r.nominal_outer_distance.upper_bound
+                  << ",input_rounding=" << r.input_rounding_volume_bound << '/' << material.input_rounding_volume_bound
+                  << ",zero_checks=" << (r.outside_volume == 0.) << '/' << (material.duplicate_volume == 0.) << '/' << (material.core_overlap_volume == 0.) << "\n";
     for (const auto& r : result.regions) {
+        std::cout << "ACCURACY " << name << ",region=" << r.id << ",topology=" << result.partition.output_topology_preserved
+                  << ",bounds=" << r.accuracy.bounds[0] << '/' << r.accuracy.bounds[1] << '/' << r.accuracy.bounds[2] << '/'
+                  << r.accuracy.bounds[3] << '/' << r.accuracy.bounds[4] << ",inadmissible=" << r.inadmissible_material
+                  << ",volume_plausible=" << r.accuracy.material_volume_plausible << "\n";
         double timeline_volume = 0.;
         for (const auto& track : result.preview.timeline.heads)
             for (const auto& motion : track)
@@ -176,6 +194,7 @@ TEST_CASE("A commensurate planar ribbon exactly partitions finite cells without 
     CHECK_THAT(r.coverage.sampled_maximum, WithinAbs(0., 1e-8));
     CHECK(r.accuracy.material_partition_verified);
     CHECK(r.accuracy.verified());
+    CHECK(r.accuracy.bounds[2] >= FH::to_float(result.core).displacement_bound);
     CHECK_THAT(input.regions[0].process.flow_ratio, WithinAbs(before.flow_ratio, 1e-12));
     CHECK_THAT(input.regions[0].process.line_width, WithinAbs(before.line_width, 1e-12));
     metrics("commensurate_plane", result);
@@ -192,6 +211,47 @@ TEST_CASE("A complete fine outer layer cannot certify missing inner ribbon cells
     CHECK(result.regions[0].projected_uncovered_volume > 0.);
     CHECK_FALSE(result.regions[0].accuracy.material_partition_verified);
     CHECK_FALSE(result.regions[0].accuracy.verified());
+}
+TEST_CASE("Every hybrid deposition run retains its actual layer head material and supplied volume", "[FormorixHybrid]")
+{
+    auto input = fixture(0, true);
+    const auto original = input.solid;
+    const auto result = FH::generate(input);
+    INFO(result.error);
+    REQUIRE(result.ok());
+    REQUIRE_FALSE(result.material_runs.empty());
+    std::array<double, 3> supply{};
+    for (const auto& run : result.material_runs) {
+        REQUIRE(run.head >= 0);
+        REQUIRE(run.head < 3);
+        REQUIRE(run.stations.size() > 1);
+        REQUIRE(run.supplied_volumes.size() + 1 == run.stations.size());
+        REQUIRE(run.layer >= 0);
+        REQUIRE(std::size_t(run.layer) < result.preview.layers.size());
+        CHECK(run.material == input.regions[run.head].process.material_id);
+        CHECK(run.region == input.regions[run.head].id);
+        for (double volume : run.supplied_volumes) {
+            CHECK(volume > 0.);
+            supply[run.head] += volume;
+        }
+    }
+    for (const auto& region : result.regions)
+        CHECK_THAT(supply[region.head], WithinAbs(region.deposited_volume, 1e-10));
+    CHECK(input.solid.vertices == original.vertices);
+    CHECK(input.solid.faces == original.faces);
+}
+TEST_CASE("An incomplete spatial audit cannot inherit a positive planar projection certificate", "[FormorixHybrid]")
+{
+    auto input = fixture(0);
+    input.regions[0].process.line_width = .75 + .2 * (1. - std::acos(-1.) / 4.);
+    input.material_options.max_stations = 2;
+    const auto result = FH::generate(input);
+    INFO(result.error);
+    REQUIRE(result.ok()); // Existing paths remain diagnostic; no material approval.
+    CHECK_FALSE(result.material.ok());
+    CHECK_FALSE(result.regions[0].accuracy.material_partition_verified);
+    CHECK_FALSE(result.regions[0].accuracy.verified());
+    CHECK_FALSE(std::isfinite(result.regions[0].accuracy.bounds[4]));
 }
 TEST_CASE("Different nozzle ribbons meet at an identical planar material boundary without geometric gaps",
           "[FormorixHybrid][RibbonBaseline]")
@@ -519,6 +579,18 @@ TEST_CASE("Impossible hybrid partitions and canceled computations keep no accept
     CHECK_FALSE(FH::generate(fixture(0), [] { return true; }).ok());
     input                                = fixture(1);
     input.regions[0].settings.shell_mode = FS::ShellMode::FullWall;
+    CHECK_FALSE(FH::generate(input).ok());
+}
+TEST_CASE("Invalid head and region identities are rejected before constructing indexed tracks", "[FormorixHybrid]")
+{
+    auto input = fixture(0);
+    input.regions[0].head = GENERATE(-1, 3, 99);
+    CHECK_FALSE(FH::generate(input).ok());
+    input.regions[0].head = 0;
+    input.regions[0].id = 0;
+    CHECK_FALSE(FH::generate(input).ok());
+    input.regions[0].id = 1;
+    input.regions.push_back(input.regions[0]);
     CHECK_FALSE(FH::generate(input).ok());
 }
 TEST_CASE("Hybrid expansion bounds the final movement count across all layers", "[FormorixHybrid]")

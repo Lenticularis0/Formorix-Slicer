@@ -1,0 +1,23 @@
+[
+  {
+    "case": "saved-curved",
+    "source": "2d5db079508df40f68a20de83942221bb8a67524",
+    "elapsed_seconds": 8.3289462,
+    "sampled_peak_working_set_bytes": 77426688,
+    "exit_code": 0
+  },
+  {
+    "case": "curved-hydrofoil",
+    "source": "2d5db079508df40f68a20de83942221bb8a67524",
+    "elapsed_seconds": 0.253531,
+    "sampled_peak_working_set_bytes": 25038848,
+    "exit_code": 0
+  },
+  {
+    "case": "commensurate",
+    "source": "2d5db079508df40f68a20de83942221bb8a67524",
+    "elapsed_seconds": 0.1205067,
+    "sampled_peak_working_set_bytes": 15228928,
+    "exit_code": 0
+  }
+]

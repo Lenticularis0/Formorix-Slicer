@@ -2,6 +2,7 @@
 #include "FormorixDeposition.hpp"
 #include "Formorix5D.hpp"
 #include "FormorixGeometry.hpp"
+#include "FormorixMaterial.hpp"
 #include "FormorixPreview.hpp"
 #include "FormorixProcess.hpp"
 #include "FormorixSurfaces.hpp"
@@ -102,11 +103,17 @@ struct Surface
     const FG::Mesh& mesh;
     std::vector<Vec3d> normals;
     AABBTreeIndirect::Tree3d tree;
+    int constant_axis = -1;
     Surface(const FG::Mesh& m, const std::map<Key, Vec3d>& shared)
         : mesh(m), tree(AABBTreeIndirect::build_aabb_tree_over_indexed_triangle_set(m.vertices, m.faces))
     {
         for (const auto& p : m.vertices)
             normals.push_back(shared.at(key(p)).normalized());
+        for (int a = 0; a < 3; ++a)
+            if (std::abs(normals.front()[a]) == 1. &&
+                std::all_of(m.vertices.begin(), m.vertices.end(), [&](const Vec3d& p) { return p[a] == m.vertices.front()[a]; }) &&
+                std::all_of(normals.begin(), normals.end(), [&](const Vec3d& n) { return n == normals.front(); }))
+                constant_axis = a;
     }
     std::pair<Vec3d, Vec3d> at(const Vec3d& p) const
     {
@@ -115,6 +122,17 @@ struct Surface
         const double d = AABBTreeIndirect::squared_distance_to_indexed_triangle_set(mesh.vertices, mesh.faces, tree, p, face, q);
         if (d < 0. || !std::isfinite(d))
             throw std::runtime_error("Cannot locate selected surface");
+        if (constant_axis >= 0) {
+            Vec3d projected = p;
+            projected[constant_axis] = mesh.vertices.front()[constant_axis];
+            const double roundoff = 32. * std::numeric_limits<double>::epsilon() * std::max(1., projected.norm());
+            // Preserve the analytic planar seed, rather than repeatedly
+            // reconstructing it with noisy barycentric coordinates. This is
+            // path construction only; the exact material audit still checks
+            // the resulting footprint against the unchanged target solid.
+            if ((q - projected).norm() <= roundoff)
+                return {projected, normals.front()};
+        }
         const auto& f = mesh.faces[face];
         const Vec3d a = mesh.vertices[f[0]], u = mesh.vertices[f[1]] - a, v = mesh.vertices[f[2]] - a, n = u.cross(v);
         const double det = n.squaredNorm();
@@ -530,10 +548,13 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
     Result out;
     out.original = input.solid;
     try {
+        canceled(cancel);
         if (input.regions.empty() || input.regions.size() > 32 || !FG::valid_solid(input.solid))
             throw std::runtime_error("Hybrid calculation requires marked surfaces on a valid closed solid");
         std::map<int, std::map<Key, Vec3d>> normals_by_region;
         for (const auto& r : input.regions) {
+            if (r.id <= 0 || r.head < 0 || r.head >= 3 || normals_by_region.count(r.id))
+                throw std::runtime_error("Hybrid regions require unique positive IDs and one of three valid heads");
             auto& shared = normals_by_region[r.id];
             FG::make_atlas(r.surface);
             if (!PS::valid(r.process))
@@ -608,7 +629,8 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
             if (p.region == 0)
                 out.core = p.mesh;
         const auto source = to_float(input.solid);
-        out.preview.core  = to_float(out.core).mesh;
+        const auto core_display = to_float(out.core);
+        out.preview.core = core_display.mesh;
         double clock      = 0.;
         for (size_t index = 0; index < input.regions.size(); ++index) {
             canceled(cancel);
@@ -625,7 +647,8 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                 if (p.region == r.id)
                     rr.shell_volume = p.volume;
             const auto selected   = to_float(r.surface);
-            rr.accuracy.bounds[2] = std::max(source.displacement_bound, selected.displacement_bound);
+            const double seed_conversion = std::max(source.displacement_bound, selected.displacement_bound);
+            rr.accuracy.bounds[2] = std::max(seed_conversion, core_display.displacement_bound);
             bool flat             = true;
             const Vec3d normal    = surface.normals.front();
             double normal_spread = 0., plane_error = 0.;
@@ -661,6 +684,8 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                 else
                     rr.accuracy.bounds[1] = INFINITY;
             }
+            if (!out.partition.output_topology_preserved)
+                rr.accuracy.bounds[1] = INFINITY;
             const auto requested_section = PS::ribbon_section(r.process);
             rr.pitch = rr.compacted_width = requested_section.compacted_width;
             rr.supplied_area              = requested_section.supplied_area;
@@ -734,15 +759,17 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                 return outer_cache.emplace(h, std::move(refined)).first->second;
             };
             if (flat)
-                rr.accuracy.bounds[3] = rr.accuracy.bounds[2] + 1e-9 + 2. * plane_error + 2. * rr.shell_depth * normal_spread;
-            double depth            = rr.shell_depth;
+                rr.accuracy.bounds[3] = seed_conversion + 1e-9 + 2. * plane_error + 2. * rr.shell_depth * normal_spread;
+            std::vector<double> boundaries{0.};
+            for (double height : heights[index])
+                boundaries.push_back(boundaries.back() + height);
             bool all_layers_covered = true, all_supplies_match = true;
             double material_bound = 0.;
             size_t terminated     = 0;
             for (size_t rev = heights[index].size(); rev > 0; --rev) {
                 canceled(cancel);
                 const double h = heights[index][rev - 1];
-                depth -= h;
+                const double depth = boundaries[rev - 1];
                 auto profile         = r.process;
                 profile.layer_height = h;
                 const auto section   = PS::ribbon_section(profile);
@@ -824,6 +851,32 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                     }
                 }
                 double layer_supply = 0.;
+                FormorixMaterial::SweepRun run;
+                const auto begin_run = [&] {
+                    run = {};
+                    run.head = r.head;
+                    run.region = r.id;
+                    run.layer = global_layer;
+                    run.material = profile.material_id;
+                    run.outer_layer = rev == 1;
+                };
+                const auto flush_run = [&] {
+                    if (run.stations.size() > 1)
+                        out.material_runs.push_back(std::move(run));
+                    begin_run();
+                };
+                const auto station = [&](size_t i) {
+                    FormorixMaterial::Station value{layer.path[i].position, layer.path[i].axis,
+                                                     section.compacted_width, section.height};
+                    // Both incident layers use the same cumulative boundary.
+                    // Reconstructing each as center +/- h/2 independently can
+                    // leave a microscopic interior crack despite equal heights.
+                    value.height_endpoints = std::array<Vec3d, 2>{
+                        contacts[i].position - boundaries[rev] * layer.path[i].axis,
+                        contacts[i].position - boundaries[rev - 1] * layer.path[i].axis};
+                    return value;
+                };
+                begin_run();
                 for (size_t i = 1; i < tcp.size(); ++i) {
                     const double length = (tcp[i].position - tcp[i - 1].position).norm();
                     if (length < 1e-9)
@@ -840,7 +893,15 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                                      extrude, global_layer, r.id, profile, tcp_area});
                     clock = end;
                     layer_supply += volume;
+                    if (extrude) {
+                        if (run.stations.empty())
+                            run.stations.push_back(station(i - 1));
+                        run.stations.push_back(station(i));
+                        run.supplied_volumes.push_back(volume);
+                    } else
+                        flush_run();
                 }
+                flush_run();
                 rr.deposited_volume += layer_supply;
                 // The outermost layer owns visible error samples. Every layer
                 // contributes its finite swept footprint to the volume ledger.
@@ -899,11 +960,6 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
             if (rr.nominal_core_overlap > 1e-6)
                 out.warnings.push_back("Region " + std::to_string(r.id) + ": nominal bead crosses the local core interface by " +
                                        std::to_string(rr.nominal_core_overlap) + " mm; this material overlap is not resolved");
-            if (!rr.accuracy.verified()) {
-                out.warnings.push_back("Region " + std::to_string(r.id) + ": 0.01 mm whole-surface accuracy is not verified");
-                if (out.unverified.size() < 10000)
-                    out.unverified.push_back(r.surface.vertices.front());
-            }
             out.regions.push_back(std::move(rr));
             const int base = int(out.preview.selected.vertices.size());
             out.preview.selected.vertices.insert(out.preview.selected.vertices.end(), selected.mesh.vertices.begin(),
@@ -911,6 +967,46 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
             for (const auto& f : selected.mesh.indices)
                 out.preview.selected.indices.emplace_back(f[0] + base, f[1] + base, f[2] + base);
             out.preview.shell_depth = std::max(out.preview.shell_depth, requests[index].depths.front());
+        }
+        std::vector<FormorixMaterial::Target> material_targets;
+        for (const auto& part : out.partition.parts)
+            if (part.region != 0) {
+                const auto region = std::find_if(out.regions.begin(), out.regions.end(),
+                                                 [&](const RegionResult& r) { return r.id == part.region; });
+                if (region == out.regions.end())
+                    throw std::runtime_error("Missing process identity for material target");
+                material_targets.push_back({part.region, region->process.material_id, part.mesh, region->surface});
+            }
+        out.material = FormorixMaterial::audit(material_targets, out.core, out.material_runs, input.material_options, cancel);
+        canceled(cancel);
+        if (!out.material.ok())
+            out.warnings.push_back("Three-dimensional nominal material audit is incomplete: " + out.material.error);
+        // Projection and contact samples remain diagnostics. They can no longer
+        // grant an accuracy certificate without the all-layer spatial audit.
+        for (auto& region : out.regions) {
+            const auto evidence = std::find_if(out.material.regions.begin(), out.material.regions.end(),
+                                               [&](const FormorixMaterial::Region& r) { return r.region == region.id; });
+            bool complete = out.material.ok() && out.material.boundary_distance.bounded && evidence != out.material.regions.end();
+            if (complete) {
+                complete = evidence->coverage == FormorixMaterial::Coverage::Full && evidence->outside_volume == 0. &&
+                           evidence->boundary_distance.bounded && evidence->nominal_outer_distance.bounded &&
+                           out.material.duplicate_volume == 0. &&
+                           out.material.core_overlap_volume == 0. &&
+                           std::abs(evidence->supply_geometry_residual) <= evidence->input_rounding_volume_bound +
+                                                                             1e-8 * std::max(1., evidence->supplied_volume) &&
+                           std::abs(out.material.supply_geometry_residual) <= out.material.input_rounding_volume_bound +
+                                                                                1e-8 * std::max(1., out.material.supplied_volume);
+                region.accuracy.bounds[4] = std::max(evidence->boundary_distance.upper_bound,
+                                                     evidence->nominal_outer_distance.upper_bound + out.material.rounding_bound);
+            } else
+                region.accuracy.bounds[4] = INFINITY;
+            region.accuracy.whole_surface_covered = complete;
+            region.accuracy.material_partition_verified = complete && !region.inadmissible_material;
+            if (!region.accuracy.verified()) {
+                out.warnings.push_back("Region " + std::to_string(region.id) + ": 0.01 mm whole-surface accuracy is not verified");
+                if (out.unverified.size() < 10000)
+                    out.unverified.push_back(region.surface.vertices.front());
+            }
         }
         for (int h = 0; h < 3; ++h)
             out.preview.timeline.idle[h] = {input.solid.vertices.front() + Vec3d(-5. - 5. * h, 0., 5.), Vec3d::UnitZ()};
@@ -923,6 +1019,8 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
         out.core = {};
         out.partition.parts.clear();
         out.partition.interfaces.clear();
+        out.material = {};
+        out.material_runs.clear();
     }
     return out;
 }
