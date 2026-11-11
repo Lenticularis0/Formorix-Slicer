@@ -1,0 +1,50 @@
+{
+  "source_commit": "b066c16391dbee033abbd8a03f7379c6ff9394ac",
+  "base_commit": "983f285202ca349051809173a97f6154c56d7f09",
+  "branch": "formorix/auftrag-05",
+  "build": "Windows x64 Release",
+  "compiler": "MSVC 19.51.36256.0",
+  "cmake": "4.4.3",
+  "configured_clean": true,
+  "embedded_commit": "b066c16391",
+  "embedded_dirty_suffix": "",
+  "build_exit_code": 0,
+  "install_exit_code": 0,
+  "local_install": "C:\\Formorix Slicer\\Formorix-Slicer\\build\\Formorix-Auftrag05",
+  "recorded_utc": "2026-11-11T16:13:57.9467638Z",
+  "artifacts": [
+    {
+      "relative_path": "orca-slicer.exe",
+      "bytes": 303616,
+      "sha256": "a0599ffed4d1bce55dc821b912727a06b6430ac562b07a8cddb8505b6548ef42"
+    },
+    {
+      "relative_path": "OrcaSlicer.dll",
+      "bytes": 166554624,
+      "sha256": "97fd35bed4f40b3b191e6c37ce3e744c546be74b50c3d0e96f43f69263581dee"
+    },
+    {
+      "relative_path": "resources/i18n/de/OrcaSlicer.mo",
+      "bytes": 1435574,
+      "sha256": "eac39ddb019d86c0f6db3f1ac17f3d75892376d7e0977ed99aae873455384e2e"
+    }
+  ],
+  "ctest": {
+    "selected": 3284,
+    "passed": 3278,
+    "skipped": 6,
+    "failed": 0,
+    "excluded": 0,
+    "elapsed_seconds": 296.69
+  },
+  "clang_tidy": {
+    "changed_files": 54,
+    "exit_code": 0
+  },
+  "notes": [
+    "The launcher is small; the application implementation is in OrcaSlicer.dll.",
+    "The source was clean at configuration and build. Later report/screenshot-only commits do not change these binaries.",
+    "Existing LNK4098 CRT-library warnings remain; Windows runtime/tests are checked separately.",
+    "No physical printing, real kinematics, collision clearance or synchronized production is certified."
+  ]
+}

@@ -2,7 +2,7 @@
 
 **Neun regionale Referenzen besitzen einen positiven nominalen Genauigkeitsnachweis bis 0,01 mm. Eine allgemeine Freigabe gekrümmter Hybridbauteile ist weiterhin nicht erreicht.** Gespeicherte Wölbung, vollständige Hydrofoil-Flächen und mehrere gekrümmte Referenzen bleiben diagnostisch oder werden begründet abgelehnt. Reale Druckgenauigkeit, Haftung, Tragfähigkeit und Kollisionsfreiheit sind nicht nachgewiesen.
 
-Ausgangspunkt ist `main` mit Commit `983f285202ca349051809173a97f6154c56d7f09`, Entwicklungsbranch `formorix/auftrag-05`. Der Pull Request bleibt zur Prüfung offen. Die verlinkten Prüfungen wurden tatsächlich ausgeführt; die abschließende Release-/GUI-Abnahme wird separat ergänzt. Bestandene Negativtests bedeuten eine korrekte Ablehnung, keine unterstützte Fertigungsgeometrie.
+Ausgangspunkt ist `main` mit Commit `983f285202ca349051809173a97f6154c56d7f09`, Entwicklungsbranch `formorix/auftrag-05`. Der finale C++-Stand `b066c16391dbee033abbd8a03f7379c6ff9394ac` wurde als Windows-Release erfolgreich gebaut und installiert. Automatisierte Regression, clang-tidy, Katalog-/Hilfeprüfungen, Performancevergleich und die [dokumentierten nativen GUI-Prüfungen](formorix/verification/auftrag-05/gui-verification.md) sind abgeschlossen. Die dort benannten ungeprüften Bedienfälle bleiben offen. Der Pull Request bleibt zur Prüfung offen. Bestandene Negativtests bedeuten eine korrekte Ablehnung, keine unterstützte Fertigungsgeometrie.
 
 ## Implementierter Stand
 
@@ -21,7 +21,7 @@ Die Materialprüfung verändert vor der Vereinigung keine Eingabekoordinaten. Ei
 
 ## Pflichtvergleich Auftrag 04 / Auftrag 05
 
-Vergleichsbasis ist der geprüfte Auftrag-04-C++-Stand `2d5db079508df40f68a20de83942221bb8a67524`. Der [alte Geometriebericht](formorix/verification/auftrag-04-nachtrag/geometry.md) enthält drei positive und **14 negative regionale Diagnosezeilen**. Diese feste historische Kohorte ist keine Anzahl universell unterstützter Bauteile. Neue Referenzen oder Eingabereihenfolgen werden nicht zu einer Erfolgsquote dieser Kohorte addiert.
+Vergleichsbasis ist der geprüfte Auftrag-04-C++-Stand `2d5db079508df40f68a20de83942221bb8a67524`. Die feste historische Kohorte besteht aus 17 numerischen regionalen `HYBRID`-Zeilen, einschließlich vier getrennter `complete_top_boundary`-Fälle. Alle haben im Auftrag-05-Protokoll ein Gegenstück: **in beiden Ständen drei positiv und 14 nicht positiv**, ohne Statuswechsel. Textuelle Vorab-Ablehnungen und neue Referenzen zählen nicht zu dieser Kohorte. [Werte 04](formorix/verification/auftrag-04-nachtrag/geometry-tests-final.txt), [Werte 05](formorix/verification/auftrag-05/package7-tests.txt).
 
 | Vergleich | Auftrag 04 | Auftrag 05 | Bewertung |
 | --- | --- | --- | --- |
@@ -30,6 +30,11 @@ Vergleichsbasis ist der geprüfte Auftrag-04-C++-Stand `2d5db079508df40f68a20de8
 | Hydrofoil-Negativfläche, bisheriger innerer Ausschnitt | Zufuhr/Schale 0,831208642920; Projektionslücke 16,2231432 %. | 0,831208643046; räumlicher Audit `InvalidSweep`. | Weiterhin unvollständig. Neue vollständige Hydrofoil-Tests stehen separat unten. |
 | Kommensurable Ebene und zwei angrenzende Materialregionen | Positive ebene Abdeckungs-/Budgettests; Zufuhrfaktoren nahe 1. | Zusätzlich exakter räumlicher Nachweis aller Lagen, einschließlich innerer Fehlmengen, Mehrfachbelegung und Materialgrenzen. | Drei bestehende regionale Referenzen mit stärkerer räumlicher Evidenz. |
 | Scharfe planare Gehrung mit umklappender innerer Feinreihe | Ablehnung. | Gültige komplementäre Innentriangulierung für geprüfte konstante planare Schalen; Volumenrest 0. | Geometrische Erweiterung, keine allgemeine geneigte Materialfreigabe. |
+| Auflage der gespeicherten Wölbung | 6.006 fehlende RAW-Proben von 22.400. | Historische RAW-Kohorte: 6.006 → 5.998 nach 25 nativen Verdichtungsmodifiern. Neue Schnittstellenkohorte separat: 10.135 → 10.130 von 36.496; 7.302 native Schichtlücken bleiben. | Kleine geometrische Verbesserung, keine Tragfähigkeitsfreigabe. [Auflage 04](formorix/verification/auftrag-04-nachtrag/core-tests.txt), [Auflage 05](formorix/verification/auftrag-05/package5-core.txt). |
+| Drei angrenzende Materialregionen | Positiver ebener Zweimaterialfall; kein entsprechender räumlicher Dreimaterialnachweis. | Düsen 0,8/0,4/0,6 mm, A/B/C: 12/9/18 mm³; zusammen 39 mm³ Schale und 321 mm³ Kern. Gemeinsame Grenzen ohne nominale Fehlmenge oder Überlagerung. | Drei regionale Nachweise mit unterschiedlichen Lagenhöhen und Schalentiefen; Haftung und Parallelplanung ungeprüft. |
+| Nominale räumliche Fehl-/Übermengen | Projektionsdiagnosen und Mengenverhältnisse, kein allgemeiner räumlicher Materialaudit aller Lagen. | Positive räumliche Referenzen: jeweils 0 mm³ Fehl-/Außenmaterial, Mehrfachbelegung und Kerneingriff. Gegenproben erkennen 0,24 mm³ Randdefizit und 3 mm³ fehlende Innenlage. | Bei fehlgeschlagenem Audit bleiben Mengen unbekannt; insbesondere keine Nullfehlerbehauptung für die gespeicherte Wölbung. |
+| Positive/nicht positive Fälle der festen Kohorte | 3 positiv / 14 nicht positiv. | Unverändert 3 positiv / 14 nicht positiv. | Bestehende positive Fälle erhalten stärkere räumliche Evidenz; keine verbesserte Erfolgszahl dieser Kohorte. |
+| Erweiterter positiver Referenzumfang | Drei regionale Referenzen der historischen Kohorte. | Insgesamt neun unterschiedliche regionale Nachweise, aufgeschlüsselt unten. | Neue Geometrien getrennt gezählt; sechs Eingabereihenfolgen und erneuter 3MF-Roundtrip erhöhen die Anzahl nicht. Keine Ganzbauteilfreigabe. |
 
 **Das aktuelle Orca-Autoprofil ist ein anderer Vergleichsfall:** Die neue Auflösung verwendet bei 0,4-mm-Düse etwa **0,45 mm** äußere Linienbreite statt des früheren pauschalen 0,42-mm-Wertes. Der native Unterbautest lädt das gespeicherte Prozessprofil und löst diese Breite frisch mit Orcas Flow-Funktion auf. Seine Ergebnisse sind kein unveränderter 0,42-mm-5D-Bahnvergleich. Die 22.400 historischen Auflagepunkte bleiben eine eigene RAW-Kohorte; die tatsächlichen Schnittflächen erhalten getrennte 36.496 Proben.
 
@@ -78,43 +83,49 @@ Die vollständige Originaldatei wurde nicht durch einen günstigen Ausschnitt er
 
 ## Ausgeführte automatisierte Prüfungen
 
-Die archivierten Läufe überlappen sich; Fall- und Assertionzahlen werden **nicht addiert**. Sie belegen den protokollierten Stand und ersetzen nicht die finalen Paket-9-Prüfungen.
+Die vollständige finale CTest-Auswahl wurde **ohne Ausschlüsse** ausgeführt. Gezielte Paketläufe überlappen sich und werden nicht zu einer Gesamttestzahl addiert.
 
 | Prüfung | Ausgeführtes Ergebnis und Protokoll |
 | --- | --- |
+| Finale vollständige CTest-Regression | **3.284 ausgewählt, 3.278 bestanden, 6 Windows-Symlink-Skips, 0 Fehler; 296,69 s.** Keine ausgeschlossenen Tests. [Abschlussprotokoll](formorix/verification/auftrag-05/ctest-final.txt). |
+| Finales clang-tidy | **54 geprüfte Dateien bestanden.** [Abschlussprotokoll](formorix/verification/auftrag-05/clang-tidy-final.txt). |
+| gettext und deutsche Kataloge | **460 neue deutsche Übersetzungen; 685 Formorix-Meldungen erfasst.** Die 66 bereits vorhandenen Übersetzungs-Prüfwarnungen bleiben unverändert; keine neuen Warnungen. [gettext](formorix/verification/auftrag-05/package9-gettext.txt), [Katalogprüfung](formorix/verification/auftrag-05/package9-po-check.txt), [Prüfumfang](formorix/verification/auftrag-05/package9-localization.txt). |
+| Veröffentlichte Hilfe | **13 Themen, 5 Anker, 32 relative Links und 22 HTTP-Ziele mit Status 200** geprüft. [Linkprotokoll](formorix/verification/auftrag-05/package9-help-links.json). |
+| Native Projektportabilität und Profilkonflikte | **19 Fälle / 1.149 Assertions bestanden.** Neun native Presets, A/B/C-IDs und frische Profilauflösung erhalten; echte gleichnamige Profilkonflikte werden abgewiesen. [Roundtrip-Nachweise und Grenzen](formorix/verification/auftrag-05/project-roundtrip.md), [Abschlusslauf](formorix/verification/auftrag-05/package9-portability-final.txt). |
 | Breite Formorix-Regression nach nativer Unterbauintegration | 155 Fälle / 433.708 Assertions; native Orca-/Ausgabesperren zusätzlich 32 Fälle / 31.634 Assertions. [Geometrie/Modelle](formorix/verification/auftrag-05/package5-tests.txt), [native Integration](formorix/verification/auftrag-05/package5-core.txt). |
 | Materialvorschau und Posen | 42 Fälle / 86.355 Assertions. [Protokoll](formorix/verification/auftrag-05/package6-tests.txt). |
 | Verschärfte Genauigkeitsgates | 35 Fälle / 189.901 Assertions. [Protokoll](formorix/verification/auftrag-05/package7-tests.txt). |
 | Zusätzliche Pflichtgeometrien und große Koordinaten | 3 geometrische Fälle / 111 Assertions; 1 nativer Fall / 689 Assertions. [Geometrie](formorix/verification/auftrag-05/package8-tests.txt), [Orca bei 1600 mm](formorix/verification/auftrag-05/package8-core.txt). |
-| Frühere breite CTest-Regression des Vorschau-Stands | 3.267 bestanden, 6 Windows-Symlink-Skips, 0 Fehler, 290,69 s. **Kein** Endnachweis nach letzten Abnahme- und Übersetzungsänderungen. |
-| Reihenfolge und Hilfe | Material-/Referenzfälle mit Seeds 7/1337 jeweils 22 Fälle / 855 Assertions; lokale Hilfe 13 Themen und 30 Datei-/Ankerprüfungen. [Seed 7](formorix/verification/auftrag-05/package1-order-7.txt), [Seed 1337](formorix/verification/auftrag-05/package1-order-1337.txt), [Hilfe](formorix/verification/auftrag-05/package6-help-local.json). |
+| Reihenfolgeunabhängigkeit | Material-/Referenzfälle mit Seeds 7/1337 jeweils 22 Fälle / 855 Assertions. [Seed 7](formorix/verification/auftrag-05/package1-order-7.txt), [Seed 1337](formorix/verification/auftrag-05/package1-order-1337.txt). |
 
 Die neueren gezielten Läufe verwenden Seed 42. Tests decken innere Lücken, Limits, Abbruch, leere/ungültige Ablage, verlorene Topologie, Materialidentität, unbekannte CAD-Referenzen und ungültige/veraltete Profile ab. Automatische Vollwandauflage, Kinematik, Kollisionsfreigabe, Mehrkopf-Scheduler, Klipper oder ausführbare 5D-/Hybriddateien wurden nicht implementiert. Die experimentellen Export-, Cache- und Sendesperren bleiben erhalten.
 
-## Performancevergleich: Abschlussmessung ausstehend
+## Performancevergleich
 
-Die Auftrag-04-Basis wurde vor dem ersten Auftrag-05-Build erneut gemessen, Seed 42. Laufzeit umfasst Prozessstart und Assertions; Speicher ist der alle 50 ms abgefragte Peak Working Set, keine isolierte Kernelmessung.
+Die Auftrag-04-Basis und der finale Auftrag-05-Stand wurden mit derselben Basistest-Auswahl und Seed 42 gemessen. Alle drei Endläufe hatten Exitcode 0, ohne gleichzeitig laufenden Build oder Test. Es handelt sich jeweils um eine Einzelmessung einschließlich Prozessstart und Assertions; Speicher ist der alle 50 ms abgefragte Peak Working Set, keine isolierte Kernelmessung.
 
-| Identische Basistest-Auswahl | Auftrag 04 Laufzeit | Beobachteter Peak Working Set |
-| --- | ---: | ---: |
-| Gespeicherte Wölbung, beide getrennten Testprofile | 8,3289462 s | 77.426.688 Byte |
-| Geneigte/konvexe/konkave/Hydrofoil-Ausschnitte | 0,253531 s | 25.038.848 Byte |
-| Kommensurable Ebene | 0,1205067 s | 15.228.928 Byte |
+| Basistest-Auswahl | Auftrag 04 Laufzeit | Auftrag 05 Laufzeit | Peak Working Set 04 | Peak Working Set 05 |
+| --- | ---: | ---: | ---: | ---: |
+| Gespeicherte Wölbung, beide getrennten Testprofile | 8,3289462 s | 8,9043811 s | 77.426.688 Byte | 128.503.808 Byte |
+| Geneigte/konvexe/konkave/Hydrofoil-Ausschnitte | 0,253531 s | 0,2418938 s | 25.038.848 Byte | 26.341.376 Byte |
+| Kommensurable Ebene | 0,1205067 s | 0,2317757 s | 15.228.928 Byte | 26.574.848 Byte |
 
-[Basismessung](formorix/verification/auftrag-05/baseline-performance.json). Ein entsprechend abgegrenzter Auftrag-05-Endlauf steht aus; Beschleunigung oder unveränderter Speicherbedarf werden nicht behauptet. Einzelne Testdauern sind kein kontrollierter Vergleich. Ein früher Diagnoseprozess wurde nach über acht CPU-Minuten beendet und nicht als bestanden gewertet. Das Materialaudit besitzt nun ein kooperatives 60-Sekunden-Budget; einzelne nicht unterbrechbare CGAL-Operationen können es überschreiten.
+[Basismessung 04](formorix/verification/auftrag-05/baseline-performance.json), [Endmessung 05](formorix/verification/auftrag-05/final-performance.json). Die 05-Fälle enthalten zusätzliche räumliche Materialprüfungen. Die Messung belegt weder eine allgemeine Beschleunigung noch eine vollständig unterstützte gekrümmte Materialablage; bestandene erwartete Audit-Ablehnungen sind eingeschlossen. Ein früher Diagnoseprozess wurde nach über acht CPU-Minuten beendet und nicht als bestanden gewertet. Das Materialaudit besitzt nun ein kooperatives 60-Sekunden-Budget; einzelne nicht unterbrechbare CGAL-Operationen können es überschreiten.
 
-## Finale Release- und GUI-Abnahme – noch zu ergänzen
+## Stand der Release- und GUI-Abnahme
 
-**Diese Tabelle bleibt bis zur tatsächlich abgeschlossenen Prüfung offen.** Frühere erfolgreiche Builds oder Teiltests übertragen ihren Status nicht automatisch auf den endgültigen Quellstand.
+Release-Build, Installation und die [dokumentierte sichtbare Endabnahme](formorix/verification/auftrag-05/gui-verification.md) sind abgeschlossen. Der GUI-Bericht trennt tatsächlich bediente Abläufe, automatisierte Prüfungen und weiterhin ungeprüfte Fälle.
 
 | Endprüfung | Abschlussstatus |
 | --- | --- |
-| Finaler Quellcommit, Windows-Release-Build und Installationsartefakt mit SHA256 | Ausstehend; Commit, Buildlog und Artefaktmanifest ergänzen. |
-| Vollständige finale CTest-Auswahl | Ausstehend; ausgewählt/bestanden/übersprungen/fehlgeschlagen, Ausschlüsse, Dauer und Log ergänzen. |
-| clang-tidy gegen `origin/main` | Ausstehend; endgültigen Dateiumfang und Ergebnis ergänzen. |
-| gettext, deutsche Kataloge und veröffentlichte Hilfeziele | Abschlussnachweis ausstehend; Katalogprüfung, unveränderlichen Hilfe-Pin und HTTP-/Ankerprotokoll ergänzen. |
-| Native GUI: Materialanzeigen, drei Kopfzustände, Zeitleiste, Abbruch und veraltete Vorschau | Ausstehend; tatsächlich bediente Abläufe und Screenshots ergänzen. |
-| Projekt-/GUI-Roundtrip und Rückkehr zum normalen Orca-Slicing | Abschlussnachweis ausstehend; Bereiche/Profile/Breitenlimits und weiterhin gesperrten experimentellen Export dokumentieren. |
-| Kontrollierter Performancevergleich 04/05 | Ausstehend; gleiche Modelle/Profile und getrennte Erfolgs-/Abbruchzustände verwenden. |
+| Finaler Quellcommit und Windows-Release-Build | Sauberer Stand `b066c16391dbee033abbd8a03f7379c6ff9394ac`; `ALL_BUILD` Exitcode 0. Generierter Versionsheader: `b066c16391`, leerer Zusatz. [Buildprotokoll](formorix/verification/auftrag-05/build-release-final.txt). |
+| Installationsartefakt mit SHA256 | Installation Exitcode 0 nach `build/Formorix-Auftrag05`. SHA256 für EXE, Anwendungs-DLL und deutschen MO-Katalog sind im [Artefaktmanifest](formorix/verification/auftrag-05/release-manifest.json) festgehalten. |
+| Portables Windows-Archiv | `Formorix-Slicer-Auftrag05-Windows-b066c16391.zip`, 221.535.321 Byte; 18.799 Dateien vollständig gegen die Installation per Hash geprüft. SHA256 `62ecb91cd67bdc22381d24ea303dcd90e30cc6e680820d79ff1176b3041605b6`. [ZIP-Manifest und lokaler Pfad](formorix/verification/auftrag-05/portable-zip.json). |
+| Native GUI: Materialanzeigen, drei Kopfzustände, Zeitleiste und veraltete Ergebnisse | Drei Kopfmarkierungen/-zustände, Darstellungswechsel, ±1 s, Schieberegler, 4×-Wiedergabe, Pause und Reset bedient. Während einer Berechnung geänderte Schichtzahl führte zum Verwerfen des alten Ergebnisses. Zwei reale Hilfe-Aufrufe bestanden. [GUI-Bericht mit zehn Screenshots](formorix/verification/auftrag-05/gui-verification.md). |
+| Projekt-/GUI-Roundtrip und Rückkehr zum normalen Orca-Slicing | Nativ gespeichert, neu geladen und berechnet: 39 mm³ Materialunion, regionale Volumen 12/9/18 mm³, keine Fehlmenge/Überstände/Kerneingriffe; CAD unbekannt. Feste Breite erzeugte sichtbar zwei rote Fehlstreifen mit 2,25395327 mm³ Fehlmenge. Hybridexport und Senden blieben gesperrt. Konventioneller Würfel wurde tatsächlich exportiert; ausführbare Befehle stimmen mit der Basis überein. [Archivvergleich](formorix/verification/auftrag-05/gui-project-archive.json), [G-Code-Vergleich](formorix/verification/auftrag-05/gui-cube-export.json). |
+| Offen in der nativen GUI-Abnahme | Ausdrücklicher Abbruchknopf und nichtleere Überstand-/Überlagerungsanzeigen wurden nicht nativ geprüft; hierfür liegen automatisierte Tests vor. Die geprüfte Änderung während einer Berechnung belegt Ergebnisinvalidierung, keinen ausdrücklich bedienten Abbruch. |
+| Performancevergleich 04/05 | Drei abgeschlossene Einzelmessungen, alle Exitcode 0; Laufzeit und Speicherverbrauch samt methodischen Grenzen oben dokumentiert. |
+
+Der erfolgreiche Release-Build enthält weiterhin `LNK4098`-Warnungen zum Konflikt der Standardbibliothek `LIBCMT` bei `orca_stubgen`, `OrcaSlicer` und `slic3rutils_tests`. Sie sind im Buildprotokoll erhalten; bestandene Tests und GUI-Prüfungen beseitigen diese Warnungen nicht.
 
 Andere Betriebssysteme und reale Druckhardware sind nicht abgenommen. Der Stand ist ein besser überprüfbarer experimenteller Prototyp; die verbleibenden Grenzen der gekrümmten Materialabdeckung erlauben keine Behauptung, Auftrag 05 sei uneingeschränkt erfüllt.

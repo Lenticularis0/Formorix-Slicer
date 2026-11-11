@@ -62,9 +62,35 @@ Speichern opak erhalten; ihr Inhalt erhält damit keine neue Validierungsfreigab
 
 ## GUI und Grenzen
 
-Die bisherige native GUI-Gegenprobe zeigte nach dem Laden drei zugeordnete Köpfe,
-39 mm³ nominales Material und etwa 105 s für den geplanten 5D-Teil. Dies ist ein
-Zwischenbefund; der finale GUI-Lauf einschließlich Konfliktbehandlung steht noch aus.
+Im finalen Windows-Release-Build **b066c16391db** wurde das Referenzprojekt in der
+GUI nativ als `gui-three-materials-final.3mf` gespeichert, über **Strg+O** samt
+Einstellungen erneut geladen und anschließend neu berechnet. Der
+[Bericht nach erneutem Laden](screenshots/04-reloaded-material-report.png) zeigt
+**39 / 39 / 39 mm³** für Zielvolumen, Zufuhr und nominale Vereinigungsmenge.
+Fehlendes Material, Überstand und Kernüberschneidung sind jeweils **0 mm³**;
+die räumliche obere Abstandsschranke beträgt **7,10542736 × 10⁻¹⁵ mm**. Die
+angezeigten **105 s** beziehen sich ausschließlich auf den geplanten 5D-Teil,
+nicht auf einen synchronisierten Ablauf mit konventionellem Kern und Supports.
+
+Eine zusätzliche reine [ZIP-/XML-/JSON-Prüfung](gui-project-archive.json) bestätigt
+im tatsächlich von der GUI gespeicherten Archiv alle neun eingebetteten Quellen,
+die Material-IDs **A / B / C**, sämtliche Bereichs- und Kopfbindungen sowie die
+Oberflächenmarkierungen. Die **16 Vertices und 28 Dreiecke** des platzierten
+Originalmodells stimmen exakt mit dem Referenzprojekt überein; die Prüfung
+wendet sämtliche Komponenten-/Instanztransformationen mit rationaler Arithmetik
+an. Die GUI hat das lokale Mesh zentriert und seine Platzierung entsprechend
+angepasst, daher sind die lokalen XML-Koordinaten nicht bytegleich. Die
+Modellgeometrie bleibt bei **360 mm³** und X=60–78, Y=40–44, Z=0–5 mm erhalten.
+Im Archiv liegt **keine ausführbare G-Code-Datei**; enthaltene G-Code-Vorlagen
+der Maschinenprofile sind weiterhin Konfigurationstexte.
+
+Alle Formorix-Annotationsdaten außer den informativen Prozess-Snapshots sind
+unverändert. Die GUI hat die absichtlich veralteten Snapshots durch frisch
+aufgelöste Werte ersetzt. Die wenigen nativen Preset-Serialisierungsunterschiede
+sind im Archivnachweis einzeln aufgeführt; sie werden nicht als bytegleicher
+Profildatensatz ausgegeben. Die automatisierten Konflikt-Negativtests sind
+oben separat dokumentiert.
+
 Die Quell-TCP-Offsets dieser Testprofile sind 0 mm; alte Snapshot-Offsets werden
 nicht übernommen. Haftung, reale Ablage, Unterbaufestigkeit und Kollisionsfreiheit
 sind nicht bestätigt. Die experimentellen Export-/Sendesperren bleiben bestehen.

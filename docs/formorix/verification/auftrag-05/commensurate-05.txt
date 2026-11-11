@@ -1,0 +1,9 @@
+Filters: "A commensurate planar ribbon exactly partitions finite cells without changing flow"
+Randomness seeded to: 42
+MATERIAL3D commensurate_plane,status=0,supplied=3.6000000000000005,union=3.6000000000000032,missing=0,outside=0,duplicate=-0,core_overlap=0,supply_residual=-2.8310687127941492e-15,maximum=0,mean=0,rms=0,upper=4.9406564584124654e-324,bounded=1,cells=14,queries=0,error=
+MATERIAL3D_REGION commensurate_plane,region=1,coverage=2,missing=0,outside=0,supply_residual=-2.8310687127941492e-15,boundary_bounded=1,outer_bounded=1,outer_upper=0,input_rounding=0/0,zero_checks=1/1/1
+ACCURACY commensurate_plane,region=1,topology=1,bounds=0/3.3306690738754696e-16/9.5367431285353632e-08/1.0001151079231935e-09/4.9406564584124654e-324,inadmissible=0,volume_plausible=1,total_bound=9.6367546726343776e-08,verified=1
+HYBRID commensurate_plane,1,-2.8421709430404007e-14,9.5367431285353632e-08,0,0,0,0,0,0.99999999999999922,1
+===============================================================================
+All tests passed (42 assertions in 1 test case)
+

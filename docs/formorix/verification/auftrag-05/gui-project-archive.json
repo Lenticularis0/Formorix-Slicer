@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "verification_method": "Read-only ZIP/JSON/XML inspection. Decimal coordinates and all component/build transforms evaluated as exact rational numbers; ordered world vertices, triangle indices and paint compared without epsilon. GUI observations below are reported separately from the archive inspection.",
+  "reference_archive": {
+    "path": "tests/data/formorix/auftrag05-three-materials.3mf",
+    "sha256": "d8e78d0398bf097efb4728612b538df91326bd10c8abc1b2c9e64c1c6056aedf",
+    "bytes": 35760,
+    "entries": 17
+  },
+  "gui_saved_archive": {
+    "path": "C:\\Formorix Slicer\\verification\\auftrag05\\gui-three-materials-final.3mf",
+    "sha256": "7cf7b6d958cb2a4d76a4b0c2202a468650285ea56c2d3108ce12f3502461ccbd",
+    "bytes": 54307,
+    "entries": 24
+  },
+  "embedded_profiles": {
+    "total": 9,
+    "by_kind": {
+      "machine": 3,
+      "filament": 3,
+      "process": 3
+    },
+    "same_names_and_types_as_reference": true,
+    "heads": [
+      {
+        "head": 1,
+        "printer_preset": "Formorix reference head 1 nozzle",
+        "material_preset": "Formorix reference head 1 PETG",
+        "process_preset": "Formorix reference head 1 process",
+        "material_id": "A",
+        "nozzle_mm": 0.8,
+        "line_width_mm": 0.9,
+        "layer_height_mm": 0.25,
+        "temperature_c": 245.0,
+        "flow_factors": {
+          "filament": 0.96,
+          "print": 1.02,
+          "outer_wall": 0.98
+        },
+        "snapshot_tcp_offset_mm": 0.0
+      },
+      {
+        "head": 2,
+        "printer_preset": "Formorix reference head 2 nozzle",
+        "material_preset": "Formorix reference head 2 PVA",
+        "process_preset": "Formorix reference head 2 process",
+        "material_id": "B",
+        "nozzle_mm": 0.4,
+        "line_width_mm": 0.45,
+        "layer_height_mm": 0.125,
+        "temperature_c": 205.0,
+        "flow_factors": {
+          "filament": 0.92,
+          "print": 1.05,
+          "outer_wall": 1.03
+        },
+        "snapshot_tcp_offset_mm": 0.0
+      },
+      {
+        "head": 3,
+        "printer_preset": "Formorix reference head 3 nozzle",
+        "material_preset": "Formorix reference head 3 PETG-CF",
+        "process_preset": "Formorix reference head 3 process",
+        "material_id": "C",
+        "nozzle_mm": 0.6,
+        "line_width_mm": 0.7,
+        "layer_height_mm": 0.1875,
+        "temperature_c": 265.0,
+        "flow_factors": {
+          "filament": 1.04,
+          "print": 0.97,
+          "outer_wall": 0.94
+        },
+        "snapshot_tcp_offset_mm": 0.0
+      }
+    ]
+  },
+  "original_mesh": {
+    "world_geometry_and_paint_exactly_equal": true,
+    "local_coordinates_equal": false,
+    "representation_note": "GUI save centers the local mesh and writes a component model; compensating build transform preserves every placed vertex exactly. XML bytes are not identical.",
+    "instances": 1,
+    "vertices": 16,
+    "triangles": 28,
+    "signed_volume_mm3": 360.0,
+    "bbox_mm": {
+      "min": [
+        60.0,
+        40.0,
+        0.0
+      ],
+      "max": [
+        78.0,
+        44.0,
+        5.0
+      ]
+    },
+    "canonical_world_mesh_with_paint_sha256": "8ea1e06b0e92a0db6ec5e2a8de2728ed4b079dc3c8229fc5d87a9967557cac30",
+    "paint_attribute_counts": {
+      "0C": 2,
+      "4": 2,
+      "8": 2
+    }
+  },
+  "formorix_annotations": {
+    "version": 4,
+    "all_data_except_informational_process_snapshots_equal": true,
+    "regions": 3,
+    "region_head_masks": [
+      1,
+      2,
+      4
+    ],
+    "reference_snapshots": "Deliberately obsolete material/nozzle/temperature/TCP values.",
+    "gui_saved_snapshots": "Freshly resolved A/B/C, nozzles0.8/0.4/0.6, temperatures245/205/265, TCP0/0/0; still informational and invalidated on native load."
+  },
+  "executable_print_payload": {
+    "gcode_entries": [],
+    "present": false,
+    "scope": "Archive entry inspection. Machine-profile start/end G-code templates are settings, not generated print jobs."
+  },
+  "native_preset_serialization_differences": [
+    {
+      "kind": "machine",
+      "name": "Formorix reference head 1 nozzle",
+      "differences": {
+        "extruder_nozzle_stats": {
+          "reference": null,
+          "gui_saved": [
+            "Standard#1"
+          ]
+        }
+      }
+    },
+    {
+      "kind": "machine",
+      "name": "Formorix reference head 2 nozzle",
+      "differences": {
+        "machine_max_junction_deviation": {
+          "reference": [
+            "0.01"
+          ],
+          "gui_saved": [
+            "0.01",
+            "0.01"
+          ]
+        },
+        "thumbnails": {
+          "reference": "48x48/PNG,300x300/PNG",
+          "gui_saved": "48x48/PNG, 300x300/PNG"
+        }
+      }
+    },
+    {
+      "kind": "machine",
+      "name": "Formorix reference head 3 nozzle",
+      "differences": {
+        "machine_max_junction_deviation": {
+          "reference": [
+            "0.01"
+          ],
+          "gui_saved": [
+            "0.01",
+            "0.01"
+          ]
+        },
+        "thumbnails": {
+          "reference": "48x48/PNG,300x300/PNG",
+          "gui_saved": "48x48/PNG, 300x300/PNG"
+        }
+      }
+    },
+    {
+      "kind": "process",
+      "name": "Formorix reference head 1 process",
+      "differences": {
+        "plugins": {
+          "reference": [],
+          "gui_saved": null
+        }
+      }
+    },
+    {
+      "kind": "process",
+      "name": "Formorix reference head 2 process",
+      "differences": {
+        "plugins": {
+          "reference": [],
+          "gui_saved": null
+        }
+      }
+    },
+    {
+      "kind": "process",
+      "name": "Formorix reference head 3 process",
+      "differences": {
+        "plugins": {
+          "reference": [],
+          "gui_saved": null
+        }
+      }
+    }
+  ],
+  "gui_observation_reported_by_root": {
+    "build_prefix": "b066",
+    "actions": [
+      "Native Save As to gui-three-materials-final.3mf",
+      "Ctrl+O load the saved project including settings",
+      "Recalculate the hybrid preview"
+    ],
+    "target_mm3": 39,
+    "supplied_mm3": 39,
+    "nominal_union_mm3": 39,
+    "missing_mm3": 0,
+    "outside_mm3": 0,
+    "core_overlap_mm3": 0,
+    "boundary_upper_mm": 7.10542736e-15,
+    "displayed_5d_duration_s": 105,
+    "screenshot": "screenshots/04-reloaded-material-report.png",
+    "cad_reference_known": false,
+    "physical_or_parallel_print_approval": false
+  }
+}

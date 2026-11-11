@@ -41,6 +41,8 @@ Die vollständige NACA-Negativform wird über `x = 100 t²` adaptiv diskretisier
 
 ## Nachweisumfang und ergänzendes reales Modell
 
+Die abschließende [native Windows-GUI-Prüfung](gui-verification.md) ergänzt diese automatisierten Fälle um Materialanzeigen, Zeitleiste, Profilwechsel und Parameteränderungen, 3MF-Rückladung, lokale Orca-Unterbauverdichtung und normalen G-Code-Dateiexport. Ihre negativen Randfüll- und Wölbungsfälle erhalten ausdrücklich keine Genauigkeitsbestätigung.
+
 Die positiven Referenzen werden regional und nach Geometrie gezählt: kommensurable Ebene (1), zwei angrenzende Materialregionen (2), adaptives Rechteck (1), Ebene mit Loch (1), Dreimaterialkörper (3) und der 1600-mm-Fall (1), insgesamt **neun regionale nominale Nachweise**. Die sechs Eingabereihenfolgen des Dreimaterialtests zählen nicht mehrfach. Der große Koordinatenfall besteht mit einem vollständig addierten Budget von **0,000047698814511611955 mm**. Daraus entsteht keine Ganzbauteil-, Unterbau- oder physische Freigabe.
 
 Das unveränderte reale [Hydrofoil-Eingangsmodell](hydrofoil-input.md) bleibt ein zusätzlicher Import-/Konturtest: 11709 Vertices, 23414 Dreiecke, vollständige Auswahl mit 21196 Dreiecken einschließlich 200 rücklaufender Facetten. Drei Schnitte liefern 336 echte Dreiecksträger und eine Offset-Interpolationsschranke von 0,0009843534 mm. CAD-Referenz und vollständiges Materialvolumen sind nicht nachgewiesen; lokale Normalen bis etwa 107,019° überschreiten die 75°-Grenze. Die Existenz dieser Schnitte oder einer geschlossenen NACA-Kontur bestätigt weder den vollständigen Materialkörper noch dessen Erreichbarkeit.
