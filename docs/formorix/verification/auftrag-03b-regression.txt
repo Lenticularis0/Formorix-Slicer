@@ -1,0 +1,31 @@
+Test project C:/Formorix Slicer/Formorix-Slicer/build/tests
+          Start 1418: The Formorix vendor loads with three independent head configurations
+  37/3116 Test #1418: The Formorix vendor loads with three independent head configurations .......................................................   Passed    0.32 sec
+          Start 2439: Disabled Formorix settings leave conventional motion commands unchanged
+ 599/3116 Test #2439: Disabled Formorix settings leave conventional motion commands unchanged ....................................................   Passed    0.09 sec
+          Start 2777: Switching to Formorix invalidates a previously exported conventional job
+ 683/3116 Test #2777: Switching to Formorix invalidates a previously exported conventional job ...................................................   Passed    0.09 sec
+          Start  709: Formorix projects round trip but cannot contain executable G-code
+          Start  485: Formorix imports configuration from both upstream and branded G-code headers
+1072/3116 Test  #709: Formorix projects round trip but cannot contain executable G-code ..........................................................   Passed    0.06 sec
+1073/3116 Test  #485: Formorix imports configuration from both upstream and branded G-code headers ...............................................   Passed    0.05 sec
+          Start  198: Formorix head settings survive printer preset JSON save and reload
+1232/3116 Test  #198: Formorix head settings survive printer preset JSON save and reload .........................................................   Passed    0.03 sec
+          Start 2590: Experimental Formorix jobs are blocked before slicing or writing output
+1513/3116 Test #2590: Experimental Formorix jobs are blocked before slicing or writing output ....................................................   Passed    0.02 sec
+          Start  929: Formorix configuration rejects missing keys and future schemas
+1575/3116 Test  #929: Formorix configuration rejects missing keys and future schemas .............................................................   Passed    0.03 sec
+          Start 1462: Formorix envelopes reject invalid positions limits channels and targets
+2110/3116 Test #1462: Formorix envelopes reject invalid positions limits channels and targets ....................................................   Passed    0.03 sec
+100% tests passed out of 3116
+Formorix5D                      =   0.74 sec*proc (10 tests)
+FormorixFoundations             =   2.42 sec*proc (18 tests)
+FormorixPreview                 =   0.25 sec*proc (7 tests)
+FormorixSurfaces                =   0.41 sec*proc (9 tests)
+Total Test time (real) = 239.45 sec
+	1823 - a link to unparsable install-state contents is not malformed contents a load may set aside (Skipped)
+	1846 - Stdlib code is recognized through a symlinked Python home (Skipped)
+	2159 - A symlink pointing outside the plugin folder is skipped, not reported as an error (Skipped)
+	2206 - A write through a dangling symlink inside a granted tree is denied (Skipped)
+	2255 - A saved exact file grant covers an equivalent spelling of the same file (Skipped)
+	2344 - A tree grant compares canonical paths on both sides (Skipped)

@@ -540,7 +540,7 @@ void FormorixSurfaceEditor::Impl::build_heads(wxWindow *parent)
             const auto it = std::find(material_names.begin(), material_names.end(), project.heads[i].material_preset);
             return it == material_names.end() ? 0 : int(it - material_names.begin());
         }, [this, i](int value) {
-            if (value >= 0 && value < int(material_names.size())) edit([&](auto &p) { p.heads[i].material_preset = material_names[value]; });
+            if (value >= 0 && value < int(material_names.size())) edit([&](auto &p) { p.heads[i].assign_material(material_names[value]); });
         }, false);
         for (int role = 0; role < 5; ++role)
             check(parent, tasks[role], [this, i, role] { return (project.heads[i].tasks & (1u << role)) != 0; }, [this, i, role](bool v) {

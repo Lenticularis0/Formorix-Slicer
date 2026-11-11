@@ -1,0 +1,304 @@
+{
+  "date": "2026-11-11",
+  "platform": "Windows x64 Release, MSVC 14.51",
+  "command": "libslic3r_tests.exe '[FormorixFoundations],[FormorixSurfaces]' --order lex --rng-seed 12345",
+  "result": "All tests passed (263 assertions in 26 test cases)",
+  "foundation_test_cases": [
+    "Planar shell and core share an exact interface without volume loss",
+    "Adjacent shell regions retain distinct depths and conserve their common solid",
+    "Variable wall and shell thickness produce a closed core",
+    "A circumferential shell supports vertical faces and overhangs without a height field",
+    "Offset and Boolean failures never leave partially accepted material volumes",
+    "Adaptive CAD distance checks distinguish fine coarse and unverified geometry",
+    "Small radii require tighter tessellation instead of an accuracy promise",
+    "A doubly curved spherical CAD patch has a bounded import error",
+    "Compensated elliptical beads follow the CAD contact rather than the TCP center",
+    "Adaptive compensated paths bound center interpolation on both curved sides",
+    "Nominal coverage exposes duplicate material volume instead of assuming a surface fit is enough",
+    "Curvature contributes a separate nominal material envelope error",
+    "An analytic hydrofoil has a measured and bounded polyline error",
+    "Chart seams and holes preserve continuity without an extrusion restart",
+    "Three independent material profiles survive project migration and simultaneous time sampling",
+    "Orca material and nozzle indices resolve independently",
+    "A surface requires completed compatible bounded underlay evidence",
+    "Parameterized nozzle envelopes retain placeholder status and respect configured axes"
+  ],
+  "target_mm": 0.01,
+  "real_print_accuracy_verified": false,
+  "notes": [
+    "Directed mesh-to-reference error, not a symmetric Hausdorff or coverage proof.",
+    "Mean and RMS are quadrature/sample estimates, not certified integrals.",
+    "Analytical upper bounds use double arithmetic; not a general interval arithmetic proof.",
+    "Individual metrics are separate test fixtures, not one end-to-end error certificate.",
+    "No 0.01 mm claim without a CAD reference and complete applicable error budget.",
+    "Logical tests have no invented zero RMS; behavior and tolerances are documented in the report."
+  ],
+  "metrics": [
+    {
+      "name": "circumferential_import",
+      "maximum_mm": 0.003613631384483451,
+      "mean_mm": 0.002421337114876506,
+      "rms_mm": 0.0026389505688509873,
+      "upper_bound_mm": 0.0038424295678432053,
+      "samples": 43520,
+      "bounded": true,
+      "within_0_01_mm": true
+    },
+    {
+      "name": "circumferential_inner_interface",
+      "maximum_mm": 0.0033124955448875504,
+      "mean_mm": 0.0022195589805288993,
+      "rms_mm": 0.0024190379834284296,
+      "upper_bound_mm": 0.003522227212422367,
+      "samples": 43520,
+      "bounded": true,
+      "within_0_01_mm": true
+    },
+    {
+      "name": "sphere_two_curvatures",
+      "maximum_mm": 0.00021117239100831853,
+      "mean_mm": 0.00014302449007209985,
+      "rms_mm": 0.0001449259671897913,
+      "upper_bound_mm": 0.00042430817052599136,
+      "samples": 40960,
+      "bounded": true,
+      "within_0_01_mm": true
+    },
+    {
+      "name": "convex_fine",
+      "maximum_mm": 0.0002343719482582607,
+      "mean_mm": 0.00016926704686530476,
+      "rms_mm": 0.00017371593279393268,
+      "upper_bound_mm": 0.00047172005817376405,
+      "samples": 2560,
+      "bounded": true,
+      "within_0_01_mm": true
+    },
+    {
+      "name": "convex_coarse",
+      "maximum_mm": 0.2368170179913447,
+      "mean_mm": 0.15658514594207343,
+      "rms_mm": 0.1719213700506621,
+      "upper_bound_mm": 0.2370614240605718,
+      "samples": 87376,
+      "bounded": true,
+      "within_0_01_mm": false
+    },
+    {
+      "name": "concave_fine",
+      "maximum_mm": 0.0002343719482582607,
+      "mean_mm": 0.00016926704686530476,
+      "rms_mm": 0.00017371593279393268,
+      "upper_bound_mm": 0.00047172005817376405,
+      "samples": 2560,
+      "bounded": true,
+      "within_0_01_mm": true
+    },
+    {
+      "name": "concave_coarse",
+      "maximum_mm": 0.2368170179913447,
+      "mean_mm": 0.15658514594207343,
+      "rms_mm": 0.1719213700506621,
+      "upper_bound_mm": 0.2370614240605718,
+      "samples": 87376,
+      "bounded": true,
+      "within_0_01_mm": false
+    },
+    {
+      "name": "convex_compensated_contact",
+      "maximum_mm": 0.00019335874557802152,
+      "mean_mm": 0.00012246051255477322,
+      "rms_mm": 0.00013780567726913282,
+      "upper_bound_mm": 0.00019335937500000207,
+      "samples": 2688,
+      "bounded": true,
+      "within_0_01_mm": true
+    },
+    {
+      "name": "concave_compensated_contact",
+      "maximum_mm": 0.00019726498286265766,
+      "mean_mm": 0.00012493446230339665,
+      "rms_mm": 0.00014058963034532245,
+      "upper_bound_mm": 0.0001972656250000021,
+      "samples": 2688,
+      "bounded": true,
+      "within_0_01_mm": true
+    },
+    {
+      "name": "NACA0012_CAD_polyline",
+      "maximum_mm": 0.0003825423610574522,
+      "mean_mm": 7.094804175609455e-05,
+      "rms_mm": 0.00010207011601910645,
+      "upper_bound_mm": 0.0009912399993301463,
+      "samples": 12587,
+      "bounded": true,
+      "within_0_01_mm": true
+    },
+    {
+      "name": "planar_bead_head_0",
+      "maximum_mm": 0.0050000000000000044,
+      "mean_mm": 0.0016615848353834506,
+      "rms_mm": 0.002232472654564765,
+      "upper_bound_mm": 0.0050000000000000044,
+      "samples": 1001,
+      "bounded": true,
+      "within_0_01_mm": true
+    },
+    {
+      "name": "planar_bead_head_1",
+      "maximum_mm": 0.0050000000000000044,
+      "mean_mm": 0.001652985171878443,
+      "rms_mm": 0.0022241929717738747,
+      "upper_bound_mm": 0.0050000000000000044,
+      "samples": 1001,
+      "bounded": true,
+      "within_0_01_mm": true
+    },
+    {
+      "name": "planar_bead_head_2",
+      "maximum_mm": 0.004999999999999998,
+      "mean_mm": 0.001658739089367622,
+      "rms_mm": 0.002229736937462859,
+      "upper_bound_mm": 0.004999999999999998,
+      "samples": 1001,
+      "bounded": true,
+      "within_0_01_mm": true
+    },
+    {
+      "name": "concave_bead_0",
+      "maximum_mm": 0.006590095107745331,
+      "mean_mm": 0.0021908865345248657,
+      "rms_mm": 0.002942439896487237,
+      "upper_bound_mm": 0.006706964285714287,
+      "samples": 2001,
+      "bounded": true,
+      "within_0_01_mm": true
+    },
+    {
+      "name": "convex_bead_0",
+      "maximum_mm": 0.003404598548546467,
+      "mean_mm": 0.0011278815389615929,
+      "rms_mm": 0.0015163175912105147,
+      "upper_bound_mm": 0.006706964285714287,
+      "samples": 2001,
+      "bounded": true,
+      "within_0_01_mm": true
+    },
+    {
+      "name": "concave_bead_1",
+      "maximum_mm": 0.005785088791279591,
+      "mean_mm": 0.0019134577290903035,
+      "rms_mm": 0.0025735637691513434,
+      "upper_bound_mm": 0.005813620689655173,
+      "samples": 2001,
+      "bounded": true,
+      "within_0_01_mm": true
+    },
+    {
+      "name": "convex_bead_1",
+      "maximum_mm": 0.004212290565301036,
+      "mean_mm": 0.0013886407574264458,
+      "rms_mm": 0.0018694689245985178,
+      "upper_bound_mm": 0.005813620689655173,
+      "samples": 2001,
+      "bounded": true,
+      "within_0_01_mm": true
+    },
+    {
+      "name": "concave_bead_2",
+      "maximum_mm": 0.00618761889540087,
+      "mean_mm": 0.002053632359049504,
+      "rms_mm": 0.0027594171778496856,
+      "upper_bound_mm": 0.006252456140350878,
+      "samples": 2001,
+      "bounded": true,
+      "within_0_01_mm": true
+    },
+    {
+      "name": "convex_bead_2",
+      "maximum_mm": 0.0038084173404393518,
+      "mean_mm": 0.0012597105176886461,
+      "rms_mm": 0.0016942903706724441,
+      "upper_bound_mm": 0.006252456140350878,
+      "samples": 2001,
+      "bounded": true,
+      "within_0_01_mm": true
+    },
+    {
+      "name": "planar_interface",
+      "maximum_mm": 0.0,
+      "mean_mm": 0.0,
+      "rms_mm": 0.0,
+      "upper_bound_mm": 0.0,
+      "samples": 24,
+      "bounded": true,
+      "within_0_01_mm": true
+    },
+    {
+      "name": "tight_radius_import",
+      "maximum_mm": 1.6275600146026248e-05,
+      "mean_mm": 1.6275600145984404e-05,
+      "rms_mm": 1.6275600145984387e-05,
+      "upper_bound_mm": 7.559858694417647e-05,
+      "samples": 512,
+      "bounded": true,
+      "within_0_01_mm": true
+    }
+  ],
+  "volumes": [
+    {
+      "name": "circumferential",
+      "input_mm3": 84.68680924474035,
+      "output_minus_input_mm3": -1.5682672938055475e-09,
+      "exact_to_output_vertex_bound_mm": 5.68633126859312e-10
+    },
+    {
+      "name": "adjacent_depths",
+      "input_mm3": 500.0,
+      "output_minus_input_mm3": 0.0,
+      "exact_to_output_vertex_bound_mm": 4.3903050937112413e-10
+    },
+    {
+      "name": "variable_wall",
+      "input_mm3": 625.0,
+      "output_minus_input_mm3": 0.0,
+      "exact_to_output_vertex_bound_mm": 5.055484869452478e-10
+    }
+  ],
+  "rejected_limits": [
+    {
+      "name": "tight_radius_bead",
+      "observed_error_mm": 0.07561028345356954,
+      "within_0_01_mm": false
+    }
+  ],
+  "nominal_coverage": [
+    {
+      "name": "head_0",
+      "pitch_mm": 0.19554027718094297,
+      "supplied_area_mm2": 0.27646015351590186,
+      "union_area_mm2": 0.07756760426340407,
+      "nominal_volume_balance_factor": 0.2805742645981075,
+      "numerical_integration_error_mm2": 6.601372226633373e-12,
+      "automatically_applied_to_flow": false
+    },
+    {
+      "name": "head_1",
+      "pitch_mm": 0.13738995596476478,
+      "supplied_area_mm2": 0.06911503837897547,
+      "union_area_mm2": 0.0270247047054796,
+      "nominal_volume_balance_factor": 0.39101048540689826,
+      "numerical_integration_error_mm2": 4.700115296962792e-12,
+      "automatically_applied_to_flow": false
+    },
+    {
+      "name": "head_2",
+      "pitch_mm": 0.1689852064531094,
+      "supplied_area_mm2": 0.15550883635269477,
+      "union_area_mm2": 0.050136087594316765,
+      "nominal_volume_balance_factor": 0.322400249209041,
+      "numerical_integration_error_mm2": 5.7301108302709736e-12,
+      "automatically_applied_to_flow": false
+    }
+  ]
+}

@@ -85,3 +85,15 @@ The Formorix preset is intentionally rejected by the upstream validator's
 the configuration-only contract. Static profile validation and the dedicated
 rejection test are the appropriate checks for this preset. All upstream vendor
 profiles are retained without edits.
+
+## Geometry and process foundation tests
+
+The independent double-precision geometry, nominal material deposition, three-head
+process profiles and manufacturing dependencies are described in
+[FormorixFoundations](HLSD/FormorixFoundations.md). They do not enable hybrid slicing
+or executable 5D export. The [Auftrag 03B report](Formorix-Auftrag-03B.md) records
+measured errors, supported cases and remaining limits.
+
+```powershell
+build/tests/libslic3r/Release/libslic3r_tests.exe '[FormorixFoundations],[FormorixSurfaces]'
+```

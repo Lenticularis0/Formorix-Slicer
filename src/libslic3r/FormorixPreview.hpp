@@ -2,9 +2,11 @@
 #include "Point.hpp"
 #include "TriangleMesh.hpp"
 #include "FormorixSurfaces.hpp"
+#include "FormorixProcess.hpp"
 #include <array>
 #include <cstddef>
 #include <functional>
+#include <optional>
 #include <vector>
 
 namespace Slic3r {
@@ -25,6 +27,7 @@ struct Motion
     MotionKind kind = MotionKind::Extrude;
     bool extrusion  = true;
     int layer = 0, region = 0;
+    std::optional<FormorixProcess::Profile> process; // absent for legacy nominal TCP preview
 };
 struct HeadState
 {
@@ -32,6 +35,7 @@ struct HeadState
     MotionKind kind     = MotionKind::Unassigned;
     bool extrusion      = false;
     std::size_t segment = 0;
+    std::optional<FormorixProcess::Profile> process;
 };
 struct Timeline
 {
@@ -94,5 +98,7 @@ Vec3d reference_direction(const ModelObject&, int instance, const FormorixSurfac
 // Bounded, cancellable single-head planner. No Print/GCode/config export integration.
 Result generate(const Input&, const FormorixSurfaces::Settings&, const Options&, const std::function<bool()>& canceled = {});
 Vec3d interpolate_axis(const Vec3d& a, const Vec3d& b, double fraction);
+// Independent test/future scheduler input. No automatic allocation or collision approval.
+Motion process_motion(int head, int region, const FormorixProcess::Profile&, const Pose& from, const Pose& to, double start);
 } // namespace FormorixPreview
 } // namespace Slic3r

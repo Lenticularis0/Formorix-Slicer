@@ -1,4 +1,5 @@
 #include "FormorixPreview.hpp"
+#include "FormorixProcess.hpp"
 #include "AABBTreeIndirect.hpp"
 #include "FormorixSurfaces.hpp"
 #include "Model.hpp"
@@ -445,7 +446,7 @@ bool Timeline::valid() const
             if (m.head != h || !std::isfinite(m.start) || !std::isfinite(m.end) || m.start < end || m.end <= m.start ||
                 !finite(m.from.position) || !finite(m.to.position) || !finite(m.from.axis) || !finite(m.to.axis) ||
                 std::abs(m.from.axis.norm() - 1.) > 1e-5 || std::abs(m.to.axis.norm() - 1.) > 1e-5 ||
-                m.extrusion != (m.kind == MotionKind::Extrude))
+                m.extrusion != (m.kind == MotionKind::Extrude) || (m.process && !FormorixProcess::valid(*m.process)))
                 return false;
             end = m.end;
         }
@@ -466,11 +467,14 @@ HeadState Timeline::sample(int head, double seconds) const
         state.pose    = track.back().to;
         state.kind    = MotionKind::Wait;
         state.segment = track.size();
+        state.process = track.back().process;
         return state;
     }
     state.segment = std::size_t(it - track.begin());
+    state.process = it->process;
     if (seconds < it->start) {
         state.pose = it == track.begin() ? it->from : (it - 1)->to;
+        state.process = it == track.begin() ? it->process : (it - 1)->process;
         state.kind = MotionKind::Wait;
         return state;
     }
@@ -479,6 +483,16 @@ HeadState Timeline::sample(int head, double seconds) const
     state.kind      = it->kind;
     state.extrusion = it->extrusion;
     return state;
+}
+Motion process_motion(int head, int region, const FormorixProcess::Profile& profile, const Pose& from, const Pose& to, double start)
+{
+    const double distance = (to.position - from.position).norm();
+    if (head < 0 || head > 2 || region <= 0 || !std::isfinite(start) || start < 0. ||
+        !from.position.allFinite() || !to.position.allFinite() || !from.axis.allFinite() || !to.axis.allFinite() ||
+        std::abs(from.axis.norm()-1.) > 1e-8 || std::abs(to.axis.norm()-1.) > 1e-8 || distance < 1e-9)
+        throw std::invalid_argument("Invalid process motion");
+    return {head, start, start + distance / FormorixProcess::effective_speed(profile), from, to,
+            MotionKind::Extrude, true, 0, region, profile};
 }
 Input extract(const ModelObject& object, int instance, int region)
 {

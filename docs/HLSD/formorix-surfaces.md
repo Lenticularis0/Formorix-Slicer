@@ -39,7 +39,11 @@ unordered region pair and remain unverified manufacturing wishes.
 ## Data ownership and persistence
 
 `libslic3r/FormorixSurfaces` is a typed annotation model with bounded values and
-schema version 1. `Model::formorix_surfaces` retains its JSON representation.
+schema version 2. Version 1 migrates without inventing per-head process values.
+Optional independent deposition profiles retain nozzle/material identity and parameters;
+changing a head's Orca material selection clears its previous resolved process values.
+The geometry/process API configures these values; no second GUI profile manager is added.
+`Model::formorix_surfaces` retains its JSON representation.
 `ModelVolume::formorix_facets` owns the triangle mask; `formorix_topology` records
 a hash of vertex count and ordered triangle connectivity. Ordinary transforms
 preserve ownership. A topology mismatch prevents rendering/reusing old masks;
