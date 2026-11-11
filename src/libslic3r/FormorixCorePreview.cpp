@@ -19,6 +19,7 @@
 #include "Triangulation.hpp"
 #include "Slicing.hpp"
 #include "I18N.hpp"
+#include "format.hpp"
 #include "libslic3r.h"
 #include <boost/multiprecision/cpp_int.hpp>
 #include <algorithm>
@@ -310,7 +311,7 @@ void project_options(DynamicPrintConfig& config, const std::vector<std::string>&
             continue;
         // A single slot is an inherited per-printer default, not another nozzle's data.
         if (index >= value->size() && value->size() != 1)
-            throw std::invalid_argument("Missing explicit per-head Orca option: " + key);
+            throw std::invalid_argument(format(_u8L("Missing explicit per-head Orca option: %1%"), key));
         std::unique_ptr<ConfigOption> original(value->clone());
         value->resize(1);
         value->set_at(original.get(), 0,
@@ -320,11 +321,11 @@ void project_options(DynamicPrintConfig& config, const std::vector<std::string>&
 DynamicPrintConfig configuration(const Source& source)
 {
     if (!FormorixProcess::valid(source.process))
-        throw std::invalid_argument("Invalid resolved head profile");
+        throw std::invalid_argument(_u8L("Invalid resolved head profile"));
     auto config = DynamicPrintConfig::full_print_config();
     config.apply(source.config);
     if (config.opt_bool("belt_printer") || config.opt_bool("spiral_mode"))
-        throw std::invalid_argument("Hybrid core preview does not support belt or spiral mode");
+        throw std::invalid_argument(_u8L("Hybrid core preview does not support belt or spiral mode"));
     project_options(config, print_config_def.extruder_option_keys(), source.nozzle_index);
     project_options(config, print_config_def.filament_option_keys(), source.material_index);
     project_options(config, std::vector<std::string>(print_options_with_variant.begin(), print_options_with_variant.end()),
@@ -341,7 +342,7 @@ DynamicPrintConfig configuration(const Source& source)
             continue;
         const std::size_t first = value->size() <= 2 ? 0 : 2 * source.nozzle_index;
         if (value->size() != 1 && first + 1 >= value->size())
-            throw std::invalid_argument("Missing paired machine limit: " + key);
+            throw std::invalid_argument(format(_u8L("Missing paired machine limit: %1%"), key));
         std::unique_ptr<ConfigOption> original(value->clone());
         const std::size_t second = value->size() == 1 ? 0 : first + 1;
         value->resize(2);
@@ -351,7 +352,7 @@ DynamicPrintConfig configuration(const Source& source)
     const auto type   = ExtruderType(config.option<ConfigOptionEnumsGeneric>("extruder_type")->get_at(0));
     const auto volume = NozzleVolumeType(config.option<ConfigOptionEnumsGeneric>("nozzle_volume_type")->get_at(0));
     if (volume == nvtHybrid)
-        throw std::invalid_argument("Hybrid core preview requires one concrete nozzle volume type per head");
+        throw std::invalid_argument(_u8L("Hybrid core preview requires one concrete nozzle volume type per head"));
     const auto variant = get_extruder_variant_string(type, volume);
     for (const char* key : {"extruder_variant_list", "printer_extruder_variant", "print_extruder_variant", "filament_extruder_variant"})
         config.set_key_value(key, new ConfigOptionStrings{variant});
@@ -370,12 +371,12 @@ DynamicPrintConfig configuration(const Source& source)
     for (double factor : p.shrink_compensation)
         if (std::abs(factor - 1.) > 1e-12)
             throw std::invalid_argument(
-                "Hybrid core preview requires neutral XY/Z shrink compensation until core and shell share a compensation transform.");
+                _u8L("Hybrid core preview requires neutral XY/Z shrink compensation until core and shell share a compensation transform."));
     for (const char* key : {"filament_shrink", "filament_shrinkage_compensation_z"}) {
         const auto* values = config.option<ConfigOptionPercents>(key);
         if (!values || values->values.empty() || !std::isfinite(values->get_at(0)) || std::abs(values->get_at(0) - 100.) > 1e-10)
-            throw std::invalid_argument(std::string("Hybrid core preview requires 100% ") + key +
-                                        "; automatic shrink neutralization is not applied.");
+            throw std::invalid_argument(
+                format(_u8L("Hybrid core preview requires 100%% %1%; automatic shrink neutralization is not applied."), key));
     }
     config.set_key_value("nozzle_diameter", new ConfigOptionFloats{p.nozzle_diameter});
     config.set_key_value("filament_flow_ratio", new ConfigOptionFloats{p.flow_ratio});
@@ -489,7 +490,7 @@ void append_entity(Result& result,
         if (path->is_force_no_extrusion() || path->polyline.points.size() < 2)
             return;
         if (dynamic_cast<const ExtrusionPathSloped*>(path) || path->z_contoured)
-            throw std::invalid_argument("Sloped or contoured conventional extrusions are not supported by hybrid preview");
+            throw std::invalid_argument(_u8L("Sloped or contoured conventional extrusions are not supported by hybrid preview"));
         Path out;
         out.head                 = head;
         out.role                 = path->role();
@@ -510,11 +511,11 @@ void append_entity(Result& result,
             out.first_layer_flow_ratio = config.opt_float("first_layer_flow_ratio");
         for (double factor : {out.process.flow_ratio, out.process.print_flow_ratio, out.role_flow_ratio, out.first_layer_flow_ratio})
             if (!std::isfinite(factor) || factor < 0.)
-                throw std::invalid_argument("Hybrid core preview requires nonnegative finite native flow factors");
+                throw std::invalid_argument(_u8L("Hybrid core preview requires nonnegative finite native flow factors"));
         out.nominal_supplied_mm3_per_mm = out.mm3_per_mm * out.process.flow_ratio * out.process.print_flow_ratio *
                                           out.role_flow_ratio * out.first_layer_flow_ratio;
         if (!std::isfinite(out.nominal_supplied_mm3_per_mm) || out.nominal_supplied_mm3_per_mm < 0.)
-            throw std::invalid_argument("Invalid nominal conventional material supply");
+            throw std::invalid_argument(_u8L("Invalid nominal conventional material supply"));
         out.flow_geometry_unverified = out.process.flow_ratio * out.process.print_flow_ratio * out.role_flow_ratio *
                                            out.first_layer_flow_ratio != 1. || config.opt_bool("small_area_infill_flow_compensation");
         out.process.line_width   = out.width;
@@ -527,9 +528,9 @@ void append_entity(Result& result,
                                     z + origin.z());
         result.paths.push_back(std::move(out));
     } else
-        throw std::invalid_argument("Unknown Orca extrusion entity");
+        throw std::invalid_argument(_u8L("Unknown Orca extrusion entity"));
     if (result.paths.size() > 1000000)
-        throw std::invalid_argument("Hybrid core preview path limit exceeded");
+        throw std::invalid_argument(_u8L("Hybrid core preview path limit exceeded"));
 }
 void run_pass(Result& result,
               const indexed_triangle_set& mesh,
@@ -642,12 +643,12 @@ Result slice(const FormorixGeometry::Mesh& core,
         check_cancel(canceled);
         validate_requests(requests, canceled);
         if (core_head < 0 || core_head > 2 || support_head < -1 || support_head > 2 || !FormorixGeometry::valid_solid(core))
-            throw std::invalid_argument("Invalid conventional core or head assignment");
+            throw std::invalid_argument(_u8L("Invalid conventional core or head assignment"));
         const auto core_config = configuration(sources[core_head]);
         const bool supports    = core_config.opt_bool("enable_support") || core_config.opt_int("enforce_support_layers") > 0 ||
                                  core_config.opt_int("raft_layers") > 0;
         if (supports && support_head < 0)
-            throw std::invalid_argument("Assign a support head before calculating enabled supports or a raft.");
+            throw std::invalid_argument(_u8L("Assign a support head before calculating enabled supports or a raft."));
         Vec3d minimum = core.vertices.front(), maximum = minimum;
         for (const auto& p : core.vertices) {
             minimum = minimum.cwiseMin(p);
@@ -666,7 +667,7 @@ Result slice(const FormorixGeometry::Mesh& core,
         mesh.indices    = core.faces;
         converted.faces = core.faces;
         if (!FormorixGeometry::valid_solid(converted))
-            throw std::invalid_argument("Float conversion invalidates the conventional core");
+            throw std::invalid_argument(_u8L("Float conversion invalidates the conventional core"));
         result.converted_volume_residual = FormorixGeometry::volume(converted) - FormorixGeometry::volume(core);
         // Conservative accounting for input/centering/output grid conversions.
         // This does not bound Orca's perimeter simplification or material deposition.
@@ -675,12 +676,12 @@ Result slice(const FormorixGeometry::Mesh& core,
         if (supports && support_head != core_head) {
             run_pass(result, mesh, sources[support_head], support_head, true, true, canceled);
             result.warnings.push_back(
-                "Support paths use a separate Orca pass with the support head profile; no shared time schedule is implied.");
+                _u8L("Support paths use a separate Orca pass with the support head profile; no shared time schedule is implied."));
         }
         if (result.paths.empty())
-            throw std::invalid_argument("Orca produced no conventional core or support extrusions for this volume.");
+            throw std::invalid_argument(_u8L("Orca produced no conventional core or support extrusions for this volume."));
         result.warnings.push_back(
-            "Conventional speeds are nominal role values; acceleration, cooling slowdown and common scheduling are not simulated.");
+            _u8L("Conventional speeds are nominal role values; acceleration, cooling slowdown and common scheduling are not simulated."));
         check_cancel(canceled);
     } catch (const std::exception& error) {
         result = {};

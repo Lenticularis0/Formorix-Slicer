@@ -22,27 +22,27 @@ namespace {
 void check_cancel(const std::function<bool()>& cancel)
 {
     if (cancel && cancel())
-        throw detail::Failure(Status::Canceled, "Material volume audit canceled");
+        throw detail::Failure(Status::Canceled, _u8L("Material volume audit canceled"));
 }
 using Ring = std::array<Vec3d, 4>;
 std::array<Vec3d, 2> height_centers(const Station& s)
 {
     if (!s.center.allFinite() || !s.axis.allFinite() || s.axis.norm() < 1e-12 || !std::isfinite(s.width) || !std::isfinite(s.height) ||
         s.width <= 0. || s.height <= 0. || s.center.cwiseAbs().maxCoeff() > 1e7)
-        throw detail::Failure(Status::InvalidInput, "Invalid material station or cross-section");
+        throw detail::Failure(Status::InvalidInput, _u8L("Invalid material station or cross-section"));
     const Vec3d axis   = s.axis.normalized();
     const Vec3d height = axis * (s.height / 2.);
     std::array<Vec3d, 2> centers{{s.center - height, s.center + height}};
     if (s.height_endpoints) {
         const auto& endpoints = *s.height_endpoints;
         if (!endpoints[0].allFinite() || !endpoints[1].allFinite())
-            throw detail::Failure(Status::InvalidInput, "Nonfinite shared material endpoints");
+            throw detail::Failure(Status::InvalidInput, _u8L("Nonfinite shared material endpoints"));
         const double scale = std::max(
             {1., s.center.cwiseAbs().maxCoeff(), endpoints[0].cwiseAbs().maxCoeff(), endpoints[1].cwiseAbs().maxCoeff()});
         const double allowance = 64. * std::numeric_limits<double>::epsilon() * scale;
         if ((endpoints[1] - endpoints[0]).dot(axis) <= 0. || (endpoints[0] - centers[0]).norm() > allowance ||
             (endpoints[1] - centers[1]).norm() > allowance)
-            throw detail::Failure(Status::InvalidInput, "Shared material height endpoints disagree with the station definition");
+            throw detail::Failure(Status::InvalidInput, _u8L("Shared material height endpoints disagree with the station definition"));
         centers = endpoints;
     }
     return centers;
@@ -54,10 +54,10 @@ Ring ring(const SweepRun& run, std::size_t i, const Options& options)
     const Vec3d axis   = s.axis.normalized();
     auto side          = [&](const Vec3d& delta) -> Vec3d {
         if (!delta.allFinite() || delta.norm() < 1e-9)
-            throw detail::Failure(Status::InvalidSweep, "Collapsed material segment");
+            throw detail::Failure(Status::InvalidSweep, _u8L("Collapsed material segment"));
         const Vec3d cross = axis.cross(delta.normalized());
         if (cross.norm() < 1e-8)
-            throw detail::Failure(Status::InvalidSweep, "Material axis is parallel to its path");
+            throw detail::Failure(Status::InvalidSweep, _u8L("Material axis is parallel to its path"));
         return cross.normalized();
     };
     Vec3d lateral;
@@ -72,23 +72,23 @@ Ring ring(const SweepRun& run, std::size_t i, const Options& options)
         const Vec3d outgoing = side(run.stations[next].center - s.center);
         const Vec3d sum      = incoming + outgoing;
         if (sum.norm() < 1e-8)
-            throw detail::Failure(Status::InvalidSweep, "Reversing material turn has no finite miter");
+            throw detail::Failure(Status::InvalidSweep, _u8L("Reversing material turn has no finite miter"));
         const double denominator = sum.dot(incoming);
         if (denominator <= 0. || sum.norm() / denominator > options.miter_limit)
-            throw detail::Failure(Status::InvalidSweep, "Material turn exceeds the miter limit");
+            throw detail::Failure(Status::InvalidSweep, _u8L("Material turn exceeds the miter limit"));
         lateral = sum / denominator;
     }
     lateral *= s.width / 2.;
     if (s.lateral_endpoints) {
         const auto& endpoints = *s.lateral_endpoints;
         if (!endpoints[0].allFinite() || !endpoints[1].allFinite())
-            throw detail::Failure(Status::InvalidInput, "Nonfinite shared material lateral endpoints");
+            throw detail::Failure(Status::InvalidInput, _u8L("Nonfinite shared material lateral endpoints"));
         const double scale = std::max(
             {1., s.center.cwiseAbs().maxCoeff(), endpoints[0].cwiseAbs().maxCoeff(), endpoints[1].cwiseAbs().maxCoeff()});
         const double allowance = 64. * std::numeric_limits<double>::epsilon() * scale;
         if ((endpoints[1] - endpoints[0]).dot(lateral) <= 0. || (endpoints[0] - (s.center - lateral)).norm() > allowance ||
             (endpoints[1] - (s.center + lateral)).norm() > allowance)
-            throw detail::Failure(Status::InvalidInput, "Shared material lateral endpoints disagree with the nominal miter");
+            throw detail::Failure(Status::InvalidInput, _u8L("Shared material lateral endpoints disagree with the nominal miter"));
         const Vec3d lower = centers[0] - s.center, upper = centers[1] - s.center;
         return {{endpoints[0] + lower, endpoints[1] + lower, endpoints[1] + upper, endpoints[0] + upper}};
     }
@@ -141,18 +141,18 @@ Result audit(const std::vector<Target>& targets,
             options.max_distance_queries == 0 || !std::isfinite(options.distance_slack) || options.distance_slack <= 0. ||
             !std::isfinite(options.miter_limit) || options.miter_limit < 1. || !std::isfinite(options.max_elapsed_seconds) ||
             options.max_elapsed_seconds < 0.)
-            throw detail::Failure(Status::InvalidInput, "Invalid material audit targets or resource limits");
+            throw detail::Failure(Status::InvalidInput, _u8L("Invalid material audit targets or resource limits"));
         check_cancel(bounded_cancel);
         std::set<int> ids;
         for (const auto& target : targets)
             if (target.region <= 0 || target.material.empty() || target.mesh.faces.empty() || !ids.insert(target.region).second)
-                throw detail::Failure(Status::InvalidInput, "Material targets require distinct regions and nonempty solids");
+                throw detail::Failure(Status::InvalidInput, _u8L("Material targets require distinct regions and nonempty solids"));
         std::size_t input_faces = 0, input_vertices = 0;
         auto count_input = [&](const FormorixGeometry::Mesh& mesh) {
             if (mesh.faces.size() > options.max_boolean_faces || mesh.vertices.size() > options.max_boolean_faces ||
                 mesh.faces.size() > options.max_sweep_faces - input_faces ||
                 mesh.vertices.size() > options.max_sweep_faces - input_vertices)
-                throw detail::Failure(Status::ResourceLimit, "Aggregate material input geometry exceeds the budget");
+                throw detail::Failure(Status::ResourceLimit, _u8L("Aggregate material input geometry exceeds the budget"));
             input_faces += mesh.faces.size();
             input_vertices += mesh.vertices.size();
         };
@@ -170,16 +170,17 @@ Result audit(const std::vector<Target>& targets,
             if (run.head < 0 || run.head > 2 || run.layer < 0 || run.stations.size() < (run.closed ? 3u : 2u) ||
                 run.supplied_volumes.size() != run.stations.size() - (run.closed ? 0u : 1u) ||
                 target == targets.end() || run.material != target->material)
-                throw detail::Failure(Status::InvalidInput, "Material run has invalid ownership or segment supply");
+                throw detail::Failure(Status::InvalidInput, _u8L("Material run has invalid ownership or segment supply"));
             if (run.stations.size() > options.max_stations - std::min(stations, options.max_stations))
-                throw detail::Failure(Status::ResourceLimit, "Material station budget exceeded");
+                throw detail::Failure(Status::ResourceLimit, _u8L("Material station budget exceeded"));
             stations += run.stations.size();
             std::set<std::tuple<double, double, double>> unique_centers;
             for (const auto& station : run.stations) {
                 check_cancel(bounded_cancel);
                 (void) height_centers(station); // validate even stations removed by exact collinear reduction
                 if (run.closed && !unique_centers.emplace(station.center.x(), station.center.y(), station.center.z()).second)
-                    throw detail::Failure(Status::InvalidInput, "Closed material runs require distinct station centers, without a repeated endpoint");
+                    throw detail::Failure(Status::InvalidInput,
+                                          _u8L("Closed material runs require distinct station centers, without a repeated endpoint"));
             }
             for (std::size_t i = 0; i < run.stations.size(); ++i)
                 if (run.stations[i].lateral_endpoints) {
@@ -188,13 +189,13 @@ Result audit(const std::vector<Target>& targets,
                 }
             for (double supply : run.supplied_volumes)
                 if (!std::isfinite(supply) || supply <= 0.)
-                    throw detail::Failure(Status::InvalidInput, "Extruding material segment requires positive finite supply");
+                    throw detail::Failure(Status::InvalidInput, _u8L("Extruding material segment requires positive finite supply"));
             SweepRun reduced;
             reduced.closed   = run.closed;
             reduced.stations = detail::simplify_stations(run.stations, run.closed, bounded_cancel);
             const std::size_t segments = reduced.stations.size() - (run.closed ? 0u : 1u);
             if (segments > options.max_sweep_faces / 12 - std::min(cells.size(), options.max_sweep_faces / 12))
-                throw detail::Failure(Status::ResourceLimit, "Material sweep face budget exceeded");
+                throw detail::Failure(Status::ResourceLimit, _u8L("Material sweep face budget exceeded"));
             const Ring first = ring(reduced, 0, options);
             Ring previous = first;
             for (std::size_t i = 1; i <= segments; ++i) {

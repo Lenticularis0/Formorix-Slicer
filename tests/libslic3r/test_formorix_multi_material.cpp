@@ -8,14 +8,31 @@
 #include "libslic3r/FormorixProcess.hpp"
 #include "libslic3r/FormorixPreview.hpp"
 #include "libslic3r/FormorixSurfaces.hpp"
+#include "libslic3r/FormorixProfiles.hpp"
+#include "libslic3r/Config.hpp"
+#include "libslic3r/Model.hpp"
+#include "libslic3r/Preset.hpp"
+#include "libslic3r/PresetBundle.hpp"
+#include "libslic3r/PrintConfig.hpp"
+#include "libslic3r/Semver.hpp"
+#include "libslic3r/TriangleMesh.hpp"
+#include "libslic3r/TriangleSelector.hpp"
+#include "libslic3r/Format/bbs_3mf.hpp"
+#include "libslic3r/Format/ProjectStrategy.hpp"
 #include "libslic3r/Point.hpp"
+#include "test_utils.hpp"
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <nlohmann/json.hpp>
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <cstdlib>
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
 #include <utility>
@@ -28,6 +45,7 @@ namespace FG = FormorixGeometry;
 namespace PS = FormorixProcess;
 namespace PV = FormorixPreview;
 namespace FS = FormorixSurfaces;
+namespace FR = FormorixProfiles;
 using Catch::Matchers::WithinAbs;
 
 namespace {
@@ -202,6 +220,89 @@ void check_paths(const FH::Result& result)
         CHECK_THAT(cell_supply[head], WithinAbs(timeline_supply[head], 1e-9));
     }
 }
+
+void native_sources(PresetBundle& bundle, FS::Project& project)
+{
+    const auto base_printer  = bundle.printers.get_edited_preset();
+    const auto base_material = bundle.filaments.get_edited_preset();
+    const auto base_process  = bundle.prints.get_edited_preset();
+    const std::array<const char*, 3> materials{{"PETG", "PVA", "PETG-CF"}};
+    for (int h = 0; h < 3; ++h) {
+        const auto p            = profile(h);
+        auto& head              = project.heads[h];
+        const std::string label = "Formorix reference head " + std::to_string(h + 1);
+        head.assign_nozzle(label + " nozzle", 0);
+        head.assign_material(label + " " + materials[h]);
+        head.assign_process(label + " process");
+        head.assign_width_limits(p.local_width_limits);
+        head.tasks = FS::Surface | (h == 0 ? FS::Build : h == 1 ? FS::Support : FS::Reinforcement);
+
+        // Actual native parent references are necessary: Orca deliberately
+        // rejects orphaned embedded printer/process presets on project import.
+        auto printer = base_printer.config;
+        printer.set_key_value("inherits", new ConfigOptionString(base_printer.name));
+        printer.set_key_value("printer_settings_id", new ConfigOptionString(head.printer_preset));
+        printer.set_key_value("printer_model", new ConfigOptionString("Formorix 5D"));
+        printer.set_key_value("nozzle_diameter", new ConfigOptionFloats{p.nozzle_diameter});
+        printer.set_key_value("printable_area", new ConfigOptionPoints{{0., 0.}, {1600., 0.}, {1600., 350.}, {0., 350.}});
+        printer.set_key_value("printable_height", new ConfigOptionFloat(350.));
+        printer.set_key_value("formorix_5d_enabled", new ConfigOptionBool(true));
+        printer.set_key_value("formorix_5d_max_tilt", new ConfigOptionFloat(75.));
+        bundle.printers.load_preset("", head.printer_preset, printer, false);
+
+        auto material = base_material.config;
+        material.set_key_value("inherits", new ConfigOptionString(base_material.name));
+        material.set_key_value("filament_settings_id", new ConfigOptionStrings{head.material_preset});
+        material.set_key_value("filament_type", new ConfigOptionStrings{materials[h]});
+        material.set_key_value("filament_colour", new ConfigOptionStrings{std::array<const char*, 3>{{"#4A90D9", "#F6D55C", "#D95F59"}}[h]});
+        material.set_key_value("nozzle_temperature", new ConfigOptionInts{int(p.temperature)});
+        material.set_key_value("nozzle_temperature_initial_layer", new ConfigOptionInts{int(p.temperature)});
+        material.set_key_value("filament_max_volumetric_speed", new ConfigOptionFloats{p.volumetric_limit});
+        material.set_key_value("filament_flow_ratio", new ConfigOptionFloats{p.flow_ratio});
+        material.set_key_value("filament_shrink", new ConfigOptionPercents{100.});
+        material.set_key_value("filament_shrinkage_compensation_z", new ConfigOptionPercents{100.});
+        bundle.filaments.load_preset("", head.material_preset, material, false).filament_id = p.material_id;
+
+        auto process = base_process.config;
+        process.set_key_value("inherits", new ConfigOptionString(base_process.name));
+        process.set_key_value("print_settings_id", new ConfigOptionString(head.process_preset));
+        process.set_key_value("outer_wall_line_width", new ConfigOptionFloatOrPercent(p.line_width, false));
+        process.set_key_value("layer_height", new ConfigOptionFloat(p.layer_height));
+        process.set_key_value("outer_wall_speed", new ConfigOptionFloatsNullable{p.speed});
+        process.set_key_value("print_flow_ratio", new ConfigOptionFloat(p.print_flow_ratio));
+        process.set_key_value("set_other_flow_ratios", new ConfigOptionBool(true));
+        process.set_key_value("outer_wall_flow_ratio", new ConfigOptionFloat(p.surface_flow_ratio));
+        bundle.prints.load_preset("", head.process_preset, process, false);
+
+        // A persisted snapshot is informational only. Deliberately obsolete
+        // values make accidental reuse distinguishable from fresh resolution.
+        head.process                  = p;
+        head.process->temperature     = 123.;
+        head.process->material_id     = "obsolete cached material";
+        head.process->nozzle_diameter = .3;
+    }
+    REQUIRE(bundle.printers.select_preset_by_name(project.heads[0].printer_preset, true));
+    REQUIRE(bundle.prints.select_preset_by_name(project.heads[0].process_preset, true));
+    REQUIRE(bundle.filaments.select_preset_by_name(project.heads[0].material_preset, true));
+    bundle.filament_presets = {project.heads[0].material_preset};
+}
+
+std::array<PS::Profile, 3> resolve_native(PresetBundle& bundle, FS::Project& project)
+{
+    std::array<std::string, 3> signatures;
+    REQUIRE(FR::invalidate_changed(project, bundle, signatures));
+    std::array<PS::Profile, 3> result;
+    for (int h = 0; h < 3; ++h) {
+        REQUIRE_FALSE(project.heads[h].process);
+        result[h] = FR::refresh(bundle, project.heads[h]).process;
+        CHECK_THAT(result[h].temperature, WithinAbs(profile(h).temperature, 1e-12));
+        CHECK_THAT(result[h].nozzle_diameter, WithinAbs(profile(h).nozzle_diameter, 1e-12));
+        CHECK_THAT(result[h].contact_to_tcp, WithinAbs(0., 0.)); // actual Orca source value, not the saved 2/5/9 mm snapshot
+        CHECK(result[h].material_id != "obsolete cached material");
+        CHECK(result[h].material_id == profile(h).material_id);
+    }
+    return result;
+}
 } // namespace
 
 TEST_CASE("Three independent nozzle and material profiles fill one adjacent multilayer workpiece in every region order",
@@ -356,4 +457,284 @@ TEST_CASE("An absent inner layer remains a regional material deficit despite two
     std::cout << "MULTI_MATERIAL_MISSING_INNER,missing=" << audit.missing_volume
               << ",boundary_lower=" << audit.boundary_distance.lower_bound << ",boundary_upper=" << audit.boundary_distance.upper_bound
               << ",outer_B_upper=" << material_region(audit, 2).nominal_outer_distance.upper_bound << "\n";
+}
+
+TEST_CASE("Native projects preserve three painted material regions while recomputing from imported Orca sources",
+          "[FormorixMultiMaterial][NativeRoundTrip]")
+{
+    ScopedSlic3rTemporaryDir temporary("formorix_three_materials");
+    const auto reference = workpiece();
+    Model model;
+    model.set_backup_path((temporary.path() / "source-backup").string());
+    auto* object = model.add_object();
+    object->name = "Three independent materials - nominal hybrid reference";
+    auto* volume = object->add_volume(TriangleMesh(FH::to_float(reference.solid).mesh), ModelVolumeType::MODEL_PART, false);
+    volume->name = "Original 18 x 4 x 5 mm body";
+    object->add_instance()->set_offset(Vec3d(60., 40., 0.));
+    TriangleSelector paint(volume->mesh());
+    FS::Project project;
+    project.strategy = FS::Strategy::MaterialRoles;
+    for (int h = 0; h < 3; ++h) {
+        // workpiece() emits the two top triangles first in each eight-face strip.
+        paint.set_facet(8 * h, EnforcerBlockerType(h + 1));
+        paint.set_facet(8 * h + 1, EnforcerBlockerType(h + 1));
+        FS::Region region;
+        region.id       = h + 1;
+        region.name     = "Surface " + std::string(1, char('A' + h));
+        region.settings = reference.regions[h].settings;
+        project.regions.push_back(region);
+    }
+    volume->formorix_facets.set(paint);
+    volume->formorix_topology = FS::topology_id(volume->mesh().its);
+    PresetBundle sources;
+    native_sources(sources, project);
+    model.formorix_surfaces      = project.encode();
+    const auto original_vertices = volume->mesh().its.vertices;
+    const auto original_faces    = volume->mesh().its.indices;
+
+    auto before_project        = project;
+    const auto before_profiles = resolve_native(sources, before_project);
+    const auto before_input    = FH::extract(*object, 0, before_project, before_profiles);
+    const auto before          = FH::generate(before_input);
+    INFO(before.error);
+    INFO(before.material.error);
+    REQUIRE(before.ok());
+    REQUIRE(before.material.ok());
+    REQUIRE(before.regions.size() == 3);
+
+    std::vector<std::unique_ptr<Preset>> embedded;
+    FR::append_project_sources(sources, project, embedded);
+    REQUIRE(embedded.size() == 9);
+    FR::append_project_sources(sources, project, embedded);
+    CHECK(embedded.size() == 9); // repeated saving does not duplicate inactive sources
+    for (const auto& head : project.heads) {
+        CHECK_FALSE(sources.printers.find_preset(head.printer_preset, false)->is_project_embedded);
+        CHECK_FALSE(sources.filaments.find_preset(head.material_preset, false)->is_project_embedded);
+        CHECK_FALSE(sources.prints.find_preset(head.process_preset, false)->is_project_embedded);
+    }
+    auto config = sources.full_config();
+    PlateData plate;
+    plate.plate_index = 0;
+    plate.objects_and_instances.emplace_back(0, 0);
+    StoreParams store;
+    store.path            = (temporary.path() / "formorix-three-materials.3mf").string();
+    store.model           = &model;
+    store.config          = &config;
+    store.plate_data_list = {&plate};
+    store.strategy        = SaveStrategy::Zip64 | SaveStrategy::Silence;
+    for (const auto& preset : embedded)
+        store.project_presets.push_back(preset.get());
+    REQUIRE(store_bbs_3mf(store));
+    CHECK(volume->mesh().its.vertices == original_vertices);
+    CHECK(volume->mesh().its.indices == original_faces);
+
+    Model restored;
+    restored.set_backup_path((temporary.path() / "restored-backup").string());
+    DynamicPrintConfig loaded_config;
+    ConfigSubstitutionContext substitutions(ForwardCompatibilitySubstitutionRule::Disable);
+    PlateDataPtrs plates;
+    std::vector<Preset*> imported;
+    bool is_bbl = false, is_orca = false;
+    Semver file_version;
+    const bool loaded = load_bbs_3mf(store.path.c_str(), &loaded_config, &substitutions, &restored, &plates, &imported, &is_bbl, &is_orca,
+                                     &file_version, nullptr, LoadStrategy::LoadModel | LoadStrategy::LoadConfig);
+    release_PlateData_list(plates);
+    std::vector<std::unique_ptr<Preset>> imported_owners;
+    for (auto* preset : imported)
+        imported_owners.emplace_back(preset);
+    REQUIRE(loaded);
+    REQUIRE(imported.size() == 9);
+    for (const auto* preset : imported)
+        if (preset->type == Preset::TYPE_FILAMENT) {
+            const auto head = std::find_if(project.heads.begin(), project.heads.end(),
+                                           [&](const auto& entry) { return entry.material_preset == preset->name; });
+            REQUIRE(head != project.heads.end());
+            CHECK(preset->filament_id == profile(int(head - project.heads.begin())).material_id);
+        }
+    REQUIRE(restored.objects.size() == 1);
+    REQUIRE(restored.objects[0]->volumes.size() == 1);
+    REQUIRE(restored.objects[0]->instances.size() == 1);
+    CHECK(restored.formorix_surfaces == model.formorix_surfaces);
+    CHECK(restored.objects[0]->volumes[0]->formorix_facets.equals(volume->formorix_facets));
+    CHECK(FS::painting_matches(*restored.objects[0]->volumes[0]));
+    CHECK(restored.objects[0]->volumes[0]->mmu_segmentation_facets.empty());
+    std::string error;
+    auto restored_project = FS::Project::decode(restored.formorix_surfaces, error);
+    INFO(error);
+    REQUIRE(restored_project);
+    REQUIRE(restored_project->regions.size() == 3);
+    for (int h = 0; h < 3; ++h) {
+        const auto& head = restored_project->heads[h];
+        REQUIRE(head.process);
+        CHECK_THAT(head.process->temperature, WithinAbs(123., 0.));
+        CHECK(head.process->material_id == "obsolete cached material");
+        CHECK(head.printer_preset == project.heads[h].printer_preset);
+        CHECK(head.material_preset == project.heads[h].material_preset);
+        CHECK(head.process_preset == project.heads[h].process_preset);
+        CHECK(head.nozzle_index == project.heads[h].nozzle_index);
+        CHECK(restored_project->regions[h].settings.head_mask == (1u << h));
+    }
+
+    // Follow the real GUI sequence, including active full-config import. No
+    // test-only name mapping or saved Process snapshot may rescue a binding.
+    PresetBundle loaded_sources;
+    std::vector<std::unique_ptr<Preset>> archive_copies;
+    std::vector<Preset*> archived_sources;
+    for (const auto* preset : imported) {
+        archive_copies.push_back(std::make_unique<Preset>(*preset));
+        archived_sources.push_back(archive_copies.back().get());
+    }
+    REQUIRE_NOTHROW(FR::validate_project_sources(loaded_sources, *restored_project, archived_sources));
+    REQUIRE_NOTHROW(FR::validate_project_sources(sources, *restored_project, archived_sources));
+    loaded_sources.load_project_embedded_presets(imported, ForwardCompatibilitySubstitutionRule::Disable);
+    loaded_sources.load_config_model(store.path, loaded_config, file_version);
+    // This is also the real GUI save collector: inactive head sources must stay
+    // embedded when the loaded project is saved again.
+    std::vector<std::unique_ptr<Preset>> saved_again;
+    for (auto* preset : loaded_sources.get_current_project_embedded_presets())
+        saved_again.emplace_back(preset);
+    REQUIRE(saved_again.size() == 9);
+    for (const auto& head : restored_project->heads) {
+        REQUIRE(loaded_sources.printers.find_preset(head.printer_preset, false));
+        REQUIRE(loaded_sources.filaments.find_preset(head.material_preset, false));
+        REQUIRE(loaded_sources.prints.find_preset(head.process_preset, false));
+    }
+    const auto after_profiles = resolve_native(loaded_sources, *restored_project);
+    REQUIRE_NOTHROW(FR::validate_project_sources(loaded_sources, *restored_project, archived_sources));
+    for (int h = 0; h < 3; ++h)
+        CHECK(nlohmann::json(after_profiles[h]) == nlohmann::json(before_profiles[h]));
+    const auto after_input = FH::extract(*restored.objects[0], 0, *restored_project, after_profiles);
+    CHECK(after_input.solid.vertices == before_input.solid.vertices);
+    CHECK(after_input.solid.faces == before_input.solid.faces);
+    REQUIRE(after_input.regions.size() == before_input.regions.size());
+    for (std::size_t i = 0; i < after_input.regions.size(); ++i) {
+        CHECK(after_input.regions[i].id == before_input.regions[i].id);
+        CHECK(after_input.regions[i].head == before_input.regions[i].head);
+        CHECK(after_input.regions[i].surface.vertices == before_input.regions[i].surface.vertices);
+        CHECK(after_input.regions[i].surface.faces == before_input.regions[i].surface.faces);
+        CHECK_FALSE(after_input.regions[i].cad_reference);
+    }
+    const auto after = FH::generate(after_input);
+    INFO(after.error);
+    INFO(after.material.error);
+    REQUIRE(after.ok());
+    REQUIRE(after.material.ok());
+    CHECK_THAT(FG::volume(after.core), WithinAbs(321., 1e-9));
+    CHECK_THAT(FG::volume(after.core), WithinAbs(FG::volume(before.core), 1e-10));
+    CHECK_THAT(after.material.union_volume, WithinAbs(39., 1e-9));
+    CHECK_THAT(after.material.union_volume, WithinAbs(before.material.union_volume, 1e-10));
+    CHECK_THAT(after.material.missing_volume, WithinAbs(0., 0.));
+    CHECK_THAT(after.material.outside_volume, WithinAbs(0., 0.));
+    CHECK_THAT(after.material.duplicate_volume, WithinAbs(0., 0.));
+    CHECK_THAT(after.material.core_overlap_volume, WithinAbs(0., 0.));
+    REQUIRE(after.regions.size() == 3);
+    for (const auto& region : after.regions) {
+        const auto& current  = material_region(after.material, region.id);
+        const auto& previous = material_region(before.material, region.id);
+        CHECK(current.material == previous.material);
+        CHECK(current.coverage == FM::Coverage::Full);
+        CHECK_THAT(current.supplied_volume, WithinAbs(wanted_volume(region.head), 1e-9));
+        CHECK_THAT(current.supplied_volume, WithinAbs(previous.supplied_volume, 1e-10));
+        CHECK(current.boundary_distance.bounded);
+        CHECK(current.nominal_outer_distance.bounded);
+        CHECK_THAT(current.boundary_distance.upper_bound, WithinAbs(previous.boundary_distance.upper_bound, 1e-12));
+        CHECK_THAT(current.nominal_outer_distance.upper_bound, WithinAbs(previous.nominal_outer_distance.upper_bound, 1e-12));
+        CHECK(region.accuracy.material_partition_verified);
+        CHECK_FALSE(std::isfinite(region.accuracy.bounds[0]));
+        CHECK_FALSE(region.accuracy.verified()); // native projects carry no analytic CAD reference
+        std::cout << std::setprecision(17) << "MULTI_MATERIAL_3MF,region=" << region.id << ",nozzle=" << region.process.nozzle_diameter
+                  << ",supply=" << current.supplied_volume << ",missing=" << current.missing_volume << ",outside=" << current.outside_volume
+                  << ",spatial_upper=" << current.boundary_distance.upper_bound
+                  << ",outer_upper=" << current.nominal_outer_distance.upper_bound << ",cad_verified=" << region.accuracy.verified()
+                  << "\n";
+    }
+    CHECK(after.preview.timeline.valid());
+    CHECK_THAT(after.preview.timeline.duration(), WithinAbs(before.preview.timeline.duration(), 1e-9));
+    for (int h = 0; h < 3; ++h) {
+        REQUIRE_FALSE(after.preview.timeline.heads[h].empty());
+        CHECK(after.preview.timeline.heads[h].size() == before.preview.timeline.heads[h].size());
+        for (const auto& motion : after.preview.timeline.heads[h]) {
+            CHECK(motion.head == h);
+            CHECK(motion.region == h + 1);
+            REQUIRE(motion.process);
+            CHECK(motion.process->material_id == after_profiles[h].material_id);
+            CHECK_THAT(motion.process->nozzle_diameter, WithinAbs(after_profiles[h].nozzle_diameter, 1e-12));
+        }
+    }
+    // Native import skips already existing same-name presets. A conflicting
+    // inactive head source must therefore be rejected before that lossy import,
+    // rather than silently calculating with its locally different parameters.
+    auto* changed_nozzle = loaded_sources.printers.find_preset(restored_project->heads[1].printer_preset, false);
+    REQUIRE(changed_nozzle);
+    const auto saved_modes = *changed_nozzle->config.option<ConfigOptionFloats>("machine_max_junction_deviation");
+    changed_nozzle->config.set_key_value("machine_max_junction_deviation", new ConfigOptionFloats{saved_modes.get_at(0), .02});
+    CHECK_THROWS(FR::validate_project_sources(loaded_sources, *restored_project, archived_sources));
+    CHECK(changed_nozzle->config.option<ConfigOptionFloats>("machine_max_junction_deviation")->get_at(1) == .02);
+    changed_nozzle->config.set_key_value("machine_max_junction_deviation", saved_modes.clone());
+    REQUIRE_NOTHROW(FR::validate_project_sources(loaded_sources, *restored_project, archived_sources));
+    auto* conflicting = loaded_sources.filaments.find_preset(restored_project->heads[1].material_preset, false);
+    REQUIRE(conflicting);
+    conflicting->config.set_key_value("nozzle_temperature", new ConfigOptionInts{206});
+    const auto before_rejection = FR::signature(FR::source(loaded_sources, restored_project->heads[1]));
+    CHECK_THROWS(FR::validate_project_sources(loaded_sources, *restored_project, archived_sources));
+    CHECK(FR::signature(FR::source(loaded_sources, restored_project->heads[1])) == before_rejection);
+    CHECK(restored.formorix_surfaces == model.formorix_surfaces);
+    // Opt-in developer artifact: the very archive validated above, with all
+    // nine native source presets. Ordinary test runs leave no persistent file.
+    if (const char* directory = std::getenv("FORMORIX_TEST_ARTIFACT_DIR"); directory && *directory) {
+        const boost::filesystem::path destination(directory);
+        boost::filesystem::create_directories(destination);
+        const auto artifact = destination / "formorix-three-materials.3mf";
+        boost::filesystem::copy_file(store.path, artifact, boost::filesystem::copy_option::overwrite_if_exists);
+        std::cout << "FORMORIX_TEST_ARTIFACT " << artifact.string() << "\n";
+    }
+}
+
+TEST_CASE("Portable head sources use edited copies without mutating originals or duplicating names",
+          "[FormorixMultiMaterial][NativeRoundTrip]")
+{
+    PresetBundle bundle;
+    FS::Project project;
+    native_sources(bundle, project);
+    auto& edited_material = bundle.filaments.get_edited_preset();
+    edited_material.config.set_key_value("nozzle_temperature", new ConfigOptionInts{247});
+    bundle.printers.get_edited_preset().config.set_key_value("printhost_apikey", new ConfigOptionString("synthetic-not-a-real-key"));
+    const auto original_signature = FR::signature(FR::source(bundle, project.heads[0]));
+    std::vector<std::unique_ptr<Preset>> copies;
+    copies.push_back(std::make_unique<Preset>(*bundle.filaments.find_preset(project.heads[0].material_preset, false)));
+    copies.front()->config.set_key_value("nozzle_temperature", new ConfigOptionInts{80});
+    FR::append_project_sources(bundle, project, copies);
+    REQUIRE(copies.size() == 9);
+    CHECK(FR::signature(FR::source(bundle, project.heads[0])) == original_signature);
+    const auto active = std::find_if(copies.begin(), copies.end(), [&](const auto& preset) {
+        return preset->type == Preset::TYPE_FILAMENT && preset->name == project.heads[0].material_preset;
+    });
+    REQUIRE(active != copies.end());
+    CHECK((*active)->config.option<ConfigOptionInts>("nozzle_temperature")->get_at(0) == 247);
+    CHECK((*active)->filament_id == "A");
+    for (const auto& copy : copies) {
+        CHECK(copy->is_project_embedded);
+        CHECK_FALSE(copy->is_default);
+        CHECK_FALSE(copy->is_system);
+        CHECK(copy->inherits() != copy->name);
+        CHECK_FALSE(copy->config.has("printhost_apikey"));
+    }
+    std::vector<const Preset*> retained;
+    for (const auto& copy : copies)
+        retained.push_back(copy.get());
+    project.heads[2].printer_preset = "Missing independent nozzle source";
+    CHECK_THROWS(FR::append_project_sources(bundle, project, copies));
+    REQUIRE(copies.size() == retained.size());
+    for (std::size_t i = 0; i < retained.size(); ++i)
+        CHECK(copies[i].get() == retained[i]);
+
+    PresetBundle defaults;
+    FS::Project default_project;
+    std::vector<std::unique_ptr<Preset>> default_copies;
+    FR::append_project_sources(defaults, default_project, default_copies);
+    CHECK(default_copies.empty());
+    default_project.heads[0].printer_preset = defaults.printers.get_edited_preset().name;
+    defaults.printers.get_edited_preset().config.set_key_value("nozzle_diameter", new ConfigOptionFloats{.8});
+    CHECK_THROWS(FR::append_project_sources(defaults, default_project, default_copies));
+    CHECK(default_copies.empty());
 }

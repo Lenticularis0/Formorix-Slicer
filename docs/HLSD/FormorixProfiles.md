@@ -69,6 +69,46 @@ with missing legacy nozzle bindings defaulting to current printer/slot zero. Old
 snapshots do not establish source freshness. Unknown future schemas retain the
 existing opaque preservation behavior.
 
+## Native project portability
+
+For a decoded Formorix project, native 3MF saving augments Orca's existing embedded
+preset collection with all explicitly assigned head sources, including inactive
+printer, material and process presets. `append_project_sources` copies the current
+source values, including unsaved edits to the matching edited preset, and deduplicates
+by preset type and name. The copies contain full configurations and inherit from the
+corresponding native default, so importing them does not depend on an absent user or
+vendor parent. Source presets and their inheritance remain unchanged. Connection
+credentials are excluded from the copies, and explicit filament IDs survive native
+metadata serialization and import instead of being replaced by a parent's ID.
+
+Untouched native defaults need no embedded copy. An explicitly assigned edited
+default must first be saved under a distinct preset name; embedding a self-inheriting
+default would not represent a portable source. Implicit bindings continue to follow
+the active native full project configuration. Unknown opaque Formorix annotations
+are preserved without inventing source bindings. Owned copies remain alive through
+native archive writing and are released on success or error.
+
+Native preset import retains an already existing same-name preset. Consequently,
+`validate_project_sources` checks assigned sources before that import: each explicitly
+archived setting and concrete filament ID must agree with any existing matching
+source, including its current edits. Different definitions or duplicate incoming
+definitions are rejected visibly rather than silently selecting the local profile.
+The comparison excludes native name/inheritance fields, connection credentials and
+the image-only thumbnail specification, whose separator whitespace native import
+normalizes. It does not apply general whitespace or numerical tolerances to process
+settings. The junction-deviation vector is compared through its native two-mode
+semantics: a missing second mode uses the first value, while a different explicit
+second value remains a conflict. References without an archived source remain external references and must
+still resolve normally before calculation.
+
+The native roundtrip test imports all independent sources into a fresh `PresetBundle`,
+then follows native full-configuration loading and fresh profile resolution. It also
+checks re-import against both original and already imported sources, rejects a changed
+inactive material source without mutating it, and compares the painted model, profile
+values and actual spatial material results after reload. The archive carries no
+analytic CAD reference; passing mesh-relative comparisons cannot establish CAD or
+physical printing accuracy.
+
 The `[FormorixProfiles]` tests cover distinct nozzles/materials, unsaved edited sources,
 explicit nonzero slots, volume-type variants, unchanged-name parameter changes, invalid sources, snapshot
 discarding, schema migration, native automatic/percentage width resolution and separate

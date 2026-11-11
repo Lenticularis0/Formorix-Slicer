@@ -28,7 +28,7 @@ bool between(double x, double a, double b) { return std::isfinite(x) && x >= a &
 void require(const Profile& p)
 {
     if (!valid(p))
-        throw std::invalid_argument("Invalid per-head deposition profile");
+        throw std::invalid_argument(_u8L("Invalid per-head deposition profile"));
 }
 } // namespace
 bool valid(const WidthLimits& limits)
@@ -130,7 +130,7 @@ Profile from_orca(const ConfigOptionResolver& config,
     if (!diameters || nozzle >= diameters->values.size() || !temperatures || material >= temperatures->values.size() || !flow ||
         material >= flow->values.size() || !volume || material >= volume->values.size() || !xy || material >= xy->values.size() || !z ||
         material >= z->values.size())
-        throw std::invalid_argument("Missing indexed Orca nozzle/material profile values");
+        throw std::invalid_argument(_u8L("Missing indexed Orca nozzle/material profile values"));
     Profile p;
     p.material_id      = id;
     p.nozzle_profile   = nozzle_id;
@@ -232,7 +232,7 @@ RibbonSection ribbon_section(const Profile& p, double requested_width)
     const double width  = requested_width * p.width_correction;
     const double height = p.layer_height * p.height_correction;
     if (width < height)
-        throw std::invalid_argument("Nominal compacted ribbon requires width at least equal to height");
+        throw std::invalid_argument(_u8L("Nominal compacted ribbon requires width at least equal to height"));
     RibbonSection out;
     out.requested_width = requested_width;
     out.height          = height;
@@ -262,12 +262,12 @@ double ribbon_speed(const Profile& p, double requested_width)
 RibbonBalance ribbon_balance(double supplied, double target, double rounding_residual)
 {
     if (!std::isfinite(supplied) || supplied < 0. || !std::isfinite(target) || target <= 0. || !std::isfinite(rounding_residual))
-        throw std::invalid_argument("Invalid nominal ribbon volume ledger");
+        throw std::invalid_argument(_u8L("Invalid nominal ribbon volume ledger"));
     RibbonBalance out;
     out.excess_volume       = std::max(0., supplied - target);
     out.numerical_tolerance = std::abs(rounding_residual) + 1e-8 * std::max(1., target);
     if (!std::isfinite(out.numerical_tolerance))
-        throw std::invalid_argument("Unrepresentable ribbon volume tolerance");
+        throw std::invalid_argument(_u8L("Unrepresentable ribbon volume tolerance"));
     out.inadmissible = out.excess_volume > out.numerical_tolerance;
     // Compare the excess to ten percent, avoiding overflow in 1.1*target.
     out.gross_oversupply = out.excess_volume > .1 * target + out.numerical_tolerance;

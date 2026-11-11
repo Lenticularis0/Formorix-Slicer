@@ -28,7 +28,7 @@ struct Failure : std::runtime_error
 void check_cancel(const std::function<bool()>& canceled)
 {
     if (canceled && canceled())
-        throw Failure(Status::Canceled, L("Planar boundary layout canceled"));
+        throw Failure(Status::Canceled, _u8L("Planar boundary layout canceled"));
 }
 struct Edge
 {
@@ -38,16 +38,16 @@ struct Edge
 Rectangle rectangle(const Domain& domain, const Options& options, double& deviation, const std::function<bool()>& canceled)
 {
     if (domain.triangles.empty() || domain.vertices.empty())
-        throw Failure(Status::InvalidInput, L("A boundary layout requires a nonempty triangulated surface"));
+        throw Failure(Status::InvalidInput, _u8L("A boundary layout requires a nonempty triangulated surface"));
     if (domain.triangles.size() > options.max_triangles || domain.vertices.size() > 3 * options.max_triangles)
-        throw Failure(Status::ResourceLimit, L("Planar boundary input exceeds the triangle budget"));
+        throw Failure(Status::ResourceLimit, _u8L("Planar boundary input exceeds the triangle budget"));
     std::map<std::pair<double, double>, std::size_t> unique;
     std::vector<Vec2d> vertices;
     std::vector<std::size_t> indices;
     for (const auto& p : domain.vertices) {
         check_cancel(canceled);
         if (!p.allFinite() || p.cwiseAbs().maxCoeff() > 1e7)
-            throw Failure(Status::InvalidInput, L("Invalid planar boundary coordinate"));
+            throw Failure(Status::InvalidInput, _u8L("Invalid planar boundary coordinate"));
         const auto entry = unique.emplace(std::make_pair(p.x(), p.y()), vertices.size());
         if (entry.second)
             vertices.push_back(p);
@@ -63,7 +63,7 @@ Rectangle rectangle(const Domain& domain, const Options& options, double& deviat
         for (int k = 0; k < 3; ++k) {
             const int i = domain.triangles[f][k];
             if (i < 0 || std::size_t(i) >= indices.size())
-                throw Failure(Status::InvalidInput, L("Invalid planar boundary triangle index"));
+                throw Failure(Status::InvalidInput, _u8L("Invalid planar boundary triangle index"));
             ids[k] = indices[i];
             used.insert(ids[k]);
         }
@@ -71,10 +71,10 @@ Rectangle rectangle(const Domain& domain, const Options& options, double& deviat
         const double left = a.x() * b.y(), right = a.y() * b.x(), det = left - right;
         const double uncertainty = 16. * std::numeric_limits<double>::epsilon() * (std::abs(left) + std::abs(right));
         if (!std::isfinite(det) || std::abs(det) <= uncertainty)
-            throw Failure(Status::Unsupported, L("A degenerate or numerically unresolved projected triangle prevents boundary layout"));
+            throw Failure(Status::Unsupported, _u8L("A degenerate or numerically unresolved projected triangle prevents boundary layout"));
         const int sign = det > 0. ? 1 : -1;
         if (orientation && orientation != sign)
-            throw Failure(Status::Unsupported, L("Folded or inconsistently oriented surface projection is unsupported"));
+            throw Failure(Status::Unsupported, _u8L("Folded or inconsistently oriented surface projection is unsupported"));
         orientation = sign;
         for (int k = 0; k < 3; ++k) {
             const auto from = ids[k], to = ids[(k + 1) % 3];
@@ -84,7 +84,7 @@ Rectangle rectangle(const Domain& domain, const Options& options, double& deviat
                 edge = {from, to, f, f, 1};
             else {
                 if (edge.count != 1 || edge.from != to || edge.to != from)
-                    throw Failure(Status::Unsupported, L("The projected surface has a duplicate or nonmanifold edge"));
+                    throw Failure(Status::Unsupported, _u8L("The projected surface has a duplicate or nonmanifold edge"));
                 edge.other = f;
                 edge.count = 2;
                 neighbors[f].push_back(edge.face);
@@ -102,7 +102,7 @@ Rectangle rectangle(const Domain& domain, const Options& options, double& deviat
                 queue.push_back(next);
             }
     if (queue.size() != domain.triangles.size())
-        throw Failure(Status::Unsupported, L("Disconnected projected regions require separate boundary layouts"));
+        throw Failure(Status::Unsupported, _u8L("Disconnected projected regions require separate boundary layouts"));
     std::map<std::size_t, std::size_t> next;
     std::set<std::size_t> destinations;
     for (const auto& entry : edges) {
@@ -110,11 +110,11 @@ Rectangle rectangle(const Domain& domain, const Options& options, double& deviat
         if (edge.count == 1) {
             const auto a = orientation > 0 ? edge.from : edge.to, b = orientation > 0 ? edge.to : edge.from;
             if (!next.emplace(a, b).second || !destinations.insert(b).second)
-                throw Failure(Status::Unsupported, L("The projected boundary has a branch or a point contact"));
+                throw Failure(Status::Unsupported, _u8L("The projected boundary has a branch or a point contact"));
         }
     }
     if (next.size() < 4 || used.size() + domain.triangles.size() != edges.size() + 1)
-        throw Failure(Status::Unsupported, L("Holes or non-disk projected surfaces are not supported by rectangular boundary layout"));
+        throw Failure(Status::Unsupported, _u8L("Holes or non-disk projected surfaces are not supported by rectangular boundary layout"));
     std::vector<std::size_t> loop;
     auto current     = next.begin()->first;
     const auto first = current;
@@ -123,18 +123,18 @@ Rectangle rectangle(const Domain& domain, const Options& options, double& deviat
         loop.push_back(current);
         const auto found = next.find(current);
         if (found == next.end() || loop.size() > next.size())
-            throw Failure(Status::Unsupported, L("The projected boundary is not a closed simple contour"));
+            throw Failure(Status::Unsupported, _u8L("The projected boundary is not a closed simple contour"));
         current = found->second;
     } while (current != first);
     if (loop.size() != next.size())
-        throw Failure(Status::Unsupported, L("Holes or multiple boundary contours are unsupported"));
+        throw Failure(Status::Unsupported, _u8L("Holes or multiple boundary contours are unsupported"));
     Rectangle rect{vertices[loop.front()], vertices[loop.front()]};
     for (auto i : loop) {
         rect.minimum = rect.minimum.cwiseMin(vertices[i]);
         rect.maximum = rect.maximum.cwiseMax(vertices[i]);
     }
     if ((rect.maximum - rect.minimum).minCoeff() <= 0.)
-        throw Failure(Status::Unsupported, L("The projected rectangle has no positive area"));
+        throw Failure(Status::Unsupported, _u8L("The projected rectangle has no positive area"));
     std::array<bool, 4> sides{};
     double edge_error = 0.;
     for (std::size_t i = 0; i < loop.size(); ++i) {
@@ -147,12 +147,12 @@ Rectangle rectangle(const Domain& domain, const Options& options, double& deviat
         const auto side = std::size_t(std::min_element(errors.begin(), errors.end()) - errors.begin());
         const std::array<double, 4> forward{{b.x() - a.x(), b.y() - a.y(), a.x() - b.x(), a.y() - b.y()}};
         if (errors[side] > options.rectangle_tolerance || forward[side] <= 0.)
-            throw Failure(Status::Unsupported, L("Sloping, curved or reentrant boundaries require a different finite-cap layout"));
+            throw Failure(Status::Unsupported, _u8L("Sloping, curved or reentrant boundaries require a different finite-cap layout"));
         sides[side] = true;
         edge_error  = std::max(edge_error, errors[side]);
     }
     if (!std::all_of(sides.begin(), sides.end(), [](bool value) { return value; }))
-        throw Failure(Status::Unsupported, L("The projected contour does not cover all four rectangle sides"));
+        throw Failure(Status::Unsupported, _u8L("The projected contour does not cover all four rectangle sides"));
     // Every boundary segment lies within this strip of its assigned rectangle
     // side; monotonic traversal covers the side, including its corner approach.
     deviation = edge_error == 0. ? 0. : std::nextafter(2. * edge_error, INFINITY);
@@ -176,7 +176,7 @@ Result plan(const Domain& domain, const PS::Profile& profile, const Options& opt
     try {
         if (options.max_triangles == 0 || options.max_triangles > 1000000 || options.max_rows == 0 || options.max_rows > 1000000 ||
             options.max_points < 2 || !std::isfinite(options.rectangle_tolerance) || options.rectangle_tolerance < 0.)
-            throw Failure(Status::InvalidInput, L("Invalid planar boundary resource limits or rectangle tolerance"));
+            throw Failure(Status::InvalidInput, _u8L("Invalid planar boundary resource limits or rectangle tolerance"));
         check_cancel(canceled);
         out.target             = rectangle(domain, options, out.boundary_deviation_bound, canceled);
         out.covered            = out.target;
@@ -190,26 +190,27 @@ Result plan(const Domain& domain, const PS::Profile& profile, const Options& opt
             const auto limits    = *profile.local_width_limits;
             const double minimum = std::max(limits.minimum_mm, original.height / profile.width_correction);
             if (minimum > limits.maximum_mm)
-                throw Failure(Status::Unsupported, L("Local width limits do not allow a valid rounded-rectangle cross-section"));
+                throw Failure(Status::Unsupported, _u8L("Local width limits do not allow a valid rounded-rectangle cross-section"));
             const double pmin = PS::ribbon_section(profile, minimum).compacted_width;
             const double pmax = PS::ribbon_section(profile, limits.maximum_mm).compacted_width;
             const double low  = std::max(1., std::ceil((depth - allowance) / pmax));
             const double high = std::floor((depth + allowance) / pmin);
             if (high < low)
-                throw Failure(Status::Unsupported, L("No complete ribbon count fits the rectangle within the explicit local width limits"));
+                throw Failure(Status::Unsupported,
+                              _u8L("No complete ribbon count fits the rectangle within the explicit local width limits"));
             rows = std::clamp(rows, low, high);
             if (rows > double(options.max_rows))
-                throw Failure(Status::ResourceLimit, L("Planar boundary row budget exceeded"));
+                throw Failure(Status::ResourceLimit, _u8L("Planar boundary row budget exceeded"));
             const double pitch = depth / rows;
             const double pi    = std::acos(-1.);
             double requested = (pitch / PS::effective_surface_flow(profile) + original.height * (1. - pi / 4.)) / profile.width_correction;
             const double limit_allowance = arithmetic_allowance(std::max(std::abs(requested), limits.maximum_mm));
             if (requested < minimum - limit_allowance || requested > limits.maximum_mm + limit_allowance)
-                throw Failure(Status::Unsupported, L("The computed local width lies outside its explicit bounds"));
+                throw Failure(Status::Unsupported, _u8L("The computed local width lies outside its explicit bounds"));
             requested   = std::clamp(requested, minimum, limits.maximum_mm);
             out.section = PS::ribbon_section(profile, requested);
             if (std::abs(depth - rows * out.section.compacted_width) > allowance)
-                throw Failure(Status::Unsupported, L("The requested local width cannot reproduce the selected ribbon spacing"));
+                throw Failure(Status::Unsupported, _u8L("The requested local width cannot reproduce the selected ribbon spacing"));
             out.local_profile.line_width = requested;
             out.width_adjusted           = requested != profile.line_width;
             out.full_candidate           = true;
@@ -221,9 +222,9 @@ Result plan(const Domain& domain, const PS::Profile& profile, const Options& opt
                 rows = std::floor(depth / original.compacted_width);
             if (rows < 1.)
                 throw Failure(Status::Unsupported,
-                              L("The region is narrower than one fixed-width ribbon; explicit local width limits are required"));
+                              _u8L("The region is narrower than one fixed-width ribbon; explicit local width limits are required"));
             if (rows > double(options.max_rows))
-                throw Failure(Status::ResourceLimit, L("Planar boundary row budget exceeded"));
+                throw Failure(Status::ResourceLimit, _u8L("Planar boundary row budget exceeded"));
             if (!out.full_candidate) {
                 const double occupied = rows * original.compacted_width;
                 out.residual_width    = depth - occupied;
@@ -236,12 +237,13 @@ Result plan(const Domain& domain, const PS::Profile& profile, const Options& opt
             }
         }
         if (rows < 1. || !std::isfinite(rows))
-            throw Failure(Status::Unsupported, L("No finite ribbon layout fits this rectangle"));
+            throw Failure(Status::Unsupported, _u8L("No finite ribbon layout fits this rectangle"));
         out.rows = std::size_t(rows);
         if (out.rows > (options.max_points - 2) / 2 + 1)
-            throw Failure(Status::ResourceLimit, L("Planar boundary station budget exceeded"));
+            throw Failure(Status::ResourceLimit, _u8L("Planar boundary station budget exceeded"));
         if (out.rows > 1 && width <= out.section.compacted_width)
-            throw Failure(Status::Unsupported, L("The rectangle is too short for finite mitered turns in the requested raster direction"));
+            throw Failure(Status::Unsupported,
+                          _u8L("The rectangle is too short for finite mitered turns in the requested raster direction"));
         out.speed = PS::ribbon_speed(out.local_profile);
         std::vector<double> borders(out.rows + 1);
         borders.front() = out.covered.minimum.y();
@@ -277,6 +279,7 @@ Result plan(const Domain& domain, const PS::Profile& profile, const Options& opt
             }
         }
         for (std::size_t i = 0; i < out.path.size(); ++i) {
+            check_cancel(canceled);
             auto side = [&](const Vec2d& d) -> Vec2d { return Vec2d(-d.y(), d.x()).normalized(); };
             Vec2d lateral;
             if (i == 0)
@@ -296,12 +299,14 @@ Result plan(const Domain& domain, const PS::Profile& profile, const Options& opt
         const double coordinate_scale = std::max(out.target.minimum.cwiseAbs().maxCoeff(), out.target.maximum.cwiseAbs().maxCoeff());
         if (!std::isfinite(out.supplied_volume) || !std::isfinite(out.construction_bound) ||
             out.construction_bound > arithmetic_allowance(coordinate_scale))
-            throw Failure(Status::Unsupported, L("Canonical boundary rails exceed the nominal profile's numerical construction allowance"));
+            throw Failure(Status::Unsupported,
+                          _u8L("Canonical boundary rails exceed the nominal profile's numerical construction allowance"));
         if (out.construction_bound > 0.)
             out.construction_bound = std::nextafter(out.construction_bound, INFINITY);
+        check_cancel(canceled);
         out.status = Status::Ready;
-        out.reason = out.full_candidate ? L("Rectangular candidate requires the full spatial material audit") :
-                                          L("Fixed profile width leaves explicit unfilled boundary strips; Flow remains unchanged");
+        out.reason = out.full_candidate ? _u8L("Rectangular candidate requires the full spatial material audit") :
+                                          _u8L("Fixed profile width leaves explicit unfilled boundary strips; Flow remains unchanged");
     } catch (const Failure& e) {
         out.status = e.status;
         out.reason = e.what();

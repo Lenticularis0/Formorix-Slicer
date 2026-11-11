@@ -1,0 +1,23 @@
+Formorix Auftrag 05, Paket 9: Lokalisierung und Hilfeziele
+
+Ausgangsstand: 7738793e82dd2af679b70ddd9bda82d9dcee321e
+Hilfe-Pin: 2c182dc885a158886cc8282b3b70164bd658ec48 (veröffentlicht)
+
+Angewendet wurden Laufzeitübersetzungen für sichtbare Fehlermeldungen und Warnungen in zehn Formorix-Kernquelldateien. Boundary verwendet jetzt _u8L statt der identischen L-Funktion. Die bereits übersetzenden L-Aliase in Hybrid, Process, Profiles und Surfaces bleiben erhalten. Zusammengesetzte Meldungen verwenden vollständige Sätze mit format-Platzhaltern. Konfigurationsschlüssel, Material-/Profilnamen und interne Referenzkennungen bleiben unverändert. Der native Import zeigte außerdem einen bereits übersetzten Drucksperrtext in Englisch: Print::validate reichte ihn roh an die Notification weiter. Root korrigierte dort die Laufzeitübersetzung vorhandener Validierungs- und Sperrmeldungen; dafür waren keine neuen msgids nötig.
+
+Vollständiges scripts/run_gettext.bat --full vor und nach dem Hauptbatch sowie vor und nach den beiden ergänzenden 3MF-Batches: sechs Läufe Exit 0; der abschließende siebte Lauf nach dem Print-Guard-Fix ebenfalls Exit 0. Das gebündelte Windows-xgettext/msgfmt benötigt hier Ausführung außerhalb der Sandbox, da es innerhalb der Sandbox mit 'Illegal System DLL Relocation' nicht startet. Der erste fehlgeschlagene Start änderte keine Kataloge.
+
+po_tool apply: insgesamt 460 angewendet (458 im Hauptbatch, zwei zusätzliche 3MF-Meldungen), 0 abgelehnt, 0 Warnungen. Zwei Review-Kommentare erläutern A/B als Drehachsen: Die Ähnlichkeitsheuristik hatte diese neuen Felder fälschlich 'Auto orientation' bzw. 'Set orientation' zugeordnet. Keine bestehende menschliche Übersetzung wurde geändert.
+
+po_tool check --lang de --warnings: Exit 0, 0 Einträge mit Fehlern. Die 66 gemeldeten Glossar-/Stilwarnungen sind gegenüber dem Ausgangskatalog unverändert; keine davon wurde durch diesen Batch hinzugefügt. Die 460 neuen Einträge haben auch in der abschließenden Einzelprüfung keine Warnungen. Es wurden keine unerwarteten aktiven Übersetzungen verändert.
+
+685 unterschiedliche markierte Formorix-msgids geprüft: 0 fehlende/ungültige deutsche Übersetzungen, 0 fehlende Dateien in list.txt. Der Glossarabgleich verwendet den frisch abgerufenen offiziellen Stand 1691ffa575e7af6c1c9ab0ebcfff8cdd3598444c in einer externen lokalen Momentaufnahme. Die vier vorherigen lokalen Ergänzungen wurden darin erhalten und fünf Formorix-Begriffe über po_tool glossary-set ergänzt. generate_glossary.py --check: Exit 0. Das ursprüngliche lokale Wiki/Glossar ist bytegleich geblieben; nichts wurde im fremden Wiki veröffentlicht.
+
+po_tool purge-obsolete --lang de entfernte 68 obsolete Einträge nach dem Merge (66 bereits im Ausgangskatalog, zwei durch den gettext-Abgleich zusätzlich obsolet). Der finale DE-Katalog enthält keine obsoleten Einträge. Von gettext erzeugte Nicht-DE-Katalogänderungen wurden anschließend auf den vorher unveränderten HEAD-Stand zurückgestellt, damit der Auftrag auf DE/POT beschränkt bleibt. Keine andere Sprache wurde übersetzt.
+
+Hilfeprüfung: 13/13 zentrale GUI-Ziele gültig, davon fünf explizite Anker. Alle 13 Hilfeseiten und 32 relative Linkvorkommen geprüft; 0 statische Fehler. Die 22 verschiedenen öffentlichen GitHub-Ziele antworten sämtlich mit HTTP 200 ohne Umleitung. Anker wurden anhand der Markdown-Überschriften und expliziten HTML-IDs am festgeschriebenen Commit geprüft; ein nativer GUI-Klick gehört zur separaten GUI-Abnahme.
+
+Deutsche resources/i18n/de/OrcaSlicer.mo SHA256:
+eac39ddb019d86c0f6db3f1ac17f3d75892376d7e0977ed99aae873455384e2e
+
+Detailbelege: package9-localization-audit.json, package9-apply.log, package9-check-final.log, package9-final-source-gettext.log, package9-gettext-first.log, package9-gettext-final.log, package9-portability-gettext-first.log, package9-portability-gettext-final.log, package9-portability-apply.log, package9-conflict-gettext-first.log, package9-conflict-gettext-final.log, package9-conflict-apply.log, package9-help-links.json, package9-help-links.log, package9-glossary.json. Kein CMake-Build durch den Lokalisierungsagenten; Build und GUI-Abnahme koordiniert Root.

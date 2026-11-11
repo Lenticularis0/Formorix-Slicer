@@ -2157,12 +2157,14 @@ StringObjectException Print::validate(std::vector<StringObjectException> *warnin
     if (Formorix5D::enabled(m_config) && !hybrid_preview_only()) {
         StringObjectException error;
         try {
-            error.string = Formorix5D::validate(Formorix5D::from_config(m_config));
+            const auto reason = Formorix5D::validate(Formorix5D::from_config(m_config));
+            if (!reason.empty())
+                error.string = I18N::translate(reason);
         } catch (const std::invalid_argument&) {
             error.string = L("Formorix 5D configuration is incomplete or uses an unsupported schema.");
         }
         if (error.string.empty())
-            error.string = Formorix5D::export_block_reason();
+            error.string = I18N::translate(Formorix5D::export_block_reason());
         error.opt_key = "formorix_5d_enabled";
         return error;
     }

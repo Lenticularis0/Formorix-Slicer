@@ -1,0 +1,9 @@
+Filters: [NativeRoundTrip],[FormorixProfiles],[FormorixSurfaces]
+Randomness seeded to: 42
+MULTI_MATERIAL_3MF,region=1,nozzle=0.80000000000000004,supply=11.999999999999996,missing=0,outside=0,spatial_upper=7.105427357601005e-15,outer_upper=0,cad_verified=0
+MULTI_MATERIAL_3MF,region=2,nozzle=0.40000000000000002,supply=8.9999999999999929,missing=0,outside=0,spatial_upper=7.105427357601005e-15,outer_upper=0,cad_verified=0
+MULTI_MATERIAL_3MF,region=3,nozzle=0.59999999999999998,supply=18.000000000000021,missing=0,outside=0,spatial_upper=7.105427357601005e-15,outer_upper=0,cad_verified=0
+FORMORIX_TEST_ARTIFACT C:\Formorix Slicer\verification\auftrag05\formorix-three-materials.3mf
+===============================================================================
+All tests passed (1149 assertions in 19 test cases)
+

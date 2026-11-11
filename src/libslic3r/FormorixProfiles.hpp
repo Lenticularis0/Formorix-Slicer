@@ -5,8 +5,10 @@
 #include "PrintConfig.hpp"
 #include <array>
 #include <cstddef>
+#include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace Slic3r {
 class PresetBundle;
@@ -38,4 +40,11 @@ Resolved resolve(const Source&);
 Resolved refresh(const PresetBundle&, FormorixSurfaces::Head&);
 // GUI refresh hook. An empty cache also invalidates snapshots loaded from a project.
 bool invalidate_changed(FormorixSurfaces::Project&, const PresetBundle&, std::array<std::string, 3>& source_signatures);
+// Add portable full copies of current head bindings, including inactive sources.
+// Replace older copies with the same type/name. Original presets are untouched;
+// resolution failures leave the owning output vector unchanged.
+void append_project_sources(const PresetBundle&, const FormorixSurfaces::Project&, std::vector<std::unique_ptr<Preset>>&);
+// Before native import, reject an explicit archived head source that would be
+// shadowed by a differing same-name local source. Does not mutate either input.
+void validate_project_sources(const PresetBundle&, const FormorixSurfaces::Project&, const std::vector<Preset*>&);
 } // namespace Slic3r::FormorixProfiles

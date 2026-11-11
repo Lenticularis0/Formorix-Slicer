@@ -5,6 +5,9 @@
 #include "I18N.hpp"
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/Surface_mesh.h>
+#include <CGAL/Surface_mesh/Surface_mesh.h>
+#include <CGAL/Lazy.h>
+#include <CGAL/global_functions_distance_3.h>
 #include <CGAL/Polygon_mesh_slicer.h>
 #include <CGAL/AABB_tree.h>
 #include <CGAL/AABB_traits_3.h>
@@ -321,6 +324,7 @@ Result trace_exact(const Input& input, const Options& options, const std::functi
         out.warnings.push_back(_u8L("Coplanar surface faces contribute boundary curves only; these curves do not certify area coverage"));
     if (out.isolated_contacts)
         out.warnings.push_back(_u8L("Isolated plane contacts have no extrusion length and are not planned"));
+    check();
     out.status                = Status::Complete;
     out.interpolation_bounded = !out.runs.empty();
     if (out.runs.empty()) {

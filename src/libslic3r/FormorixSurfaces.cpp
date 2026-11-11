@@ -68,7 +68,7 @@ void from_json(const json& j, Head& h)
     if (j.contains("local_width_limits") && !j.at("local_width_limits").is_null())
         h.local_width_limits = j.at("local_width_limits").get<FormorixProcess::WidthLimits>();
     if (j.contains("nozzle_index") && (!j.at("nozzle_index").is_number_integer() || j.at("nozzle_index") < 0 || j.at("nozzle_index") > 255))
-        throw std::invalid_argument("Invalid Formorix nozzle slot");
+        throw std::invalid_argument(_u8L("Invalid Formorix nozzle slot"));
     h.nozzle_index = j.value("nozzle_index", 0u);
     h.process.reset();
     if (j.contains("process")) h.process = j.at("process").get<FormorixProcess::Profile>();
@@ -99,18 +99,19 @@ template<class E> static bool enum_valid(E value, int last) { return int(value) 
 
 static void validate(const Project &p)
 {
-    if (p.version != schema_version) throw std::invalid_argument("Unsupported Formorix surface schema");
+    if (p.version != schema_version)
+        throw std::invalid_argument(_u8L("Unsupported Formorix surface schema"));
     if (p.regions.size() > max_regions || !enum_valid(p.strategy, 2))
-        throw std::invalid_argument("Invalid Formorix project settings");
+        throw std::invalid_argument(_u8L("Invalid Formorix project settings"));
     const auto &view = p.selection;
     if (view.tool < 0 || view.tool > 3 || !in_range(view.brush_radius, .4, 8.) ||
         !in_range(view.edge_angle, 0., 90.) || !in_range(view.slope_min, 0., 180.) ||
         !in_range(view.slope_max, 0., 180.) || !in_range(view.section_position, 0., 1.))
-        throw std::invalid_argument("Invalid Formorix selection settings");
+        throw std::invalid_argument(_u8L("Invalid Formorix selection settings"));
     std::set<int> ids;
     for (const Region &r : p.regions) {
         if (r.id < 1 || r.id > max_regions || !ids.insert(r.id).second || r.name.empty() || r.name.size() > 1024)
-            throw std::invalid_argument("Invalid or duplicate Formorix region");
+            throw std::invalid_argument(_u8L("Invalid or duplicate Formorix region"));
         const Settings &s = r.settings;
         if (!enum_valid(s.shell_mode, 2) || !enum_valid(s.support_material, 2) || !enum_valid(s.direction, 2) ||
             s.layers < 1 || s.layers > 10000 || !in_range(s.shell_thickness, 0.001, 10000.) ||
@@ -119,27 +120,30 @@ static void validate(const Project &p)
             !in_range(s.fine_layer_height, 0.001, 100.) || !in_range(s.boundary_margin, 0., 10000.) ||
             s.quality < 0 || s.quality > 2 || s.head_mask == 0 || s.head_mask > 7 ||
             (s.single_head && (s.head_mask & (s.head_mask - 1)) != 0))
-            throw std::invalid_argument("Invalid Formorix region settings");
+            throw std::invalid_argument(_u8L("Invalid Formorix region settings"));
         double norm = 0.;
         for (double v : s.custom_direction) {
-            if (!in_range(v, -1e6, 1e6)) throw std::invalid_argument("Invalid surface direction");
+            if (!in_range(v, -1e6, 1e6))
+                throw std::invalid_argument(_u8L("Invalid surface direction"));
             norm += v * v;
         }
-        if (norm < 1e-12) throw std::invalid_argument("Surface direction must be nonzero");
+        if (norm < 1e-12)
+            throw std::invalid_argument(_u8L("Surface direction must be nonzero"));
         for (double v : s.edge)
-            if (!in_range(v, -1e9, 1e9)) throw std::invalid_argument("Invalid reference edge");
+            if (!in_range(v, -1e9, 1e9))
+                throw std::invalid_argument(_u8L("Invalid reference edge"));
     }
     for (const Head &h : p.heads)
         if (h.tasks == 0 || h.tasks > 31 || h.material_preset.size() > 4096 || h.printer_preset.size() > 4096 || h.nozzle_index > 255 ||
             h.process_preset.size() > 4096 || (h.local_width_limits && !FormorixProcess::valid(*h.local_width_limits)) ||
             (h.process && !FormorixProcess::valid(*h.process)))
-            throw std::invalid_argument("Invalid Formorix head assignment");
+            throw std::invalid_argument(_u8L("Invalid Formorix head assignment"));
     std::set<std::pair<int, int>> pairs;
     for (const Transition &t : p.transitions)
         if (!ids.count(t.first) || !ids.count(t.second) || t.first >= t.second ||
             !pairs.emplace(t.first, t.second).second || !enum_valid(t.kind, 2) || !enum_valid(t.pattern, 2) ||
             !in_range(t.width, 0.001, 10000.) || !in_range(t.overlap, 0., 100.))
-            throw std::invalid_argument("Invalid Formorix transition");
+            throw std::invalid_argument(_u8L("Invalid Formorix transition"));
 }
 
 std::string Project::encode() const { validate(*this); return json(*this).dump(); }
@@ -148,14 +152,16 @@ std::optional<Project> Project::decode(const std::string &text, std::string &err
     error.clear();
     if (text.empty()) return Project{};
     try {
-        if (text.size() > 4 * 1024 * 1024) throw std::invalid_argument("Formorix settings exceed size limit");
+        if (text.size() > 4 * 1024 * 1024)
+            throw std::invalid_argument(_u8L("Formorix settings exceed size limit"));
         auto data = json::parse(text);
-        if (!data.is_object()) throw std::invalid_argument("Invalid Formorix surface object");
+        if (!data.is_object())
+            throw std::invalid_argument(_u8L("Invalid Formorix surface object"));
         const int version = data.at("version").get<int>();
         if (version < 1 || version > schema_version)
-            throw std::invalid_argument("Unsupported Formorix surface schema");
+            throw std::invalid_argument(_u8L("Unsupported Formorix surface schema"));
         if (data.contains("heads") && (!data["heads"].is_array() || data["heads"].size() != 3))
-            throw std::invalid_argument("Formorix requires three head assignments");
+            throw std::invalid_argument(_u8L("Formorix requires three head assignments"));
         if (version < schema_version) {
             data["version"] = schema_version;
             for (auto& head : data.at("heads")) {
@@ -190,11 +196,13 @@ bool painting_matches(const ModelVolume &v)
 
 void remap_regions(Model &model, const std::vector<int> &sources, int destination)
 {
-    if (destination < 0 || destination > max_regions) throw std::invalid_argument("Invalid region destination");
+    if (destination < 0 || destination > max_regions)
+        throw std::invalid_argument(_u8L("Invalid region destination"));
     EnforcerBlockerStateMap map;
     for (int i = 0; i <= max_regions; ++i) map[i] = EnforcerBlockerType(i);
     for (int id : sources) {
-        if (id < 1 || id > max_regions) throw std::invalid_argument("Invalid region source");
+        if (id < 1 || id > max_regions)
+            throw std::invalid_argument(_u8L("Invalid region source"));
         map[id] = EnforcerBlockerType(destination);
     }
     for (ModelObject *object : model.objects)
@@ -211,8 +219,10 @@ void merge_regions(Project &p, Model &model, const std::vector<int> &ids, int de
 {
     Region *target = p.find(destination);
     if (!target || ids.size() < 2 || std::find(ids.begin(), ids.end(), destination) == ids.end())
-        throw std::invalid_argument("Select at least two regions including the destination");
-    for (int id : ids) if (!p.find(id)) throw std::invalid_argument("Unknown region");
+        throw std::invalid_argument(_u8L("Select at least two regions including the destination"));
+    for (int id : ids)
+        if (!p.find(id))
+            throw std::invalid_argument(_u8L("Unknown region"));
     remap_regions(model, ids, destination);
     target->continuous = true;
     auto selected = [&ids](int id) { return std::find(ids.begin(), ids.end(), id) != ids.end(); };

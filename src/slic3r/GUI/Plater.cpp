@@ -1,4 +1,6 @@
 #include "libslic3r/Formorix5D.hpp"
+#include "libslic3r/FormorixProfiles.hpp"
+#include "libslic3r/FormorixSurfaces.hpp"
 #include "Plater.hpp"
 #include "FormorixSurfaceEditor.hpp"
 #include "../Utils/NetworkAgent.hpp"
@@ -9673,6 +9675,9 @@ std::vector<size_t> Plater::priv::load_files(const std::vector<fs::path>& input_
                         // load project embedded presets
                         PresetsConfigSubstitutions preset_substitutions;
                         PresetBundle &             preset_bundle = *wxGetApp().preset_bundle;
+                        std::string annotation_error;
+                        if (const auto project = FormorixSurfaces::Project::decode(model.formorix_surfaces, annotation_error))
+                            FormorixProfiles::validate_project_sources(preset_bundle, *project, project_presets);
                         preset_substitutions                     = preset_bundle.load_project_embedded_presets(project_presets, ForwardCompatibilitySubstitutionRule::Enable);
                         if (is_bambu_studio_project)
                             log_substitutions(preset_substitutions, path.string());
@@ -10122,6 +10127,9 @@ std::vector<size_t> Plater::priv::load_files(const std::vector<fs::path>& input_
                     // load project embedded presets
                     PresetsConfigSubstitutions preset_substitutions;
                     PresetBundle &             preset_bundle = *wxGetApp().preset_bundle;
+                    std::string annotation_error;
+                    if (const auto project = FormorixSurfaces::Project::decode(model.formorix_surfaces, annotation_error))
+                        FormorixProfiles::validate_project_sources(preset_bundle, *project, project_presets);
                     preset_substitutions                     = preset_bundle.load_project_embedded_presets(project_presets, ForwardCompatibilitySubstitutionRule::Enable);
                     if (!preset_substitutions.empty()) show_substitutions_info(preset_substitutions);
 
@@ -20994,6 +21002,28 @@ int Plater::export_3mf(const boost::filesystem::path& output_path, SaveStrategy 
     if (!path.Lower().EndsWith(".3mf"))
         return -1;
 
+    PresetBundle& preset_bundle = *wxGetApp().preset_bundle;
+    std::vector<Preset*> project_presets = preset_bundle.get_current_project_embedded_presets();
+    std::vector<std::unique_ptr<Preset>> project_preset_owners;
+    project_preset_owners.reserve(project_presets.size());
+    for (auto* preset : project_presets)
+        project_preset_owners.emplace_back(preset);
+    if (!p->model.formorix_surfaces.empty()) {
+        std::string annotation_error;
+        // Unknown future annotations remain opaque and are saved unchanged.
+        if (const auto project = FormorixSurfaces::Project::decode(p->model.formorix_surfaces, annotation_error)) {
+            try {
+                FormorixProfiles::append_project_sources(preset_bundle, *project, project_preset_owners);
+            } catch (const std::exception& error) {
+                show_error(this, error.what());
+                return -1;
+            }
+        }
+    }
+    project_presets.clear();
+    for (const auto& preset : project_preset_owners)
+        project_presets.push_back(preset.get());
+
     // take care about private data stored into .3mf
     // modify model
     publish(p->model, strategy);
@@ -21134,10 +21164,6 @@ int Plater::export_3mf(const boost::filesystem::path& output_path, SaveStrategy 
         }
     }
 
-    // BBS: backup
-    PresetBundle& preset_bundle = *wxGetApp().preset_bundle;
-    std::vector<Preset*> project_presets = preset_bundle.get_current_project_embedded_presets();
-
     StoreParams store_params;
     store_params.path  = path_u8;
     store_params.model = &p->model;
@@ -21226,15 +21252,6 @@ int Plater::export_3mf(const boost::filesystem::path& output_path, SaveStrategy 
     }
     else {
         ret = -1;
-    }
-
-    if (project_presets.size() > 0)
-    {
-        for (unsigned int i = 0; i < project_presets.size(); i++)
-        {
-            delete project_presets[i];
-        }
-        project_presets.clear();
     }
 
     release_PlateData_list(plate_data_list);

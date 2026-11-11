@@ -2929,6 +2929,11 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
             preset->is_project_embedded = true;
             preset->is_external = true;
             preset->is_dirty = false;
+            if (type == Preset::TYPE_FILAMENT) {
+                const auto id = key_values.find(BBL_JSON_KEY_FILAMENT_ID);
+                if (id != key_values.end() && !id->second.empty() && id->second != UNKNOWN_FILAMENT_ID)
+                    preset->filament_id = id->second;
+            }
 
             std::string version_str = key_values[BBL_JSON_KEY_VERSION];
             boost::optional<Semver> version = Semver::parse(version_str);
@@ -8301,7 +8306,11 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
 
             if (preset) {
                 preset->file = temp_path + std::string("/") + "_temp_1.config";
-                DynamicPrintConfig& config = preset->config;
+                DynamicPrintConfig config = preset->config;
+                // Preserve an explicit material identity in native JSON metadata,
+                // without adding a slicer setting or mutating the source preset.
+                if (preset->type == Preset::TYPE_FILAMENT && !preset->filament_id.empty() && preset->filament_id != UNKNOWN_FILAMENT_ID)
+                    config.set_key_value(BBL_JSON_KEY_FILAMENT_ID, new ConfigOptionString(preset->filament_id));
                 //config.save(preset->file);
                 config.save_to_json(preset->file, preset->name, std::string("project"), preset->version.to_string());
 

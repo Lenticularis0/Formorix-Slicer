@@ -4,6 +4,8 @@
 #include "Point.hpp"
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/squared_distance_3.h>
+#include <CGAL/global_functions_distance_3.h>
+#include <CGAL/Named_function_parameters.h>
 #include <CGAL/Surface_mesh.h>
 #include <CGAL/Surface_mesh/Surface_mesh.h>
 #include <CGAL/Kernel/global_functions_3.h>
@@ -41,24 +43,24 @@ bool valid(const ExactMesh& m)
 ExactMesh exact(const Mesh& m)
 {
     if (m.vertices.size() > 200000 || m.faces.size() > 200000)
-        throw std::invalid_argument("Boolean resource limit");
+        throw std::invalid_argument(_u8L("Boolean resource limit"));
     ExactMesh out;
     for (const Vec3d& p : m.vertices) {
         if (!p.allFinite() || p.cwiseAbs().maxCoeff() > 1e7)
-            throw std::invalid_argument("Invalid coordinate");
+            throw std::invalid_argument(_u8L("Invalid coordinate"));
         out.add_vertex(K::Point_3(p.x(), p.y(), p.z()));
     }
     for (const auto& f : m.faces) {
         for (int i : f)
             if (i < 0 || std::size_t(i) >= m.vertices.size())
-                throw std::invalid_argument("Invalid face index");
+                throw std::invalid_argument(_u8L("Invalid face index"));
         if (f[0] == f[1] || f[1] == f[2] || f[2] == f[0] ||
             CGAL::collinear(out.point(ExactMesh::Vertex_index(f[0])), out.point(ExactMesh::Vertex_index(f[1])),
                             out.point(ExactMesh::Vertex_index(f[2]))))
-            throw std::invalid_argument("Degenerate face");
+            throw std::invalid_argument(_u8L("Degenerate face"));
         if (out.add_face(ExactMesh::Vertex_index(f[0]), ExactMesh::Vertex_index(f[1]), ExactMesh::Vertex_index(f[2])) ==
             ExactMesh::null_face())
-            throw std::invalid_argument("Non-manifold mesh");
+            throw std::invalid_argument(_u8L("Non-manifold mesh"));
     }
     return out;
 }
@@ -91,13 +93,13 @@ Mesh materialize(const ExactMesh& m, double& bound, bool grid)
     // Topological removal of zero-area faces keeps the boundary closed. Never
     // smooth the solid or permit repair to introduce a new coordinate.
     if (grid && !PMP::remove_degenerate_faces(representable))
-        throw std::invalid_argument("Unrepresentable degenerate output");
+        throw std::invalid_argument(_u8L("Unrepresentable degenerate output"));
     Mesh out;
     std::map<ExactMesh::Vertex_index, int> ids;
     for (auto v : representable.vertices()) {
         const Vec3d p = rounded(representable.point(v), bound, grid);
         if (!allowed.count(std::make_tuple(p.x(), p.y(), p.z())))
-            throw std::invalid_argument("Repair changed vertex coordinates");
+            throw std::invalid_argument(_u8L("Repair changed vertex coordinates"));
         ids[v] = int(out.vertices.size());
         out.vertices.push_back(p);
     }
@@ -136,7 +138,7 @@ double volume(const Mesh& m)
 {
     const auto e = exact(m);
     if (!valid(e))
-        throw std::invalid_argument("Invalid solid");
+        throw std::invalid_argument(_u8L("Invalid solid"));
     return CGAL::to_double(PMP::volume(e));
 }
 static Partition partition_exact(const Mesh& solid, const std::vector<std::pair<int, ExactMesh>>& requests, bool clip)
@@ -144,10 +146,10 @@ static Partition partition_exact(const Mesh& solid, const std::vector<std::pair<
     Partition out;
     try {
         if (requests.empty() || requests.size() > 32)
-            throw std::invalid_argument("Invalid region count");
+            throw std::invalid_argument(_u8L("Invalid region count"));
         ExactMesh remaining = exact(solid);
         if (!valid(remaining))
-            throw std::invalid_argument("Source is not a valid oriented solid");
+            throw std::invalid_argument(_u8L("Source is not a valid oriented solid"));
         const auto original_volume = PMP::volume(remaining);
         const ExactMesh original = remaining;
         out.input_volume           = CGAL::to_double(original_volume);
@@ -156,14 +158,14 @@ static Partition partition_exact(const Mesh& solid, const std::vector<std::pair<
         std::set<int> ids;
         for (const auto& request : requests) {
             if (!ids.insert(request.first).second)
-                throw std::invalid_argument("Duplicate shell region");
+                throw std::invalid_argument(_u8L("Duplicate shell region"));
             ExactMesh cutter = request.second;
             if (!valid(cutter))
-                throw std::invalid_argument("Offset is self-intersecting or not a valid volume");
+                throw std::invalid_argument(_u8L("Offset is self-intersecting or not a valid volume"));
             if (clip) {
                 ExactMesh source = original, clipped;
                 if (!PMP::corefine_and_compute_intersection(source, cutter, clipped) || !valid(clipped))
-                    throw std::invalid_argument("Clipped shell is not a valid volume");
+                    throw std::invalid_argument(_u8L("Clipped shell is not a valid volume"));
                 cutter = std::move(clipped);
             }
             const auto cutter_volume = PMP::volume(cutter);
@@ -174,13 +176,13 @@ static Partition partition_exact(const Mesh& solid, const std::vector<std::pair<
             outputs[3]        = &outside;
             const auto result = PMP::corefine_and_compute_boolean_operations(remaining, cutter, outputs);
             if (!result[1] || !result[2] || !result[3])
-                throw std::invalid_argument("Non-manifold Boolean result");
+                throw std::invalid_argument(_u8L("Non-manifold Boolean result"));
             // Strict rejection prevents silent region priority, missing support walls,
             // overthick shells and overlapping material assignments.
             if (!outside.is_empty() && PMP::volume(outside) != 0)
-                throw std::invalid_argument("Shell exceeds available wall or overlaps another region");
+                throw std::invalid_argument(_u8L("Shell exceeds available wall or overlaps another region"));
             if (!valid(skin) || (!core.is_empty() && !valid(core)) || PMP::volume(skin) != cutter_volume)
-                throw std::invalid_argument("Invalid shell/core partition");
+                throw std::invalid_argument(_u8L("Invalid shell/core partition"));
             solids.push_back(std::move(skin));
             regions.push_back(request.first);
             remaining = std::move(core);
@@ -196,11 +198,11 @@ static Partition partition_exact(const Mesh& solid, const std::vector<std::pair<
         K::FT exact_sum = 0;
         for (const auto& part : solids) {
             if (!valid(part))
-                throw std::invalid_argument("Invalid refined part");
+                throw std::invalid_argument(_u8L("Invalid refined part"));
             exact_sum += PMP::volume(part);
         }
         if (exact_sum != original_volume)
-            throw std::invalid_argument("Exact volume conservation failed");
+            throw std::invalid_argument(_u8L("Exact volume conservation failed"));
         auto convert = [&](bool grid) {
             Partition candidate;
             candidate.input_volume = out.input_volume;
@@ -235,11 +237,11 @@ static Partition partition_exact(const Mesh& solid, const std::vector<std::pair<
                 Mesh rounded_mesh    = materialize(solids[i], candidate.rounding_bound, grid);
                 const auto converted = exact(rounded_mesh);
                 if (!CGAL::is_closed(converted))
-                    throw std::invalid_argument("Double conversion opens solid");
+                    throw std::invalid_argument(_u8L("Double conversion opens solid"));
                 if (PMP::does_self_intersect(converted))
-                    throw std::invalid_argument("Double conversion creates self-intersections");
+                    throw std::invalid_argument(_u8L("Double conversion creates self-intersections"));
                 if (!valid(converted))
-                    throw std::invalid_argument("Double conversion invalidates volume orientation");
+                    throw std::invalid_argument(_u8L("Double conversion invalidates volume orientation"));
                 const double part_volume = CGAL::to_double(PMP::volume(converted));
                 materialized_sum += part_volume;
                 candidate.parts.push_back({regions[i], std::move(rounded_mesh), part_volume});
@@ -250,13 +252,13 @@ static Partition partition_exact(const Mesh& solid, const std::vector<std::pair<
                 for (std::size_t j = i + 1; j < converted_parts.size(); ++j) {
                     ExactMesh a = converted_parts[i], b = converted_parts[j], overlap;
                     if (!PMP::corefine_and_compute_intersection(a, b, overlap) || (!overlap.is_empty() && PMP::volume(overlap) != 0))
-                        throw std::invalid_argument("Double conversion overlaps material volumes");
+                        throw std::invalid_argument(_u8L("Double conversion overlaps material volumes"));
                 }
             candidate.volume_residual = materialized_sum - candidate.input_volume;
             for (auto& entry : interfaces)
                 candidate.interfaces.push_back({entry.first.first, entry.first.second, std::move(entry.second)});
             if (solids.size() > 1 && candidate.interfaces.empty())
-                throw std::invalid_argument("Shared interface was not recovered");
+                throw std::invalid_argument(_u8L("Shared interface was not recovered"));
             return candidate;
         };
         // Prefer full double precision when every part and shared interface can

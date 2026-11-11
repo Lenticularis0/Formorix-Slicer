@@ -1,5 +1,6 @@
 #pragma once
 #include "FormorixMaterial.hpp"
+#include "FormorixGeometry.hpp"
 #include <cstddef>
 #include <functional>
 #include <stdexcept>

@@ -55,25 +55,25 @@ double scaled_error_bound(double bound, double scale)
         return unknown;
     return bound == 0. || scale == 0. ? 0. : std::nextafter(bound * scale, unknown);
 }
-const char* preview_issue(PV::Issue issue)
+std::string preview_issue(PV::Issue issue)
 {
     switch (issue) {
-    case PV::Issue::Empty: return "The selected surface is empty.";
-    case PV::Issue::Disconnected: return "The selected surface contains disconnected islands.";
-    case PV::Issue::NonDisk: return "The selected surface has holes or a branching boundary unsupported by the continuous planner.";
-    case PV::Issue::NotHeightField: return "The surface folds over its local projection or has multiple intervals in a raster row.";
-    case PV::Issue::ThinWall: return "The available wall is too thin for the requested layer.";
-    case PV::Issue::InvalidOffset: return "The requested normal offset folds or self-intersects.";
-    case PV::Issue::FullWallVariable: return "Full-wall mode requires a local termination strategy for variable wall thickness.";
-    case PV::Issue::VerticalDisabled: return "Vertical surfaces require explicit permission.";
-    case PV::Issue::TiltExceeded: return "The desired nozzle direction exceeds the configured tilt and deviation.";
-    case PV::Issue::TooLarge: return "The preview exceeds the current mesh or path resource limit.";
-    case PV::Issue::Canceled: return "Calculation was canceled.";
-    case PV::Issue::StalePaint: return "Surface markings no longer match the mesh topology.";
-    case PV::Issue::MultipleHeads: return "A single surface requires one explicitly assigned head.";
-    case PV::Issue::ProfileMissing: return "A required nozzle or material profile is unavailable.";
-    case PV::Issue::ReferenceEdge: return "The selected reference edge is no longer valid.";
-    default: return "The selected mesh is invalid for continuous surface planning.";
+    case PV::Issue::Empty: return _u8L("The selected surface is empty.");
+    case PV::Issue::Disconnected: return _u8L("The selected surface contains disconnected islands.");
+    case PV::Issue::NonDisk: return _u8L("The selected surface has holes or a branching boundary unsupported by the continuous planner.");
+    case PV::Issue::NotHeightField: return _u8L("The surface folds over its local projection or has multiple intervals in a raster row.");
+    case PV::Issue::ThinWall: return _u8L("The available wall is too thin for the requested layer.");
+    case PV::Issue::InvalidOffset: return _u8L("The requested normal offset folds or self-intersects.");
+    case PV::Issue::FullWallVariable: return _u8L("Full-wall mode requires a local termination strategy for variable wall thickness.");
+    case PV::Issue::VerticalDisabled: return _u8L("Vertical surfaces require explicit permission.");
+    case PV::Issue::TiltExceeded: return _u8L("The desired nozzle direction exceeds the configured tilt and deviation.");
+    case PV::Issue::TooLarge: return _u8L("The preview exceeds the current mesh or path resource limit.");
+    case PV::Issue::Canceled: return _u8L("Calculation was canceled.");
+    case PV::Issue::StalePaint: return _u8L("Surface markings no longer match the mesh topology.");
+    case PV::Issue::MultipleHeads: return _u8L("A single surface requires one explicitly assigned head.");
+    case PV::Issue::ProfileMissing: return _u8L("A required nozzle or material profile is unavailable.");
+    case PV::Issue::ReferenceEdge: return _u8L("The selected reference edge is no longer valid.");
+    default: return _u8L("The selected mesh is invalid for continuous surface planning.");
     }
 }
 using Key = std::tuple<double, double, double>;
@@ -81,7 +81,7 @@ Key key(const Vec3d& p) { return {p.x(), p.y(), p.z()}; }
 void canceled(const std::function<bool()>& cancel)
 {
     if (cancel && cancel())
-        throw std::runtime_error("Hybrid calculation canceled");
+        throw std::runtime_error(_u8L("Hybrid calculation canceled"));
 }
 FG::Mesh compact(const FG::Mesh& input)
 {
@@ -92,7 +92,7 @@ FG::Mesh compact(const FG::Mesh& input)
         for (int k = 0; k < 3; ++k) {
             const auto& p = input.vertices.at(f[k]);
             if (!p.allFinite())
-                throw std::invalid_argument("Non-finite hybrid vertex");
+                throw std::invalid_argument(_u8L("Non-finite hybrid vertex"));
             auto [it, added] = ids.emplace(key(p), int(out.vertices.size()));
             if (added)
                 out.vertices.push_back(p);
@@ -136,7 +136,7 @@ struct Surface
         Vec3d q;
         const double d = AABBTreeIndirect::squared_distance_to_indexed_triangle_set(mesh.vertices, mesh.faces, tree, p, face, q);
         if (d < 0. || !std::isfinite(d))
-            throw std::runtime_error("Cannot locate selected surface");
+            throw std::runtime_error(_u8L("Cannot locate selected surface"));
         if (constant_axis >= 0) {
             Vec3d projected = p;
             projected[constant_axis] = mesh.vertices.front()[constant_axis];
@@ -152,11 +152,11 @@ struct Surface
         const Vec3d a = mesh.vertices[f[0]], u = mesh.vertices[f[1]] - a, v = mesh.vertices[f[2]] - a, n = u.cross(v);
         const double det = n.squaredNorm();
         if (det < 1e-28)
-            throw std::runtime_error("Degenerate selected surface");
+            throw std::runtime_error(_u8L("Degenerate selected surface"));
         const double b = (q - a).cross(v).dot(n) / det, c = u.cross(q - a).dot(n) / det;
         Vec3d normal = (1. - b - c) * normals[f[0]] + b * normals[f[1]] + c * normals[f[2]];
         if (normal.norm() < 1e-12)
-            throw std::runtime_error("Ambiguous selected normal");
+            throw std::runtime_error(_u8L("Ambiguous selected normal"));
         return {q, normal.normalized()};
     }
 };
@@ -236,13 +236,13 @@ public:
 Vec3d orientation(const Vec3d& normal, const FS::Settings& s, double limit)
 {
     if (!std::isfinite(limit) || limit <= 0. || limit > 180.)
-        throw std::runtime_error("Invalid machine tilt limit");
+        throw std::runtime_error(_u8L("Invalid machine tilt limit"));
     const double tilt = std::acos(std::clamp(normal.z(), -1., 1.)) * 180. / pi;
     if (tilt >= 89.9 && !s.allow_vertical)
-        throw std::runtime_error("Vertical 5D surface requires explicit permission");
+        throw std::runtime_error(_u8L("Vertical 5D surface requires explicit permission"));
     const double deviation = s.allow_deviation ? s.max_deviation : 0.;
     if (tilt > limit + deviation + 1e-5)
-        throw std::runtime_error("Requested surface exceeds nominal nozzle tilt");
+        throw std::runtime_error(_u8L("Requested surface exceeds nominal nozzle tilt"));
     return tilt <= limit ? normal : PV::interpolate_axis(normal, Vec3d::UnitZ(), (tilt - limit) / tilt);
 }
 std::vector<double> layer_heights(const FS::Settings& s, double full_depth)
@@ -254,17 +254,17 @@ std::vector<double> layer_heights(const FS::Settings& s, double full_depth)
         if (s.shell_mode == FS::ShellMode::Layers ? i >= s.layers : depth >= requested - 1e-9)
             break;
         if (i >= 200)
-            throw std::runtime_error("Hybrid shell exceeds 200 layers");
+            throw std::runtime_error(_u8L("Hybrid shell exceeds 200 layers"));
         double h = i < s.fine_final_layers ? s.fine_layer_height : s.layer_height;
         if (s.shell_mode != FS::ShellMode::Layers)
             h = std::min(h, requested - depth);
         if (h <= 0. || !std::isfinite(h))
-            throw std::runtime_error("Invalid hybrid layer height");
+            throw std::runtime_error(_u8L("Invalid hybrid layer height"));
         heights.push_back(h);
         depth += h;
     }
     if (heights.empty())
-        throw std::runtime_error("Empty 5D shell");
+        throw std::runtime_error(_u8L("Empty 5D shell"));
     return heights;
 }
 void sample_triangles(const FG::Mesh& mesh, const std::function<void(const Vec3d&)>& sample)
@@ -278,7 +278,7 @@ void sample_triangles(const FG::Mesh& mesh, const std::function<void(const Vec3d
         for (int i = 0; i <= n; ++i)
             for (int j = 0; j <= n - i; ++j) {
                 if (++count > 100000)
-                    throw std::runtime_error("Hybrid surface audit resource limit");
+                    throw std::runtime_error(_u8L("Hybrid surface audit resource limit"));
                 sample(a + (b - a) * (double(i) / n) + (c - a) * (double(j) / n));
             }
     }
@@ -381,7 +381,7 @@ void coverage(RegionResult& out,
     const Polygons covered = union_(offset(runs, float(scale_(section.compacted_width / 2.)), jtMiter, 4., etOpenButt));
     const double area      = polygon_area(selected);
     if (area <= 0.)
-        throw std::runtime_error("Unusable surface projection");
+        throw std::runtime_error(_u8L("Unusable surface projection"));
     const double uncovered             = polygon_area(diff(selected, covered));
     const double outside               = polygon_area(diff(covered, selected));
     out.coverage.uncovered_fraction    = uncovered / area;
@@ -535,7 +535,7 @@ FloatMesh to_float(const FG::Mesh& source)
     out.mesh.indices = source.faces;
     for (const auto& p : source.vertices) {
         if (!p.allFinite() || p.cwiseAbs().maxCoeff() > 1e7)
-            throw std::invalid_argument("Invalid double to Orca conversion");
+            throw std::invalid_argument(_u8L("Invalid double to Orca conversion"));
         const Vec3f q = p.cast<float>();
         out.mesh.vertices.push_back(q);
         out.displacement_bound = std::max(out.displacement_bound, (q.cast<double>() - p).norm());
@@ -545,7 +545,7 @@ FloatMesh to_float(const FG::Mesh& source)
 Input extract(const ModelObject& object, int instance, const FS::Project& project, const std::array<PS::Profile, 3>& profiles)
 {
     if (instance < 0 || instance >= int(object.instances.size()))
-        throw std::invalid_argument("Invalid hybrid instance");
+        throw std::invalid_argument(_u8L("Invalid hybrid instance"));
     Input input;
     const auto check_overrides = [](const ModelConfig& config) {
         for (const auto& option : config.keys()) {
@@ -557,22 +557,22 @@ Input extract(const ModelObject& object, int instance, const FS::Project& projec
             const auto* extruder = config.get().option<ConfigOptionInt>("extruder");
             if (option == "extruder" && extruder && extruder->value >= 0 && extruder->value <= 1)
                 continue;
-            throw std::runtime_error("Hybrid preview does not yet preserve object or part override: " + option);
+            throw std::runtime_error(format(_u8L("Hybrid preview does not yet preserve object or part override: %1%"), option));
         }
     };
     check_overrides(object.config);
     if (!object.layer_config_ranges.empty() || !object.layer_height_profile.empty())
-        throw std::runtime_error("Hybrid preview does not yet preserve layer-range overrides or variable layer-height profiles");
+        throw std::runtime_error(_u8L("Hybrid preview does not yet preserve layer-range overrides or variable layer-height profiles"));
     for (const auto* volume : object.volumes) {
         if (!volume->is_model_part())
-            throw std::runtime_error("Hybrid preview does not yet support negative volumes, modifiers or support modifiers");
+            throw std::runtime_error(_u8L("Hybrid preview does not yet support negative volumes, modifiers or support modifiers"));
         check_overrides(volume->config);
         if (!volume->supported_facets.empty() || !volume->seam_facets.empty() || !volume->mmu_segmentation_facets.empty() ||
             !volume->fuzzy_skin_facets.empty())
-            throw std::runtime_error(
-                "Hybrid preview does not yet remap conventional support, seam, material or fuzzy-skin painting onto the computed core");
+            throw std::runtime_error(_u8L(
+                "Hybrid preview does not yet remap conventional support, seam, material or fuzzy-skin painting onto the computed core"));
         if (!FS::painting_matches(*volume))
-            throw std::runtime_error("Surface markings no longer match model topology");
+            throw std::runtime_error(_u8L("Surface markings no longer match model topology"));
         append(input.solid, volume->mesh().its, object.instances[instance]->get_matrix() * volume->get_matrix());
     }
     input.solid = compact(input.solid);
@@ -590,12 +590,12 @@ Input extract(const ModelObject& object, int instance, const FS::Project& projec
         if (region.surface.faces.empty())
             continue;
         if (!r.settings.head_mask || (r.settings.head_mask & (r.settings.head_mask - 1)))
-            throw std::runtime_error("A hybrid region requires one assigned head");
+            throw std::runtime_error(_u8L("A hybrid region requires one assigned head"));
         for (region.head = 0; region.head < 3; ++region.head)
             if (r.settings.head_mask & (1u << region.head))
                 break;
         if (region.head > 2 || !project.heads[region.head].enabled || !PS::valid(profiles[region.head]))
-            throw std::runtime_error("A painted region has no enabled resolved head profile");
+            throw std::runtime_error(_u8L("A painted region has no enabled resolved head profile"));
         region.process              = profiles[region.head];
         region.process.layer_height = r.settings.layer_height;
         if (r.settings.direction == FS::Direction::Edge) {
@@ -604,7 +604,7 @@ Input extract(const ModelObject& object, int instance, const FS::Project& projec
                 region.settings.direction        = FS::Direction::Custom;
                 region.settings.custom_direction = {direction.x(), direction.y(), direction.z()};
             } catch (PV::Issue) {
-                throw std::runtime_error("The selected reference edge no longer belongs to this model instance");
+                throw std::runtime_error(_u8L("The selected reference edge no longer belongs to this model instance"));
             }
         }
         region.surface = compact(region.surface);
@@ -620,23 +620,25 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
     try {
         canceled(cancel);
         if (input.regions.empty() || input.regions.size() > 32 || !FG::valid_solid(input.solid))
-            throw std::runtime_error("Hybrid calculation requires marked surfaces on a valid closed solid");
+            throw std::runtime_error(_u8L("Hybrid calculation requires marked surfaces on a valid closed solid"));
         std::map<int, std::map<Key, Vec3d>> normals_by_region;
         for (const auto& r : input.regions) {
             if (r.id <= 0 || r.head < 0 || r.head >= 3 || normals_by_region.count(r.id))
-                throw std::runtime_error("Hybrid regions require unique positive IDs and one of three valid heads");
+                throw std::runtime_error(_u8L("Hybrid regions require unique positive IDs and one of three valid heads"));
             auto& shared = normals_by_region[r.id];
             FG::make_atlas(r.surface);
             if (!PS::valid(r.process))
-                throw std::runtime_error("Invalid per-head hybrid process profile");
+                throw std::runtime_error(_u8L("Invalid per-head hybrid process profile"));
             if (r.settings.quality < 0 || r.settings.quality > 2)
-                throw std::runtime_error("Invalid hybrid surface quality selection");
+                throw std::runtime_error(_u8L("Invalid hybrid surface quality selection"));
             if (std::abs(r.process.height_correction - 1.) > 1e-12)
-                throw std::runtime_error("Hybrid ribbon requires neutral height correction until calibrated normal thickness is available");
+                throw std::runtime_error(
+                    _u8L("Hybrid ribbon requires neutral height correction until calibrated normal thickness is available"));
             if (std::any_of(r.process.shrink_compensation.begin(), r.process.shrink_compensation.end(),
                             [](double value) { return std::abs(value - 1.) > 1e-12; }))
-                throw std::runtime_error("Hybrid preview requires neutral material shrink compensation until the core and skin share a "
-                                         "common compensated geometry");
+                throw std::runtime_error(
+                    _u8L("Hybrid preview requires neutral material shrink compensation until the core and skin share a "
+                         "common compensated geometry"));
             for (const auto& f : r.surface.faces) {
                 const Vec3d n = (r.surface.vertices[f[1]] - r.surface.vertices[f[0]])
                                     .cross(r.surface.vertices[f[2]] - r.surface.vertices[f[0]]);
@@ -649,7 +651,7 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
         for (const auto& region : normals_by_region)
             for (const auto& item : region.second)
                 if (item.second.norm() < 1e-12)
-                    throw std::runtime_error("Ambiguous normal in selected region");
+                    throw std::runtime_error(_u8L("Ambiguous normal in selected region"));
         Wall wall(input.solid);
         std::vector<FG::ShellRequest> requests;
         std::vector<std::vector<double>> heights;
@@ -670,26 +672,27 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                 maximum = std::max(maximum, d);
             });
             if (!std::isfinite(minimum))
-                throw std::runtime_error("No inward wall intersection below selected surface");
+                throw std::runtime_error(_u8L("No inward wall intersection below selected surface"));
             if (boundary_unknown && r.settings.shell_mode == FS::ShellMode::FullWall)
-                throw std::runtime_error("Full-wall thickness is undefined at the selected boundary");
+                throw std::runtime_error(_u8L("Full-wall thickness is undefined at the selected boundary"));
             if (boundary_unknown)
-                out.warnings.push_back("Region " + std::to_string(r.id) +
-                                       ": offset is clipped at the original boundary; wall thickness there is not verified");
+                out.warnings.push_back(
+                    format(_u8L("Region %1%: offset is clipped at the original boundary; wall thickness there is not verified"),
+                           std::to_string(r.id)));
             if (r.settings.shell_mode == FS::ShellMode::FullWall && maximum - minimum > 1e-4)
-                throw std::runtime_error("Variable full-wall thickness needs a local layer termination strategy");
+                throw std::runtime_error(_u8L("Variable full-wall thickness needs a local layer termination strategy"));
             heights.push_back(layer_heights(r.settings, minimum));
             const std::size_t layer_elements = r.surface.vertices.size() + r.surface.faces.size();
             if (layer_elements > (2000000 - mesh_elements) / heights.back().size())
-                throw std::runtime_error("Hybrid layer mesh budget exceeded; reduce the marked area, mesh detail or layer count");
+                throw std::runtime_error(_u8L("Hybrid layer mesh budget exceeded; reduce the marked area, mesh detail or layer count"));
             mesh_elements += layer_elements * heights.back().size();
             double depth = 0.;
             for (double h : heights.back())
                 depth += h;
             if (depth > maximum + 1e-6)
-                throw std::runtime_error("Requested 5D shell exceeds the entire sampled wall thickness");
+                throw std::runtime_error(_u8L("Requested 5D shell exceeds the entire sampled wall thickness"));
             if (depth > minimum + 1e-6)
-                out.warnings.push_back("Region " + std::to_string(r.id) + ": local thin walls require clipped layer termination");
+                out.warnings.push_back(format(_u8L("Region %1%: local thin walls require clipped layer termination"), std::to_string(r.id)));
             requests.push_back({r.id, r.surface, surface.normals, std::vector<double>(r.surface.vertices.size(), depth)});
         }
         out.partition = FG::partition_clipped(input.solid, requests, FG::SharedBoundaryPolicy::MiterAdjacentEdges);
@@ -764,7 +767,7 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                 if (part.region == r.id)
                     assigned = &part.mesh;
             if (!assigned)
-                throw std::runtime_error("Missing allocated 5D skin");
+                throw std::runtime_error(_u8L("Missing allocated 5D skin"));
             Wall allocated(*assigned);
             // Quality affects longitudinal interpolation. Adaptive transverse
             // widths require explicit limits and leave every Flow factor intact.
@@ -820,7 +823,7 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                     if (boundary.status == FormorixBoundary::Status::Unsupported && profile.local_width_limits)
                         out.warnings.push_back(boundary.reason);
                     if (boundary.status == FormorixBoundary::Status::Canceled)
-                        throw std::runtime_error("Hybrid calculation canceled");
+                        throw std::runtime_error(_u8L("Hybrid calculation canceled"));
                     if (boundary.status != FormorixBoundary::Status::Unsupported && !boundary.ok())
                         throw std::runtime_error(boundary.reason);
                     if (boundary.ok()) {
@@ -959,8 +962,9 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                     const auto [q, n] = surface.at(p);
                     const Vec3d axis  = orientation(n, r.settings, r.max_tilt);
                     if (axis.dot(n) < 1. - 1e-8)
-                        throw std::runtime_error("The rigid tilted nozzle-section does not fit the requested normal layer thickness; the "
-                                                 "compacted ribbon requires a perpendicular nozzle");
+                        throw std::runtime_error(
+                            _u8L("The rigid tilted nozzle-section does not fit the requested normal layer thickness; the "
+                                 "compacted ribbon requires a perpendicular nozzle"));
                     return PV::Pose{q, axis};
                 };
                 for (const auto& p : seed.layers.back().path) {
@@ -978,7 +982,7 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                     } else
                         refined.push_back(b);
                     if (refined.size() > 150000)
-                        throw std::runtime_error("Hybrid adaptive path limit");
+                        throw std::runtime_error(_u8L("Hybrid adaptive path limit"));
                 };
                 refined.push_back(outer.front());
                 for (size_t i = 1; i < outer.size(); ++i)
@@ -1053,7 +1057,7 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                 };
                 auto append = [&](const Node& p, bool extrusion) {
                     if (++motion_elements > std::min(input.max_motions, std::size_t(500000)))
-                        throw std::runtime_error("Hybrid movement budget exceeded; reduce the marked area or layer count");
+                        throw std::runtime_error(_u8L("Hybrid movement budget exceeded; reduce the marked area or layer count"));
                     layer.path.push_back(p.center);
                     tcp.push_back(p.tcp);
                     contacts.push_back(p.contact);
@@ -1149,11 +1153,11 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                 for (size_t i = 1; i < tcp.size(); ++i) {
                     const double length = (tcp[i].position - tcp[i - 1].position).norm();
                     if (length < 1e-9)
-                        throw std::runtime_error("Collapsed compensated ribbon segment");
+                        throw std::runtime_error(_u8L("Collapsed compensated ribbon segment"));
                     const bool extrude           = layer.extruding[i - 1];
                     const double material_length = (layer.path[i].position - layer.path[i - 1].position).norm();
                     if (extrude && material_length < 1e-9)
-                        throw std::runtime_error("Collapsed material-center segment cannot carry ribbon extrusion");
+                        throw std::runtime_error(_u8L("Collapsed material-center segment cannot carry ribbon extrusion"));
                     const double volume   = extrude ? material_length * section.supplied_area : 0.;
                     const double tcp_area = volume / length;
                     const double speed    = extrude ? std::min(profile.speed, profile.volumetric_limit / tcp_area) : 80.;
@@ -1192,7 +1196,7 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                 out.preview.layers.push_back(std::move(layer));
             }
             if (rr.deposited_volume <= 0.)
-                throw std::runtime_error("No ribbon extrusion fits inside the allocated shell");
+                throw std::runtime_error(_u8L("No ribbon extrusion fits inside the allocated shell"));
             if (rr.contour_runs > 0)
                 rr.accuracy.bounds[3] = contour_interpolation_bound;
             rr.accuracy.bounds[3]   = add_error_bounds(rr.accuracy.bounds[3], construction_bound);
@@ -1211,9 +1215,9 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                                                       std::abs(rr.deposited_volume - rr.shell_volume) <=
                                                           1e-8 * std::max(1., rr.shell_volume);
             if (terminated)
-                out.warnings.push_back(
-                    "Region " + std::to_string(r.id) +
-                    ": local boundary termination inserted non-extruding movements; their collision safety is unverified");
+                out.warnings.push_back(format(
+                    _u8L("Region %1%: local boundary termination inserted non-extruding movements; their collision safety is unverified"),
+                    std::to_string(r.id)));
             if (rr.maximum_boundary_remainder > 0. ||
                 (r.process.local_width_limits && !rr.adaptive_boundary && !rr.boundary_diagnostic.empty()))
                 out.warnings.push_back(rr.boundary_diagnostic);
@@ -1223,12 +1227,13 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
             rr.inadmissible_material      = balance.inadmissible;
             rr.excess_material_volume_mm3 = balance.excess_volume;
             if (balance.gross_oversupply)
-                throw std::runtime_error("Region " + std::to_string(r.id) +
-                                         ": nominal material supply exceeds 110% of the allocated skin volume; the ribbon plan is rejected "
-                                         "without changing flow");
+                throw std::runtime_error(format(_u8L("Region %1%: nominal material supply exceeds 110%% of the allocated skin volume; the "
+                                                     "ribbon plan is rejected without changing flow"),
+                                                std::to_string(r.id)));
             if (balance.inadmissible)
-                out.warnings.push_back("Region " + std::to_string(r.id) + ": nominal supply exceeds the allocated skin by " +
-                                       std::to_string(balance.excess_volume) + " mm3; this material region is inadmissible");
+                out.warnings.push_back(
+                    format(_u8L("Region %1%: nominal supply exceeds the allocated skin by %2% mm3; this material region is inadmissible"),
+                           std::to_string(r.id), std::to_string(balance.excess_volume)));
             rr.accuracy.material_partition_verified = rr.accuracy.material_partition_verified && !balance.inadmissible;
             rr.accuracy.material_volume_plausible   = !balance.inadmissible && std::abs(rr.volume_ratio - 1.) <= .1 &&
                                                       rr.projected_overlap_volume <= .01 * rr.shell_volume &&
@@ -1239,11 +1244,12 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                 rr.interface_normals.push_back(n);
             });
             if (!rr.accuracy.material_volume_plausible)
-                out.warnings.push_back("Region " + std::to_string(r.id) +
-                                       ": nominal material volume is inconsistent; flow was not corrected");
+                out.warnings.push_back(
+                    format(_u8L("Region %1%: nominal material volume is inconsistent; flow was not corrected"), std::to_string(r.id)));
             if (rr.nominal_core_overlap > 1e-6)
-                out.warnings.push_back("Region " + std::to_string(r.id) + ": nominal bead crosses the local core interface by " +
-                                       std::to_string(rr.nominal_core_overlap) + " mm; this material overlap is not resolved");
+                out.warnings.push_back(format(
+                    _u8L("Region %1%: nominal bead crosses the local core interface by %2% mm; this material overlap is not resolved"),
+                    std::to_string(r.id), std::to_string(rr.nominal_core_overlap)));
             out.regions.push_back(std::move(rr));
             const int base = int(out.preview.selected.vertices.size());
             out.preview.selected.vertices.insert(out.preview.selected.vertices.end(), selected.mesh.vertices.begin(),
@@ -1258,27 +1264,28 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                 const auto region = std::find_if(out.regions.begin(), out.regions.end(),
                                                  [&](const RegionResult& r) { return r.id == part.region; });
                 if (region == out.regions.end())
-                    throw std::runtime_error("Missing process identity for material target");
+                    throw std::runtime_error(_u8L("Missing process identity for material target"));
                 material_targets.push_back({part.region, region->process.material_id, part.mesh, region->surface});
             }
         out.material = FormorixMaterial::audit(material_targets, out.core, out.material_runs, input.material_options, cancel);
         if (out.material.status == FormorixMaterial::Status::Canceled)
-            throw std::runtime_error("Hybrid calculation canceled");
+            throw std::runtime_error(_u8L("Hybrid calculation canceled"));
         canceled(cancel);
         if (!out.material.ok())
-            out.warnings.push_back("Three-dimensional nominal material audit is incomplete: " + out.material.error);
+            out.warnings.push_back(format(_u8L("Three-dimensional nominal material audit is incomplete: %1%"), out.material.error));
         // Projection and contact samples remain diagnostics. They can no longer
         // grant an accuracy certificate without the all-layer spatial audit.
         for (auto& region : out.regions) {
             region.accuracy.update_material_evidence(out.material, region.id, region.process.material_id, region.inadmissible_material);
             if (!region.accuracy.verified()) {
-                out.warnings.push_back("Region " + std::to_string(region.id) + ": 0.01 mm whole-surface accuracy is not verified");
+                out.warnings.push_back(
+                    format(_u8L("Region %1%: 0.01 mm whole-surface accuracy is not verified"), std::to_string(region.id)));
                 if (out.unverified.size() < 10000)
                     out.unverified.push_back(region.surface.vertices.front());
             }
         }
         if (!out.preview.timeline.valid())
-            throw std::runtime_error("Invalid 5D-only preview timing");
+            throw std::runtime_error(_u8L("Invalid 5D-only preview timing"));
     } catch (const std::exception& e) {
         out.error   = e.what();
         out.preview = {};
@@ -1370,12 +1377,12 @@ void audit_underlay(Result& result, const std::vector<UnderlaySegment>& paths, c
         region.underlay_contacts.clear();
         region.underlay_contacts.reserve(region.interface_samples.size());
         if (region.interface_samples.size() != region.interface_normals.size())
-            throw std::invalid_argument("Inconsistent interface audit data");
+            throw std::invalid_argument(_u8L("Inconsistent interface audit data"));
         for (size_t i = 0; i < region.interface_samples.size(); ++i) {
             canceled(cancel);
             const Vec3d q = region.interface_samples[i], direction = -region.interface_normals[i];
             if (!q.allFinite() || !direction.allFinite() || std::abs(direction.norm() - 1.) > 1e-6)
-                throw std::invalid_argument("Invalid interface audit position or normal");
+                throw std::invalid_argument(_u8L("Invalid interface audit position or normal"));
             double nearest = INFINITY, excluded_infill = INFINITY, raw_nearest = INFINITY;
             std::size_t raw_path = std::numeric_limits<std::size_t>::max();
             bool unknown_section = false, raw_geometry_unknown = false;

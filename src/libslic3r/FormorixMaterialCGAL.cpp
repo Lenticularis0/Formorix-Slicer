@@ -6,6 +6,9 @@
 #include "Point.hpp"
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/Surface_mesh.h>
+#include <CGAL/Surface_mesh/Surface_mesh.h>
+#include <CGAL/global_functions_distance_3.h>
+#include <CGAL/Named_function_parameters.h>
 #include <CGAL/AABB_tree.h>
 #include <CGAL/AABB_traits_3.h>
 #include <CGAL/AABB_face_graph_triangle_primitive.h>
@@ -82,7 +85,7 @@ struct Control
     void check() const
     {
         if (canceled && canceled())
-            throw Failure(Status::Canceled, "Material volume audit canceled");
+            throw Failure(Status::Canceled, _u8L("Material volume audit canceled"));
     }
     void distance_query()
     {
@@ -95,7 +98,7 @@ struct Control
         check();
         out.peak_boolean_faces = std::max(out.peak_boolean_faces, std::size_t(mesh.number_of_faces()));
         if (mesh.number_of_faces() > options.max_boolean_faces || mesh.number_of_vertices() > options.max_boolean_faces)
-            throw Failure(Status::ResourceLimit, "Material Boolean face budget exceeded");
+            throw Failure(Status::ResourceLimit, _u8L("Material Boolean face budget exceeded"));
     }
 };
 struct Visitor : PMP::Corefinement::Default_visitor<Exact>
@@ -126,20 +129,20 @@ double number(const K::FT& value)
 {
     const double result = CGAL::to_double(value);
     if (!std::isfinite(result))
-        throw Failure(Status::InvalidInput, "Nonfinite material volume");
+        throw Failure(Status::InvalidInput, _u8L("Nonfinite material volume"));
     return result;
 }
 Exact exact(const FormorixGeometry::Mesh& mesh, Control& control, bool cell = false)
 {
     control.check();
     if (mesh.vertices.size() > control.options.max_boolean_faces || mesh.faces.size() > control.options.max_boolean_faces)
-        throw Failure(Status::ResourceLimit, "Material Boolean input exceeds face budget");
+        throw Failure(Status::ResourceLimit, _u8L("Material Boolean input exceeds face budget"));
     Exact result;
     std::vector<Exact::Vertex_index> indices;
     std::map<std::tuple<double, double, double>, Exact::Vertex_index> unique;
     for (const auto& p : mesh.vertices) {
         if (!p.allFinite() || p.cwiseAbs().maxCoeff() > 1e7)
-            throw Failure(Status::InvalidInput, "Invalid material mesh coordinate");
+            throw Failure(Status::InvalidInput, _u8L("Invalid material mesh coordinate"));
         const auto key   = std::make_tuple(p.x(), p.y(), p.z());
         const auto found = unique.find(key);
         const auto index = cell && found != unique.end() ? found->second : result.add_vertex(Point(p.x(), p.y(), p.z()));
@@ -149,18 +152,18 @@ Exact exact(const FormorixGeometry::Mesh& mesh, Control& control, bool cell = fa
     for (const auto& f : mesh.faces) {
         for (int i : f)
             if (i < 0 || std::size_t(i) >= mesh.vertices.size())
-                throw Failure(Status::InvalidInput, "Invalid material mesh index");
+                throw Failure(Status::InvalidInput, _u8L("Invalid material mesh index"));
         const auto a = indices[f[0]], b = indices[f[1]], c = indices[f[2]];
         const bool degenerate = a == b || b == c || c == a || CGAL::collinear(result.point(a), result.point(b), result.point(c));
         if (cell && degenerate)
             continue; // exact zero-area face at a collapsed inner miter rail; no geometric area is removed
         if (degenerate || result.add_face(a, b, c) == Exact::null_face())
-            throw Failure(Status::InvalidSweep, "Degenerate or nonmanifold material mesh");
+            throw Failure(Status::InvalidSweep, _u8L("Degenerate or nonmanifold material mesh"));
     }
     if (cell)
         PMP::remove_isolated_vertices(result);
     if (!valid(result))
-        throw Failure(Status::InvalidSweep, "Material mesh is folded, self-intersecting or does not bound a volume");
+        throw Failure(Status::InvalidSweep, _u8L("Material mesh is folded, self-intersecting or does not bound a volume"));
     return result;
 }
 Point rounded(const Point& p, double& bound)
@@ -217,8 +220,8 @@ FormorixGeometry::Mesh materialize(const Exact& source, Control& control, const 
             // Volume equality alone cannot preserve a narrow gap or cavity.
             // Both exact directed differences must be empty. boolean() takes
             // copies, so its refinement cannot change the output candidate.
-            if (!boolean(source, planar, 2, control, "planar output removed volume").is_empty() ||
-                !boolean(planar, source, 2, control, "planar output added volume").is_empty())
+            if (!boolean(source, planar, 2, control, _u8L("planar output removed volume")).is_empty() ||
+                !boolean(planar, source, 2, control, _u8L("planar output added volume")).is_empty())
                 throw Failure(Status::InvalidSweep, _u8L("Planar material output retriangulation changed the exact volume set"));
             // Every candidate triangle retains correspondence during rounding.
             // Exact set identity above transfers its whole-boundary bound back
@@ -256,7 +259,7 @@ bool separate(const Exact& a, const Exact& b)
     return x.xmax() < y.xmin() || y.xmax() < x.xmin() || x.ymax() < y.ymin() || y.ymax() < x.ymin() || x.zmax() < y.zmin() ||
            y.zmax() < x.zmin();
 }
-Exact boolean(Exact a, Exact b, int op, Control& control, const std::string& phase = "material audit")
+Exact boolean(Exact a, Exact b, int op, Control& control, const std::string& phase = _u8L("material audit"))
 {
     control.check();
     if (a.is_empty())
@@ -273,7 +276,7 @@ Exact boolean(Exact a, Exact b, int op, Control& control, const std::string& pha
         return a;
     }
     if (++control.out.boolean_operations > control.options.max_boolean_operations)
-        throw Failure(Status::ResourceLimit, "Material Boolean operation budget exceeded");
+        throw Failure(Status::ResourceLimit, _u8L("Material Boolean operation budget exceeded"));
     control.faces(a);
     control.faces(b);
     const auto input_a = a.number_of_faces(), input_b = b.number_of_faces();
@@ -284,10 +287,10 @@ Exact boolean(Exact a, Exact b, int op, Control& control, const std::string& pha
         PMP::corefine_and_compute_boolean_operations(a, b, outputs,
                                                      CGAL::parameters::visitor(Visitor(control)).throw_on_self_intersection(true));
     const auto failure = [&] {
-        return Failure(Status::BooleanFailure, phase + ": Boolean operation " + std::to_string(op) + " failed (work " +
-                                                   std::to_string(control.out.boolean_operations) + ", input faces " +
-                                                   std::to_string(input_a) + "/" + std::to_string(input_b) +
-                                                   "): nonmanifold or invalid result");
+        return Failure(Status::BooleanFailure,
+                       format(_u8L("%1%: Boolean operation %2% failed (work %3%, input faces %4%/%5%): nonmanifold or invalid result"),
+                              phase, std::to_string(op), std::to_string(control.out.boolean_operations), std::to_string(input_a),
+                              std::to_string(input_b)));
     };
     // CGAL does not promise a usable output when this flag is false. Never
     // evaluate its lazy coordinates or traverse a partial result in that case.
@@ -544,7 +547,7 @@ Distance symmetric_distance(const Exact& a, const Exact& b, bool identical, Cont
 Exact sheet(const FormorixGeometry::Mesh& source, Control& control)
 {
     if (source.faces.size() > control.options.max_boolean_faces || source.vertices.size() > control.options.max_boolean_faces)
-        throw Failure(Status::ResourceLimit, "Material outer sheet exceeds face budget");
+        throw Failure(Status::ResourceLimit, _u8L("Material outer sheet exceeds face budget"));
     Exact result;
     // Sheets are a triangle collection. Keeping distinct vertices is intentional:
     // the nearest-surface calculation does not require manifold chart seams.
@@ -552,7 +555,7 @@ Exact sheet(const FormorixGeometry::Mesh& source, Control& control)
         std::array<Point, 3> p;
         for (int i = 0; i < 3; ++i) {
             if (face[i] < 0 || std::size_t(face[i]) >= source.vertices.size() || !source.vertices[face[i]].allFinite())
-                throw Failure(Status::InvalidInput, "Invalid nominal outer sheet");
+                throw Failure(Status::InvalidInput, _u8L("Invalid nominal outer sheet"));
             const auto& v = source.vertices[face[i]];
             p[i]          = Point(v.x(), v.y(), v.z());
         }
@@ -582,7 +585,7 @@ std::vector<Station> simplify_stations(const std::vector<Station>& input, bool c
     auto point = [](const Vec3d& p) { return Point(p.x(), p.y(), p.z()); };
     auto removable = [&](const Station& first, const Station& middle, const Station& last) {
         if (canceled && canceled())
-            throw Failure(Status::Canceled, "Material station simplification canceled");
+            throw Failure(Status::Canceled, _u8L("Material station simplification canceled"));
         if (!same_section(first, middle) || !same_section(middle, last))
             return false;
         const auto a = point(first.center), b = point(middle.center), c = point(last.center);
@@ -646,8 +649,8 @@ void audit_exact(Result& out,
         supply_volumes.emplace(target.region, K::FT(0));
         Exact mesh = exact(target.mesh, control);
         for (const auto& previous : target_parts)
-            if (volume(boolean(mesh, previous, 1, control, "target overlap")) != 0)
-                throw Failure(Status::InvalidInput, "Material target regions have overlapping interiors");
+            if (volume(boolean(mesh, previous, 1, control, _u8L("target overlap"))) != 0)
+                throw Failure(Status::InvalidInput, _u8L("Material target regions have overlapping interiors"));
         target_parts.push_back(mesh);
         target_meshes.emplace(target.region, std::move(mesh));
     }
@@ -664,7 +667,8 @@ void audit_exact(Result& out,
         try {
             mesh = exact(cell.mesh, control, true);
         } catch (const Failure& e) {
-            throw Failure(e.status, "Material run " + std::to_string(cell.run) + ", cell " + std::to_string(index) + ": " + e.what());
+            throw Failure(e.status,
+                          format(_u8L("Material run %1%, cell %2%: %3%"), std::to_string(cell.run), std::to_string(index), e.what()));
         }
         const auto v = volume(mesh);
         add_exact(cell_volumes.at(region), v);
@@ -675,22 +679,22 @@ void audit_exact(Result& out,
         }
     }
     for (std::size_t r = 0; r < runs.size(); ++r)
-        region_cells[runs[r].region].push_back(unite(std::move(run_cells[r]), control, "run " + std::to_string(r), true));
-    const Exact all_targets = unite(std::move(target_parts), control, "target union");
+        region_cells[runs[r].region].push_back(unite(std::move(run_cells[r]), control, format(_u8L("run %1%"), std::to_string(r)), true));
+    const Exact all_targets = unite(std::move(target_parts), control, _u8L("target union"));
     const Exact core_mesh   = core.faces.empty() && core.vertices.empty() ? Exact{} : exact(core, control);
     std::vector<Exact> deposited_regions;
     K::FT all_cells(0), all_supply(0);
     for (const auto& target : targets) {
-        Exact deposited = unite(std::move(region_cells[target.region]), control, "region " + std::to_string(target.region));
+        Exact deposited = unite(std::move(region_cells[target.region]), control, format(_u8L("region %1%"), std::to_string(target.region)));
         deposited_regions.push_back(deposited);
         material_regions[target.material].push_back(deposited);
         const auto& wanted       = target_meshes.at(target.region);
-        const Exact missing      = boolean(wanted, deposited, 2, control, "regional missing");
-        const Exact outside      = boolean(deposited, wanted, 2, control, "regional outside");
-        const Exact core_overlap = boolean(deposited, core_mesh, 1, control, "regional core overlap");
+        const Exact missing      = boolean(wanted, deposited, 2, control, _u8L("regional missing"));
+        const Exact outside      = boolean(deposited, wanted, 2, control, _u8L("regional outside"));
+        const Exact core_overlap = boolean(deposited, core_mesh, 1, control, _u8L("regional core overlap"));
         const auto v             = volume(deposited);
         if (cell_volumes.at(target.region) < v)
-            throw Failure(Status::BooleanFailure, "Material union exceeds the sum of its cells");
+            throw Failure(Status::BooleanFailure, _u8L("Material union exceeds the sum of its cells"));
         Region region;
         region.region         = target.region;
         region.material       = target.material;
@@ -728,20 +732,20 @@ void audit_exact(Result& out,
     }
     std::map<std::string, Exact> materials;
     for (auto& entry : material_regions)
-        materials.emplace(entry.first, unite(std::move(entry.second), control, "material " + entry.first));
+        materials.emplace(entry.first, unite(std::move(entry.second), control, format(_u8L("material %1%"), entry.first)));
     for (auto first = materials.begin(); first != materials.end(); ++first)
         for (auto second = std::next(first); second != materials.end(); ++second) {
-            const Exact overlap = boolean(first->second, second->second, 1, control, "cross-material overlap");
+            const Exact overlap = boolean(first->second, second->second, 1, control, _u8L("cross-material overlap"));
             if (!overlap.is_empty())
                 out.material_overlaps.push_back({first->first, second->first, number(volume(overlap)),
                     materialize(overlap, control, format(_u8L("overlap between materials %1% and %2%"), first->first, second->first))});
         }
-    const Exact deposited = unite(std::move(deposited_regions), control, "complete deposited union");
-    const Exact missing   = boolean(all_targets, deposited, 2, control, "complete missing");
-    const Exact outside   = boolean(deposited, all_targets, 2, control, "complete outside");
-    const Exact overlap   = boolean(deposited, core_mesh, 1, control, "complete core overlap");
+    const Exact deposited = unite(std::move(deposited_regions), control, _u8L("complete deposited union"));
+    const Exact missing   = boolean(all_targets, deposited, 2, control, _u8L("complete missing"));
+    const Exact outside   = boolean(deposited, all_targets, 2, control, _u8L("complete outside"));
+    const Exact overlap   = boolean(deposited, core_mesh, 1, control, _u8L("complete core overlap"));
     if (all_cells < volume(deposited))
-        throw Failure(Status::BooleanFailure, "Combined material union exceeds supplied cell geometry");
+        throw Failure(Status::BooleanFailure, _u8L("Combined material union exceeds supplied cell geometry"));
     out.supplied_volume             = number(all_supply);
     out.cell_volume                 = number(all_cells);
     out.union_volume                = number(volume(deposited));

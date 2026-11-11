@@ -12,6 +12,8 @@
 #include "libslic3r.h"
 #include <Eigen/Geometry>
 #include <algorithm>
+#include <exception>
+#include <functional>
 #include <array>
 #include <cmath>
 #include <cstddef>

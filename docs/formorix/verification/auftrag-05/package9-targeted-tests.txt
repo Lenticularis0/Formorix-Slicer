@@ -1,0 +1,17 @@
+Filters: [NativeRoundTrip],[FormorixBoundary],[FormorixSurfacePaths]
+Randomness seeded to: 42
+SURFACE_PATHS scaled_normals,runs=1,knots=9,point_rounding=0,normal_rounding=5.2735593669694955e-16,offset_bound=2.1094237467877991e-16,sample_max=1.7901808365247238e-15,sample_mean=1.7432257090713031e-16,sample_rms=3.9048903533568831e-16
+SURFACE_PATHS full_naca0012,runs=1,knots=284,point_rounding=1.332267629550188e-14,normal_rounding=9.9920072216264128e-16,offset_bound=0.0006959646613583357,sample_max=0.0001155883945986511,sample_mean=8.2589474207225372e-06,sample_rms=2.1556333765075068e-05
+SURFACE_PATHS coarse_offset,runs=1,knots=128,point_rounding=1.6653345369377351e-16,normal_rounding=8.8817841970012582e-16,offset_bound=0.0018100855262048929,sample_max=0.00030154430850233354,sample_mean=0.00019599788270782583,sample_rms=0.00021750993200220339
+SURFACE_PATHS fine_offset,runs=1,knots=1024,point_rounding=2.7546622262785163e-16,normal_rounding=1.1102230246251571e-15,offset_bound=2.8282586348129733e-05,sample_max=4.7137310616930951e-06,sample_mean=3.0639132683622085e-06,sample_rms=3.4001690933466051e-06
+SURFACE_PATHS double_curvature,runs=3,knots=189,point_rounding=2.2193960985262706e-16,normal_rounding=7.823602876655403e-16,offset_bound=0.00019785328610061803,sample_max=3.29757059860238e-05,sample_mean=1.2320232591256592e-05,sample_rms=1.484069646266527e-05
+SURFACE_PATHS wrapped_cylinder,runs=2,knots=384,point_rounding=2.7476618026966068e-16,normal_rounding=9.9920072216264148e-16,offset_bound=0.00030545193254741265,sample_max=5.089570139217779e-05,sample_mean=2.6956103199030146e-05,sample_rms=3.1421374688306623e-05
+SURFACE_PATHS polygon_hole,runs=2,knots=8,point_rounding=1.7763568394002508e-16,normal_rounding=0,offset_bound=1.7763568394002513e-16,sample_max=1.1102230246251565e-16,sample_mean=3.9621267831567079e-17,sample_rms=5.476142661686394e-17
+MULTI_MATERIAL_3MF,region=1,nozzle=0.80000000000000004,supply=11.999999999999996,missing=0,outside=0,spatial_upper=7.105427357601005e-15,outer_upper=0,cad_verified=0
+MULTI_MATERIAL_3MF,region=2,nozzle=0.40000000000000002,supply=8.9999999999999929,missing=0,outside=0,spatial_upper=7.105427357601005e-15,outer_upper=0,cad_verified=0
+MULTI_MATERIAL_3MF,region=3,nozzle=0.59999999999999998,supply=18.000000000000021,missing=0,outside=0,spatial_upper=7.105427357601005e-15,outer_upper=0,cad_verified=0
+FORMORIX_TEST_ARTIFACT C:\Formorix Slicer\verification\auftrag05\formorix-three-materials.3mf
+SURFACE_PATHS inclined_plane,runs=1,knots=9,point_rounding=0,normal_rounding=5.5511151231257857e-16,offset_bound=2.220446049250316e-16,sample_max=1.7901808365247238e-15,sample_mean=1.7432257090713031e-16,sample_rms=3.9048903533568831e-16
+===============================================================================
+All tests passed (143182 assertions in 21 test cases)
+

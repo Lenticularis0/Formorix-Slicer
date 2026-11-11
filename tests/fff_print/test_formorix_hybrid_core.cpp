@@ -3,6 +3,7 @@
 #include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include "libslic3r/FormorixCorePreview.hpp"
+#include "libslic3r/libslic3r.h"
 #include "libslic3r/FormorixGeometry.hpp"
 #include "libslic3r/FormorixHybrid.hpp"
 #include "libslic3r/FormorixSurfaces.hpp"

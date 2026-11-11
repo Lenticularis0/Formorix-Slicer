@@ -370,18 +370,21 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
         if (state->underlay_after) underlay_report(*state->underlay_after, _L("Underlay after local Orca refinement"));
         if (state->conventional) {
             const auto& c = *state->conventional;
-            text += "\n\n" + format_wxstr(_L("Orca conversion bound: %1% mm; coordinate quantization: %2% mm; volume residual: %3% mm³."),
-                wxString::Format("%.9g", c.float_conversion_bound), wxString::Format("%.9g", c.coordinate_quantization_bound),
-                wxString::Format("%.9g", c.converted_volume_residual));
-            if (!c.error.empty()) text += "\n" + from_u8(c.error);
+            if (!c.ok())
+                text += "\n" + format_wxstr(_L("Orca core preview failed: %1%"), from_u8(c.error));
+            else {
+                text += "\n\n" + format_wxstr(_L("Orca conversion bound: %1% mm; coordinate quantization: %2% mm; volume residual: %3% mm³."),
+                    wxString::Format("%.9g", c.float_conversion_bound), wxString::Format("%.9g", c.coordinate_quantization_bound),
+                    wxString::Format("%.9g", c.converted_volume_residual));
+                text += "\n" + format_wxstr(_L("Native underlay requests applied: %1%; modifier volumes: %2%; modifier conversion bound: %3% mm. Manufacturing dependencies remain pending."),
+                    c.dense_requests_applied, c.dense_modifier_volumes, wxString::Format("%.9g", c.modifier_float_conversion_bound));
+                text += "\n" + format_wxstr(_L("Native slice safety expansion bound: %1% mm. Original core geometry is unchanged."),
+                    wxString::Format("%.9g", c.native_slice_expansion_bound));
+                text += "\n" + format_wxstr(_L("Requested / applied density area summed over native layers: %1% / %2% mm²; modifier offset allowance: %3% mm. This does not bound the distance across removed thin mask features."),
+                    wxString::Format("%.9g", c.dense_requested_area), wxString::Format("%.9g", c.dense_applied_area),
+                    wxString::Format("%.9g", c.modifier_boundary_retreat_bound));
+            }
             for (const auto& warning : c.warnings) text += "\n" + from_u8(warning);
-            text += "\n" + format_wxstr(_L("Native underlay requests applied: %1%; modifier volumes: %2%; modifier conversion bound: %3% mm. Manufacturing dependencies remain pending."),
-                c.dense_requests_applied, c.dense_modifier_volumes, wxString::Format("%.9g", c.modifier_float_conversion_bound));
-            text += "\n" + format_wxstr(_L("Native slice safety expansion bound: %1% mm. Original core geometry is unchanged."),
-                wxString::Format("%.9g", c.native_slice_expansion_bound));
-            text += "\n" + format_wxstr(_L("Requested / applied density area summed over native layers: %1% / %2% mm²; modifier offset allowance: %3% mm. This does not bound the distance across removed thin mask features."),
-                wxString::Format("%.9g", c.dense_requested_area), wxString::Format("%.9g", c.dense_applied_area),
-                wxString::Format("%.9g", c.modifier_boundary_retreat_bound));
         }
         show_info(&panel, text, _L("Hybrid geometry report"));
     }
