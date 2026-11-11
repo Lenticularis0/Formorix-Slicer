@@ -489,9 +489,9 @@ HeadState Timeline::sample(int head, double seconds) const
         throw std::invalid_argument("Invalid preview time/head");
     const auto& track = heads[head];
     HeadState state;
-    state.pose = idle[head];
     if (track.empty())
         return state;
+    state.pose_known = true;
     auto it = std::upper_bound(track.begin(), track.end(), seconds, [](double t, const Motion& m) { return t < m.end; });
     if (it == track.end()) {
         state.pose    = track.back().to;
@@ -707,8 +707,6 @@ Result generate(const Input& input, const FormorixSurfaces::Settings& s, const O
             for (std::size_t j = 1; j < path.size(); ++j)
                 move(path[j - 1], path[j], int(i), true);
         }
-        for (int i = 0; i < 3; ++i)
-            result.timeline.idle[i] = {outer.front().position + Vec3d(-4. - i * 4., 0., 5.), Vec3d::UnitZ()};
         if (!result.timeline.valid())
             throw Issue::InvalidMesh;
     } catch (Issue issue) {

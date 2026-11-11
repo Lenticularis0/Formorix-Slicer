@@ -15,7 +15,11 @@
 | 5D-Schale / Verbleibender Kern | In der einfachen 5D-Vorschau Näherungsflächen, in der Hybrid-Vorschau die tatsächlich berechneten Volumenkörper einblenden. |
 | Orca-Vorschau | Experimentellen Cache verwerfen und zur normalen Orca-Vorschau wechseln. |
 
-Goldene Linien sind zukünftige Bahnen, grüne Linien bereits abgearbeitete Bahnen. Weiss hebt den aktuellen Extrusionsabschnitt hervor; in der Hybrid-Vorschau erscheint ein aktiver Verfahrabschnitt orange. Kleine Pfeile zeigen die Richtung, grüne und rote Punkte Anfang und Ende. Düsenspitzen und kurze Achsen zeigen die drei Kopfposen: grün arbeitet, orange fährt, grau wartet beziehungsweise ohne Aufgabe. Die Statuszeile unterscheidet die Zustände ausdrücklich. Nicht berechenbare ausgewählte Flächen erscheinen rot mit einer kurzen Fehlermeldung.
+Goldene Linien sind zukünftige Bahnen, grüne Linien bereits abgearbeitete Bahnen. Weiss hebt den aktuellen Extrusionsabschnitt hervor; in der Hybrid-Vorschau erscheint ein aktiver Verfahrabschnitt orange. Kleine Pfeile zeigen die Richtung, grüne und rote Punkte Anfang und Ende. Düsenspitzen und kurze Achsen erscheinen nur für Köpfe mit einer aus ihrer Bewegungsspur bekannten Vorschaupose: grün arbeitet, orange fährt, grau wartet. Vor dem ersten Abschnitt wartet der Kopf an dessen Anfang, während einer Lücke und nach dem letzten Abschnitt am zuletzt berechneten Endpunkt. Das sind Vorschaupositionen, keine gemessenen Maschinenpositionen.
+
+Die Statuszeile führt weiterhin alle drei Köpfe auf. Ein Kopf ohne Bewegungsspur hat keine bekannte Position; für ihn werden keine erfundene Düsenspitze, Achse oder Koordinaten angezeigt. Nicht berechenbare ausgewählte Flächen erscheinen rot mit einer kurzen Fehlermeldung.
+
+Der Prüfstatus des [nominalen Materialvolumens](material.md#nominales-materialvolumen) bezieht sich auf sämtliche berechneten Lagen. Zeit- und Lagenregler verändern die Darstellung, nicht diesen geometrischen Gesamtnachweis.
 
 Die geschätzte Dauer verwendet Bahnlänge geteilt durch Profilgeschwindigkeit, einschliesslich der Verbindungen zwischen Lagen. Beschleunigungen, thermische Wartezeiten, Unterbau, Stützen und normales Kern-Slicing sind nicht enthalten. Die gesamte angezeigte Zeit umfasst den berechneten 5D-Vorgang, nicht einen vollständigen fertigen Maschinenauftrag.
 

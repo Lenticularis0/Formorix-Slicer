@@ -25,6 +25,8 @@ struct FormorixPreviewState
     bool shell = false, core = false;
     bool original = false, core_paths = true, surface_paths = true;
     bool interfaces = false, missing_underlay = true, unverified = true;
+    bool material = false, missing_material = false, excess_material = false, material_overlap = false;
+    bool diagnostic_cells = false;
 };
 wxString formorix_preview_error(FormorixPreview::Issue issue);
 class FormorixPreviewPanel : public wxScrolledWindow
@@ -68,6 +70,9 @@ private:
     GLModel m_core, m_invalid, m_marker, m_active, m_axis;
     GLModel m_original, m_interfaces, m_missing_underlay, m_unverified;
     GLModel m_unsuitable_infill, m_underlay_gaps, m_unknown_underlay;
+    GLModel m_native_layer_gaps;
+    GLModel m_material, m_material_missing, m_material_outside, m_material_core_overlap, m_diagnostic_cells;
+    std::vector<std::unique_ptr<GLModel>> m_material_overlaps;
     std::vector<std::unique_ptr<GLModel>> m_core_paths;
     void rebuild(const FormorixPreview::Result&);
     void rebuild_hybrid(const FormorixPreviewState&);

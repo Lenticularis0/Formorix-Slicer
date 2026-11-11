@@ -1221,8 +1221,6 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                     out.unverified.push_back(region.surface.vertices.front());
             }
         }
-        for (int h = 0; h < 3; ++h)
-            out.preview.timeline.idle[h] = {input.solid.vertices.front() + Vec3d(-5. - 5. * h, 0., 5.), Vec3d::UnitZ()};
         if (!out.preview.timeline.valid())
             throw std::runtime_error("Invalid 5D-only preview timing");
     } catch (const std::exception& e) {

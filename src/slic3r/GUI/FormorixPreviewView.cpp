@@ -14,6 +14,7 @@
 #include "libslic3r/FormorixCorePreview.hpp"
 #include "libslic3r/FormorixUnderlay.hpp"
 #include "libslic3r/FormorixGeometry.hpp"
+#include "libslic3r/FormorixMaterial.hpp"
 #include "slic3r/GUI/GUI.hpp"
 #include "slic3r/GUI/GLCanvas3D.hpp"
 #include "slic3r/GUI/Plater.hpp"
@@ -45,9 +46,41 @@
 #include <map>
 #include <imgui.h>
 #include <Eigen/Core>
+#include <Eigen/Geometry>
 
 namespace Slic3r::GUI {
 namespace FP = FormorixPreview;
+// GPU-only conversion. The Double audit mesh remains authoritative; a feature
+// below Float display resolution must not generate nonfinite triangle normals.
+static bool gpu_triangle(const FormorixGeometry::Mesh& mesh, const Vec3i32& face, std::array<Vec3f, 3>& vertices)
+{
+    for (int i = 0; i < 3; ++i) {
+        if (face[i] < 0 || std::size_t(face[i]) >= mesh.vertices.size()) return false;
+        const auto& p = mesh.vertices[face[i]];
+        if (!p.allFinite() || p.cwiseAbs().maxCoeff() > 1e7) return false;
+        vertices[i] = p.cast<float>();
+    }
+    return (vertices[1] - vertices[0]).cross(vertices[2] - vertices[0]).squaredNorm() > 0.f;
+}
+static bool has_gpu_triangles(const FormorixGeometry::Mesh& mesh)
+{
+    std::array<Vec3f, 3> vertices;
+    return std::any_of(mesh.faces.begin(), mesh.faces.end(), [&](const auto& face) { return gpu_triangle(mesh, face, vertices); });
+}
+static GLModel::Geometry gpu_geometry(const FormorixGeometry::Mesh& mesh, bool wireframe = false)
+{
+    GLModel::Geometry out;
+    out.format = {wireframe ? GLModel::Geometry::EPrimitiveType::Lines : GLModel::Geometry::EPrimitiveType::Triangles,
+                  GLModel::Geometry::EVertexLayout::P3};
+    std::array<Vec3f, 3> vertices;
+    for (const auto& face : mesh.faces) if (gpu_triangle(mesh, face, vertices)) {
+        const unsigned first = unsigned(out.vertices_count());
+        for (const auto& p : vertices) out.add_vertex(p);
+        if (wireframe) { out.add_line(first, first + 1); out.add_line(first + 1, first + 2); out.add_line(first + 2, first); }
+        else out.add_triangle(first, first + 1, first + 2);
+    }
+    return out;
+}
 wxString formorix_preview_error(FP::Issue issue)
 {
     switch (issue) {
@@ -89,6 +122,8 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
     ::ComboBox *layers, *speed;
     std::vector<Button*> buttons;
     std::vector<wxSizerItem*> hybrid_controls;
+    std::array<::CheckBox*, 5> material_checks{};
+    std::array<bool, 5> material_available{}; // computed once when a new immutable result arrives
     wxTimer timer;
     std::chrono::steady_clock::time_point last;
     double rate = 1.;
@@ -158,11 +193,13 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
             changed();
         });
         options->Add(layers, 0, wxALL, panel.FromDIP(3));
-        auto flag = [&](const wxString& name, bool FormorixPreviewState::* field, bool hybrid_only = false) {
+        auto flag = [&](const wxString& name, bool FormorixPreviewState::* field, bool hybrid_only = false,
+                        const wxString& tooltip = wxEmptyString) {
             auto* item = new wxBoxSizer(wxHORIZONTAL);
             auto* c = new ::CheckBox(&panel);
             c->SetName(name);
             c->SetValue(state.get()->*field);
+            if (!tooltip.empty()) c->SetToolTip(tooltip);
             c->Bind(wxEVT_TOGGLEBUTTON, [this, c, field](wxCommandEvent& e) {
                 state.get()->*field = c->GetValue();
                 changed();
@@ -172,6 +209,7 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
             item->Add(new wxStaticText(&panel, wxID_ANY, name), 0, wxALIGN_CENTER_VERTICAL | wxLEFT, panel.FromDIP(4));
             auto* entry = options->Add(item, 0, wxALIGN_CENTER_VERTICAL | wxTOP | wxBOTTOM, panel.FromDIP(3));
             if (hybrid_only) hybrid_controls.push_back(entry);
+            return c;
         };
         flag(_L("Original model"), &FormorixPreviewState::original, true);
         flag(_L("Remaining core"), &FormorixPreviewState::core);
@@ -181,6 +219,14 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
         flag(_L("Shared interfaces"), &FormorixPreviewState::interfaces, true);
         flag(_L("Missing underlay"), &FormorixPreviewState::missing_underlay, true);
         flag(_L("Unverified regions"), &FormorixPreviewState::unverified, true);
+        const wxString all_layers = _L("All calculated layers; independent of playback time.");
+        material_checks[0] = flag(_L("Nominal 3D material"), &FormorixPreviewState::material, true, all_layers);
+        material_checks[1] = flag(_L("Missing material"), &FormorixPreviewState::missing_material, true, all_layers);
+        material_checks[2] = flag(_L("Excess material"), &FormorixPreviewState::excess_material, true, all_layers);
+        material_checks[3] = flag(_L("Material overlaps"), &FormorixPreviewState::material_overlap, true, all_layers);
+        material_checks[4] = flag(_L("Diagnostic cells (unverified)"), &FormorixPreviewState::diagnostic_cells, true, all_layers);
+        hybrid_controls.push_back(options->Add(formorix_help_button(&panel, FormorixHelpTopic::MaterialVolume),
+                                               0, wxALL, panel.FromDIP(3)));
         auto* normal = new Button(&panel, _L("Orca preview"));
         normal->SetStyle(ButtonStyle::Regular, ButtonType::Compact);
         normal->Bind(wxEVT_BUTTON, [ordinary](wxCommandEvent&) { ordinary(); });
@@ -195,6 +241,7 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
         validation = new Label(&panel, wxEmptyString, LB_AUTO_WRAP);
         layout->Add(validation, 0, wxEXPAND | wxLEFT | wxRIGHT, panel.FromDIP(5));
         heads = new wxStaticText(&panel, wxID_ANY, wxEmptyString);
+        heads->SetToolTip(_L("Positions are shown only for heads with calculated movements."));
         layout->Add(heads, 0, wxALL, panel.FromDIP(5));
         auto* scope = new Label(&panel,
             _L("Time: 5D part only. Orca core paths are not synchronized; supports and waiting times are excluded."), LB_AUTO_WRAP);
@@ -226,6 +273,32 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
         text += "\n\n" + format_wxstr(_L("Original volume: %1% mm³; partition residual: %2% mm³."),
             wxString::Format("%.9g", h.partition.input_volume), wxString::Format("%.9g", h.partition.volume_residual));
         if (!h.error.empty()) text += "\n" + from_u8(h.error);
+        const auto number = [](double value) { return std::isfinite(value) ? wxString::Format("%.9g", value) : _L("Unknown"); };
+        auto distance = [&](const wxString& name, const FormorixMaterial::Distance& value) {
+            text += "\n" + format_wxstr(_L("%1%: sampled maximum / mean / RMS = %2% / %3% / %4% mm; conservative upper bound = %5% mm; observed lower bound = %6% mm; samples: %7%."),
+                name, number(value.maximum), number(value.mean), number(value.rms),
+                value.bounded ? number(value.upper_bound) : _L("Unknown"),
+                value.bounded || value.samples > 0 ? number(value.lower_bound) : _L("Unknown"), value.samples);
+        };
+        const auto& material = h.material;
+        if (!material.ok()) {
+            text += "\n\n" + _L("Spatial material audit incomplete. Volumes, missing material and overlaps are unknown; raw diagnostic cells may be incomplete.");
+            if (!material.error.empty()) text += "\n" + from_u8(material.error);
+        } else {
+            text += "\n\n" + format_wxstr(_L("All-layer 3D material (mm³), supplied / cells / union / missing / outside / duplicate / core overlap: %1% / %2% / %3% / %4% / %5% / %6% / %7%."),
+                number(material.supplied_volume), number(material.cell_volume), number(material.union_volume),
+                number(material.missing_volume), number(material.outside_volume), number(material.duplicate_volume),
+                number(material.core_overlap_volume));
+            text += "\n" + format_wxstr(_L("Supply minus cell volume: %1% mm³; spatial output rounding allowance: %2% mm; audit time: %3% s."),
+                number(material.supply_geometry_residual), number(material.rounding_bound), number(material.elapsed_seconds));
+            distance(_L("Complete volume boundaries"), material.boundary_distance);
+            distance(_L("Nominal outer-layer sheets"), material.nominal_outer_distance);
+            text += "\n" + _L("Outer-layer sheets alone do not prove the complete material envelope. Same-material duplicate volume is measured but has no separate display mesh.");
+            for (const auto& overlap : material.material_overlaps)
+                text += "\n" + format_wxstr(_L("Overlap between materials %1% and %2%: %3% mm³."),
+                    from_u8(overlap.first), from_u8(overlap.second), number(overlap.volume));
+        }
+        text += "\n" + _L("The GPU display omits triangles below its numerical resolution. Numerical audit values remain authoritative.");
         for (const auto& r : h.regions) {
             text += "\n\n" + format_wxstr(_L("Region %1%, head %2%: nominal volume / shell volume = %3%."),
                 r.id, r.head + 1, wxString::Format("%.4g", r.volume_ratio));
@@ -239,6 +312,21 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
                 wxString::Format("%.4g", r.process.line_width), wxString::Format("%.4g", r.process.layer_height),
                 wxString::Format("%.4g", r.process.temperature), wxString::Format("%.4g", r.process.volumetric_limit),
                 wxString::Format("%.4g", r.process.speed));
+            text += "\n" + format_wxstr(_L("Configured flow factors, filament / process / surface: %1% / %2% / %3%; local requested line width: %4%–%5% mm."),
+                number(r.process.flow_ratio), number(r.process.print_flow_ratio), number(r.process.surface_flow_ratio),
+                number(r.minimum_local_width), number(r.maximum_local_width));
+            if (material.ok()) {
+                const auto found = std::find_if(material.regions.begin(), material.regions.end(), [&](const auto& region) { return region.region == r.id; });
+                if (found != material.regions.end()) {
+                    text += "\n" + format_wxstr(_L("Regional 3D volumes (mm³), target / deposited / missing / outside / duplicate / core overlap: %1% / %2% / %3% / %4% / %5% / %6%."),
+                        number(found->target_volume), number(found->deposited_volume), number(found->missing_volume),
+                        number(found->outside_volume), number(found->duplicate_volume), number(found->core_overlap_volume));
+                    distance(_L("Regional volume boundaries"), found->boundary_distance);
+                    text += "\n" + (r.accuracy.verified() ?
+                        _L("Nominal regional CAD error budget ≤ 0.01 mm. Physical accuracy and conventional deposited surfaces remain unverified.") :
+                        _L("Regional CAD error budget ≤ 0.01 mm is not verified."));
+                }
+            }
             text += "\n" + format_wxstr(_L("Coverage samples: %1%; uncovered fraction: %2%. Sample error max / mean / RMS: %3% / %4% / %5% mm."),
                 r.coverage.samples, wxString::Format("%.3g", r.coverage.uncovered_fraction),
                 wxString::Format("%.6g", r.coverage.sampled_maximum), wxString::Format("%.6g", r.coverage.sampled_mean),
@@ -306,6 +394,7 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
     void update()
     {
         for (auto* control : hybrid_controls) control->Show(bool(state->hybrid));
+        for (std::size_t i = 0; i < material_available.size(); ++i) material_checks[i]->Enable(material_available[i]);
         const double total = state->result ? state->result->timeline.duration() : 0.;
         slider->SetValue(total > 0. ? int(10000. * state->seconds / total) : 0);
         slider->Enable(total > 0.);
@@ -335,6 +424,8 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
                 assessment = inadmissible ? _L("Material excess is inadmissible. Diagnostic preview only; flow unchanged.") :
                     plausible ? _L("Nominal material volume plausible. CAD accuracy and full surface coverage: see geometry report.") :
                     _L("Nominal material volume implausible; flow unchanged. CAD accuracy and full surface coverage are unverified.");
+                if (!h.material.ok())
+                    assessment = _L("Spatial material audit incomplete. Accepted 3D volumes are unavailable; diagnostic cells remain unverified.");
                 if (!h.missing_underlay.empty()) assessment += " " + _L("Underlay contact is missing or unverified at sampled points.");
                 if (state->underlay_before && state->underlay_after && state->underlay_after->ok()) {
                     const auto& before = state->underlay_before->regions;
@@ -373,6 +464,7 @@ void FormorixPreviewPanel::set_result(std::shared_ptr<const FP::Result> result)
     p.state->underlay_preparation.reset();
     p.state->underlay_before.reset();
     p.state->underlay_after.reset();
+    p.material_available.fill(false);
     p.state->seconds = 0.;
     p.state->layer   = -1;
     p.layers->Clear();
@@ -397,6 +489,13 @@ void FormorixPreviewPanel::set_hybrid(std::shared_ptr<const FormorixHybrid::Resu
     m_impl->state->underlay_preparation = std::move(preparation);
     m_impl->state->underlay_before = std::move(before);
     m_impl->state->underlay_after = std::move(after);
+    const auto& material = m_impl->state->hybrid->material;
+    m_impl->material_available = {{material.ok() && has_gpu_triangles(material.deposited),
+        material.ok() && has_gpu_triangles(material.missing), material.ok() && has_gpu_triangles(material.outside),
+        material.ok() && (has_gpu_triangles(material.core_overlap) ||
+            std::any_of(material.material_overlaps.begin(), material.material_overlaps.end(),
+                        [](const auto& overlap) { return has_gpu_triangles(overlap.mesh); })),
+        has_gpu_triangles(material.diagnostic_cells)}};
     m_impl->update();
     m_impl->changed();
 }
@@ -506,15 +605,34 @@ void FormorixPreviewRenderer::rebuild_hybrid(const FormorixPreviewState& s)
 {
     m_original.reset(); m_interfaces.reset(); m_missing_underlay.reset(); m_unverified.reset();
     m_unsuitable_infill.reset(); m_underlay_gaps.reset(); m_unknown_underlay.reset();
+    m_native_layer_gaps.reset();
+    m_material.reset(); m_material_missing.reset(); m_material_outside.reset(); m_material_core_overlap.reset();
+    m_diagnostic_cells.reset(); m_material_overlaps.clear();
     m_core_paths.clear();
     if (!s.hybrid) return;
     const auto& h = *s.hybrid;
     auto mesh = [](GLModel& model, const FormorixGeometry::Mesh& source) {
         model.reset();
-        if (!source.faces.empty()) model.init_from(FormorixHybrid::to_float(source).mesh);
+        auto geometry = gpu_geometry(source);
+        if (!geometry.is_empty()) model.init_from(std::move(geometry));
     };
     mesh(m_original, h.original);
     mesh(m_core, h.core);
+    // These are the exact audit's output meshes, converted only for GPU display.
+    // Failed audits may expose individual cells, never accepted union evidence.
+    auto cells = gpu_geometry(h.material.diagnostic_cells, true);
+    if (!cells.is_empty()) m_diagnostic_cells.init_from(std::move(cells));
+    if (h.material.ok()) {
+        mesh(m_material, h.material.deposited);
+        mesh(m_material_missing, h.material.missing);
+        mesh(m_material_outside, h.material.outside);
+        mesh(m_material_core_overlap, h.material.core_overlap);
+        for (const auto& overlap : h.material.material_overlaps) {
+            auto display = std::make_unique<GLModel>();
+            mesh(*display, overlap.mesh);
+            m_material_overlaps.push_back(std::move(display));
+        }
+    }
     m_shells.clear();
     for (const auto& part : h.partition.parts) if (part.region != 0) {
         auto display = std::make_unique<GLModel>();
@@ -544,6 +662,7 @@ void FormorixPreviewRenderer::rebuild_hybrid(const FormorixPreviewState& s)
     points(m_unsuitable_infill, h.unsuitable_infill);
     points(m_underlay_gaps, h.path_gaps);
     points(m_unknown_underlay, h.unknown_underlay);
+    points(m_native_layer_gaps, h.native_layer_gaps);
     points(m_unverified, h.unverified);
     if (s.conventional) for (int head = 0; head < 3; ++head) {
         GLModel::Geometry g;
@@ -607,6 +726,23 @@ void FormorixPreviewRenderer::render(const FormorixPreviewState& s, const Camera
         m_interfaces.render();
         glDepthMask(GL_TRUE);
     }
+    if (s.hybrid) {
+        glDepthMask(GL_FALSE);
+        auto material_mesh = [](GLModel& mesh, const ColorRGBA& color) {
+            mesh.set_color(color);
+            mesh.render();
+        };
+        if (s.material) material_mesh(m_material, ColorRGBA(.5f, .7f, .75f, .45f));
+        if (s.missing_material) material_mesh(m_material_missing, ColorRGBA(1.f, .15f, .2f, .8f));
+        if (s.excess_material) material_mesh(m_material_outside, ColorRGBA(1.f, .6f, .05f, .8f));
+        if (s.material_overlap) {
+            material_mesh(m_material_core_overlap, ColorRGBA(.75f, .15f, 1.f, .8f));
+            for (const auto& overlap : m_material_overlaps)
+                material_mesh(*overlap, ColorRGBA(.95f, .1f, .7f, .8f));
+        }
+        if (s.diagnostic_cells) material_mesh(m_diagnostic_cells, ColorRGBA(.8f, .65f, .35f, .2f));
+        glDepthMask(GL_TRUE);
+    }
     m_invalid.set_color(ColorRGBA(1.f, .15f, .1f, .7f));
     m_invalid.render();
     // Lines are a preview overlay, so inner layers remain visible through the context mesh.
@@ -627,6 +763,8 @@ void FormorixPreviewRenderer::render(const FormorixPreviewState& s, const Camera
         m_underlay_gaps.render();
         m_unknown_underlay.set_color(ColorRGBA(.6f, .6f, .6f, 1.f));
         m_unknown_underlay.render();
+        m_native_layer_gaps.set_color(ColorRGBA(.45f, .25f, .05f, 1.f));
+        m_native_layer_gaps.render();
     }
     if (s.unverified) {
         m_unverified.set_color(ColorRGBA(1.f, .35f, .85f, 1.f));
@@ -661,6 +799,7 @@ void FormorixPreviewRenderer::render(const FormorixPreviewState& s, const Camera
     if (s.result->ok())
         for (int h = 0; h < 3; ++h) {
             const auto state      = s.result->timeline.sample(h, s.seconds);
+            if (!state.pose_known) continue;
             const ColorRGBA color = state.kind == FP::MotionKind::Extrude ? ColorRGBA(.1f, 1.f, .4f, 1.f) :
                                     state.kind == FP::MotionKind::Travel  ? ColorRGBA(1.f, .5f, .1f, 1.f) :
                                                                             ColorRGBA(.65f, .65f, .75f, 1.f);
