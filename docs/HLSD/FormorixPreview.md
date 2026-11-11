@@ -18,6 +18,8 @@ Axes point from TCP into the nozzle. They follow the local normal unless an expl
 
 `Timeline` owns three independently sorted, non-overlapping tracks. A `Motion` contains head ID, absolute start/end seconds, two poses, movement kind, extrusion flag, layer and region. Tracks may overlap across heads. `sample` performs a binary search and linear position/spherical axis interpolation; gaps and completed tracks wait, empty tracks are unassigned. Time estimates use constant profile speed and ignore acceleration and unplanned operations. The current generator writes exactly one track; no scheduling is performed.
 
+Motions and sampled states may also carry an independent `FormorixProcess::Profile` with material/nozzle IDs and deposition parameters. `process_motion` creates synthetic or externally supplied single segments using that profile's own speed and volumetric ceiling. Legacy GUI preview motions leave this field absent; their TCP paths do not claim material-envelope precision. The separate [geometric foundations](FormorixFoundations.md) must be explicitly integrated and validated before such a claim.
+
 ## GUI integration and lifetime
 
 The existing 5D editor submits a copied input to Orca's UI job worker. Finalization applies the result only if the editor is alive and the model/settings fingerprint still matches. Fingerprints include painting timestamps, vertex/index content, transformations and profiles. Playback data is a disposable cache; native 3MF annotations remain the persisted source of truth.

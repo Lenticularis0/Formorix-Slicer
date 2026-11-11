@@ -2,6 +2,7 @@
 
 #include "libslic3r/Formorix5D.hpp"
 #include "libslic3r/FormorixSurfaces.hpp"
+#include "libslic3r/FormorixProcess.hpp"
 #include "libslic3r/TriangleSelector.hpp"
 #include "libslic3r/GCode.hpp"
 #include "libslic3r/Model.hpp"
@@ -75,6 +76,17 @@ TEST_CASE("Surface GUI annotations do not enter conventional toolpaths or bypass
     data.regions[0].continuous = true;
     data.regions[0].settings.shell_mode = FormorixSurfaces::ShellMode::FullWall;
     data.strategy = FormorixSurfaces::Strategy::HighSpeed;
+    const double diameters[] = {.8, .4, .6};
+    const char *materials[] = {"PETG", "PVA", "PETG-CF"};
+    for (int h = 0; h < 3; ++h) {
+        FormorixProcess::Profile process;
+        process.material_id = materials[h];
+        process.nozzle_profile = "nozzle-" + std::to_string(h);
+        process.nozzle_diameter = diameters[h];
+        process.line_width = diameters[h] * 1.1;
+        data.heads[h].material_preset = materials[h];
+        data.heads[h].process = process;
+    }
     model.formorix_surfaces = data.encode();
     auto *volume = model.objects[0]->volumes[0];
     TriangleSelector selector(volume->mesh());

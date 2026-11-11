@@ -1,0 +1,46 @@
+{
+  "platform": "Windows x64 Release, Visual Studio 2026 / MSVC 14.51",
+  "base_commit": "7fb330b60a2450473be86b17067257b62216d669",
+  "build": {
+    "command": "cmake --build build --config Release --target ALL_BUILD --parallel 2 -- /p:CL_MPCount=8",
+    "exit_code": 0,
+    "remaining_warnings": [
+      "LNK4098: upstream CRT library conflict"
+    ]
+  },
+  "unit_tests": "263 assertions in 26 test cases; includes 18 foundation cases",
+  "ctest": {
+    "command": "ctest --test-dir build/tests -C Release -LE 'NotWorking|RequiresApp' --no-tests=error --output-on-failure -j 2",
+    "selected": 3116,
+    "passed": 3110,
+    "skipped": 6,
+    "failed": 0,
+    "seconds": 239.45,
+    "skipped_tests": [
+      "1823 - a link to unparsable install-state contents is not malformed contents a load may set aside (Skipped)",
+      "1846 - Stdlib code is recognized through a symlinked Python home (Skipped)",
+      "2159 - A symlink pointing outside the plugin folder is skipped, not reported as an error (Skipped)",
+      "2206 - A write through a dangling symlink inside a granted tree is denied (Skipped)",
+      "2255 - A saved exact file grant covers an equivalent spelling of the same file (Skipped)",
+      "2344 - A tree grant compares canonical paths on both sides (Skipped)"
+    ],
+    "reason": "Existing Windows symlink privilege requirements; Linux-only CLI tests are not registered."
+  },
+  "clang_tidy": {
+    "passed": true,
+    "files": 14,
+    "command": "scripts/run_clang_tidy.ps1 -Base origin/main -NoFetch -Jobs 1 -Yes"
+  },
+  "local_installation": "build/Formorix-Auftrag03B",
+  "startup": {
+    "executable": "build/Formorix-Auftrag03B/orca-slicer.exe",
+    "arguments": "--help with isolated datadir",
+    "exit_code": 0,
+    "tested_at": "2026-11-11T03:26:41.9060225+01:00",
+    "dll_sha256": "6C8716516BA0D961CF81362B100216015E2B3FAE6005C306DC4834C1A216C449"
+  },
+  "gui_manually_retested": false,
+  "other_operating_systems_tested": false,
+  "actual_printer_tested": false,
+  "focused_regression": "Thin triangle rejects external path points; observed failing before cross-product fix, passes after."
+}

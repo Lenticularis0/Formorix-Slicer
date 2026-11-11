@@ -27,6 +27,11 @@ if (SLIC3R_CAD)
 endif ()
 
 set(lisbslic3r_sources
+    FormorixGeometry.cpp
+    FormorixGeometry.hpp
+    FormorixProcess.cpp
+    FormorixProcess.hpp
+    FormorixDeposition.hpp
     Formorix5D.cpp
     FormorixSurfaces.cpp
     FormorixSurfaces.hpp
@@ -639,6 +644,7 @@ unset(CMAKE_POLICY_DEFAULT_CMP0167)
 cmake_policy(POP)
 
 add_library(libslic3r_cgal STATIC
+    FormorixGeometryCGAL.cpp
     CutSurface.hpp CutSurface.cpp
     IntersectionPoints.hpp IntersectionPoints.cpp
     MeshBoolean.hpp MeshBoolean.cpp

@@ -3,6 +3,7 @@
 #include <catch2/generators/catch_generators.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include "libslic3r/FormorixSurfaces.hpp"
+#include "libslic3r/FormorixProcess.hpp"
 #include "libslic3r/Model.hpp"
 #include "libslic3r/TriangleMesh.hpp"
 #include "libslic3r/TriangleSelector.hpp"
@@ -76,6 +77,28 @@ Model round_trip(Model &source)
 }
 }
 
+TEST_CASE("Per-head deposition profiles survive native project archives", "[FormorixSurfaces]")
+{
+    Model model = make_surface_model();
+    std::string error;
+    auto project = FS::Project::decode(model.formorix_surfaces, error);
+    REQUIRE(project);
+    for (int h = 0; h < 3; ++h) {
+        project->heads[h].material_preset = "Orca material " + std::to_string(h);
+        Slic3r::FormorixProcess::Profile process;
+        process.material_id = "material-" + std::to_string(h);
+        process.nozzle_profile = "nozzle-" + std::to_string(h);
+        process.nozzle_diameter = .4 + .2 * h;
+        process.line_width = process.nozzle_diameter * 1.1;
+        project->heads[h].process = process;
+    }
+    model.formorix_surfaces = project->encode();
+    Model restored = round_trip(model);
+    auto loaded = FS::Project::decode(restored.formorix_surfaces, error);
+    REQUIRE(loaded);
+    CHECK(loaded->encode() == project->encode());
+}
+
 TEST_CASE("Surface manufacturing wishes round trip independently of printer settings", "[FormorixSurfaces]")
 {
     FS::Project p;
@@ -116,7 +139,7 @@ TEST_CASE("Surface project input rejects unsupported schemas and invalid bounds"
     auto data = nlohmann::json::parse(p.encode());
     const auto invalid = GENERATE(0, 1, 2, 3, 4, 5, 6, 7, 8);
     switch (invalid) {
-    case 0: data["version"] = 2; break;
+    case 0: data["version"] = FS::schema_version + 1; break;
     case 1: data["regions"][1]["id"] = 1; break;
     case 2: data["regions"][0]["settings"]["max_deviation"] = 15.1; break;
     case 3: data["regions"][0]["settings"]["head_mask"] = 3; break;

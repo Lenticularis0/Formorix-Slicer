@@ -1,4 +1,6 @@
 #include "FormorixSurfaces.hpp"
+#include "FormorixProcess.hpp"
+#include <string>
 #include <cstdint>
 #include <exception>
 #include <optional>
@@ -16,13 +18,28 @@
 
 namespace Slic3r::FormorixSurfaces {
 using nlohmann::json;
+void Head::assign_material(const std::string& preset)
+{
+    if (preset != material_preset) process.reset();
+    material_preset = preset;
+}
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Settings, shell_mode, layers, shell_thickness, layer_height,
     preserve_dimensions, use_infill, inherit_infill_first, dense_underlay, underlay_density,
     additional_support, support_material, allow_deviation, max_deviation, allow_vertical,
     direction, custom_direction, edge, edge_selected, alternate_directions, fine_final_layers,
     fine_layer_height, boundary_margin, quality, ironing, head_mask, single_head)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Region, id, name, visible, continuous, settings)
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Head, enabled, material_preset, tasks)
+void to_json(json& j, const Head& h)
+{
+    j = json{{"enabled", h.enabled}, {"material_preset", h.material_preset}, {"tasks", h.tasks}};
+    if (h.process) j["process"] = *h.process;
+}
+void from_json(const json& j, Head& h)
+{
+    j.at("enabled").get_to(h.enabled); j.at("material_preset").get_to(h.material_preset); j.at("tasks").get_to(h.tasks);
+    h.process.reset();
+    if (j.contains("process")) h.process = j.at("process").get<FormorixProcess::Profile>();
+}
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Transition, first, second, kind, width, overlap, pattern)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SelectionSettings, tool, brush_radius, limit_edges, edge_angle, slope_min, slope_max, section_position)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Project, version, regions, heads, strategy, transitions, selection)
@@ -80,7 +97,8 @@ static void validate(const Project &p)
             if (!in_range(v, -1e9, 1e9)) throw std::invalid_argument("Invalid reference edge");
     }
     for (const Head &h : p.heads)
-        if (h.tasks == 0 || h.tasks > 31 || h.material_preset.size() > 4096)
+        if (h.tasks == 0 || h.tasks > 31 || h.material_preset.size() > 4096 ||
+            (h.process && (h.material_preset.empty() || !FormorixProcess::valid(*h.process))))
             throw std::invalid_argument("Invalid Formorix head assignment");
     std::set<std::pair<int, int>> pairs;
     for (const Transition &t : p.transitions)
@@ -97,8 +115,10 @@ std::optional<Project> Project::decode(const std::string &text, std::string &err
     if (text.empty()) return Project{};
     try {
         if (text.size() > 4 * 1024 * 1024) throw std::invalid_argument("Formorix settings exceed size limit");
-        const auto data = json::parse(text);
-        if (!data.is_object() || data.at("version").get<int>() != schema_version)
+        auto data = json::parse(text);
+        if (!data.is_object()) throw std::invalid_argument("Invalid Formorix surface object");
+        if (data.at("version").get<int>() == 1) data["version"] = schema_version;
+        if (data.at("version").get<int>() != schema_version)
             throw std::invalid_argument("Unsupported Formorix surface schema");
         if (data.contains("heads") && (!data["heads"].is_array() || data["heads"].size() != 3))
             throw std::invalid_argument("Formorix requires three head assignments");

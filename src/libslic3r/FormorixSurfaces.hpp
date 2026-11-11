@@ -1,4 +1,5 @@
 #pragma once
+#include "FormorixProcess.hpp"
 
 #include <array>
 #include <cstdint>
@@ -13,7 +14,7 @@ class ModelVolume;
 
 // Project annotations only. Nothing in the print pipeline consumes these manufacturing wishes.
 namespace FormorixSurfaces {
-constexpr int schema_version = 1;
+constexpr int schema_version = 2;
 // Reuse Orca's subdivision-aware painting codec, independently of filament painting.
 constexpr int max_regions = 32;
 constexpr const char *archive_path = "Metadata/formorix_surfaces.json";
@@ -68,6 +69,9 @@ struct Head {
     bool enabled = true;
     std::string material_preset;
     unsigned tasks = HeadTask::Automatic;
+    // Optional resolved/overridden per-head values. Absent in v1; never invent a material binding.
+    std::optional<FormorixProcess::Profile> process;
+    void assign_material(const std::string& preset);
 };
 
 struct Transition {
