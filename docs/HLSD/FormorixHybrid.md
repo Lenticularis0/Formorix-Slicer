@@ -44,6 +44,8 @@ The adapter calls `Print::process()` and traverses native perimeter, fill and su
 
 The temporary `Print` is constructed with the immutable `Purpose::HybridPreview`. This purpose survives `clear()` and configuration replacement. `Print::require_executable()` blocks ordinary, previous-file and cached print exports, and `GCode::do_export()` checks the same guard before opening its output. Standard `Print` objects retain the existing experimental-mode export protection. The internal adapter never disables the experimental configuration flag.
 
+Only export-specific E-addressing macro validation is omitted for this immutable purpose: a geometric preview has no G-code stream requiring a `G92 E0` reset. Geometry and process validation still runs, and ordinary `Print` continues to reject missing or incompatible reset macros. The adapter does not insert synthetic G-code into the user's configuration.
+
 ## Underlay and shared display
 
 Underlay analysis receives actual native extrusion segments, widths and heights. It tests inward interface samples against nominal conventional bead sweeps, respecting the surface's infill/support choices. Missing contact is marked. Sampled contact cannot establish complete footprint coverage, material bonding, mechanical strength or a valid manufacturing order.

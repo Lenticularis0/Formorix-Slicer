@@ -2893,7 +2893,10 @@ StringObjectException Print::validate(std::vector<StringObjectException> *warnin
     const bool layer_has_g92_any  = boost::regex_search(
         m_config.layer_change_gcode.value, regex_g92e0);
 
-    if (m_config.use_relative_e_distances) {
+    // An immutable hybrid preview has no G-code stream or E addressing. Only
+    // these export-macro requirements are inapplicable; geometry/profile
+    // validation above and below remains identical to ordinary Print.
+    if (!hybrid_preview_only() && m_config.use_relative_e_distances) {
         // Relative mode: "G92 E0" is required to reset extruder position.
         const bool before_has_g92_exact = boost::regex_search(
             m_config.before_layer_change_gcode.value, regex_g92e0_correct);
@@ -2917,7 +2920,7 @@ StringObjectException Print::validate(std::vector<StringObjectException> *warnin
             return {L("Relative extruder addressing requires resetting the extruder position at each layer to "
                       "prevent loss of floating point accuracy. Add \"G92 E0\" to layer_gcode."),
                     nullptr, "before_layer_change_gcode"};
-    } else {
+    } else if (!hybrid_preview_only()) {
         // Absolute mode: any occurrence of "G92 E0" is incompatible.
         if (before_has_g92_any)
             return {L("\"G92 E0\" was found in before_layer_change_gcode, which is incompatible with absolute extruder "

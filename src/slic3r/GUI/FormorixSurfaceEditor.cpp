@@ -9,6 +9,7 @@
 #include "libslic3r/FormorixCorePreview.hpp"
 #include "libslic3r/ExtrusionEntity.hpp"
 #include "libslic3r/FormorixProcess.hpp"
+#include "libslic3r/Utils.hpp"
 #include "libslic3r/FormorixProfiles.hpp"
 #include "I18N.hpp"
 #include "format.hpp"
@@ -890,6 +891,7 @@ void FormorixSurfaceEditor::Impl::calculate_hybrid()
         message(_L("Calculating hybrid geometry and Orca core paths…"));
         const bool queued = queue_job(plater.get_ui_job_worker(),
             [input = std::move(input), sources = std::move(sources), core_head, support_head, hybrid, conventional](Job::Ctl& ctl) {
+                ScopeGuard finish_status([&ctl] { ctl.update_status(100); });
                 auto canceled = [&ctl] { return ctl.was_canceled(); };
                 ctl.update_status(0, _u8L("Calculating hybrid geometry…"));
                 *hybrid = FH::generate(input, canceled);
@@ -908,7 +910,6 @@ void FormorixSurfaceEditor::Impl::calculate_hybrid()
                 for (auto& region : hybrid->regions)
                     region.accuracy.bounds[2] += conventional->float_conversion_bound + conventional->coordinate_quantization_bound;
                 FH::audit_underlay(*hybrid, underlay, canceled);
-                ctl.update_status(100);
             },
             [this, life, hybrid, conventional, signature](bool canceled, std::exception_ptr& error) {
                 wxString failure;

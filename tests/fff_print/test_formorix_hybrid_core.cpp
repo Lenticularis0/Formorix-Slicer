@@ -25,6 +25,7 @@
 #include <cstddef>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace Slic3r;
@@ -51,7 +52,6 @@ std::array<CP::Source, 3> sources()
                                          {"enable_support", "0"},
                                          {"brim_type", "no_brim"},
                                          {"skirt_loops", "0"},
-                                         {"before_layer_change_gcode", "G92 E0"},
                                          {"elefant_foot_compensation", "0"}});
         for (const char* key : {"line_width", "outer_wall_line_width", "inner_wall_line_width", "sparse_infill_line_width",
                                 "internal_solid_infill_line_width", "top_surface_line_width"})
@@ -93,6 +93,26 @@ TEST_CASE("An immutable hybrid preview can slice but cannot export after configu
         CHECK_THROWS_AS(generator.do_export(&print, output.string().c_str(), nullptr, {}), std::runtime_error);
         CHECK_THROWS_AS(print.export_cached_data(output.string()), std::runtime_error);
         CHECK_FALSE(boost::filesystem::exists(output.path()));
+    }
+}
+TEST_CASE("Only immutable previews omit E-addressing export macro validation", "[FormorixHybridCore]")
+{
+    for (const auto& input : std::array<std::pair<bool, std::string>, 3>{{{true, ""}, {true, "g92 e0"}, {false, "G92 E0"}}}) {
+        auto config = DynamicPrintConfig::full_print_config();
+        config.set_deserialize_strict("gcode_flavor", "marlin");
+        config.set_deserialize_strict("use_relative_e_distances", input.first ? "1" : "0");
+        config.set_deserialize_strict("before_layer_change_gcode", input.second);
+        config.set_deserialize_strict("layer_change_gcode", "");
+        Print standard, preview(Print::Purpose::HybridPreview);
+        Model standard_model, preview_model;
+        Test::init_print({Test::cube(8.)}, standard, standard_model, config);
+        Test::init_print({Test::cube(8.)}, preview, preview_model, config);
+        CHECK_FALSE(standard.validate().string.empty());
+        CHECK(preview.validate().string.empty());
+        CHECK_THROWS_AS(preview.require_executable(), std::runtime_error);
+        config.set_deserialize_strict("layer_height", "1.0");
+        preview.apply(preview_model, config);
+        CHECK_FALSE(preview.validate().string.empty());
     }
 }
 TEST_CASE("Native Orca core paths retain source coordinates and head-specific extrusion metadata", "[FormorixHybridCore]")
@@ -290,4 +310,49 @@ TEST_CASE("A saved painted curved surface feeds a genuinely curved partitioned c
     CHECK(std::any_of(conventional.paths.begin(), conventional.paths.end(), [](const auto& p) { return is_infill(p.role); }));
     CHECK(input.solid.vertices == original.vertices);
     CHECK(input.solid.faces == original.faces);
+}
+
+TEST_CASE("The saved GUI Formorix process produces native core paths without layer G-code macros", "[FormorixHybridCore]")
+{
+    namespace FH = FormorixHybrid;
+    ScopedSlic3rTemporaryDir temporary("formorix-hybrid-saved-profile");
+    DynamicPrintConfig saved;
+    ConfigSubstitutionContext substitutions(ForwardCompatibilitySubstitutionRule::Disable);
+    Model model = Model::read_from_file(std::string(TEST_DATA_DIR) + "/formorix/hybrid-curved-saved-profile.3mf", &saved, &substitutions,
+                                        LoadStrategy::LoadModel | LoadStrategy::LoadConfig | LoadStrategy::AddDefaultInstances);
+    auto config = DynamicPrintConfig::full_print_config();
+    config.apply(saved);
+    REQUIRE(config.opt_bool("use_relative_e_distances"));
+    REQUIRE(config.opt_string("before_layer_change_gcode").empty());
+    REQUIRE(config.opt_string("layer_change_gcode").empty());
+    REQUIRE(config.opt_string("printer_settings_id") == "Formorix 5D 0.4 nozzle");
+    const double nozzle = config.opt_float("nozzle_diameter", 0);
+    double width        = config.get_abs_value("outer_wall_line_width", nozzle);
+    if (width == 0.)
+        width = config.get_abs_value("line_width", nozzle);
+    if (width == 0.)
+        width = nozzle * 1.05;
+    const auto profile = FormorixProcess::from_orca(config, 0, 0, "Generic PLA @System", "Formorix 5D 0.4 nozzle", width,
+                                                    config.opt_float("layer_height"), config.opt_float("outer_wall_speed", 0));
+    std::array<CP::Source, 3> configs;
+    for (auto& source : configs) {
+        source.config  = config;
+        source.process = profile;
+    }
+    std::string error;
+    auto project = FormorixSurfaces::Project::decode(model.formorix_surfaces, error);
+    INFO(error);
+    REQUIRE(project);
+    REQUIRE_FALSE(model.objects.empty());
+    const auto input = FH::extract(*model.objects.front(), 0, *project, {profile, profile, profile});
+    auto hybrid      = FH::generate(input);
+    INFO(hybrid.error);
+    REQUIRE(hybrid.ok());
+    const auto core = CP::slice(hybrid.core, configs, 0, -1);
+    INFO(core.error);
+    REQUIRE(core.ok());
+    CHECK(std::any_of(core.paths.begin(), core.paths.end(), [](const auto& p) { return is_perimeter(p.role); }));
+    CHECK(std::any_of(core.paths.begin(), core.paths.end(), [](const auto& p) { return is_infill(p.role); }));
+    CHECK(config.opt_string("before_layer_change_gcode").empty());
+    CHECK(config.opt_string("layer_change_gcode").empty());
 }
