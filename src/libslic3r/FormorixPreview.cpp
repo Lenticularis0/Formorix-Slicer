@@ -10,6 +10,7 @@
 #include "libslic3r.h"
 #include <Eigen/Geometry>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <functional>
@@ -286,7 +287,7 @@ Vec3d nozzle_axis(const Vec3d& normal, const FormorixSurfaces::Settings& s, doub
         throw Issue::TiltExceeded;
     return tilt <= limit ? normal : interpolate_axis(normal, Vec3d::UnitZ(), (tilt - limit) / tilt);
 }
-std::vector<Vec2d> raster(const Patch& p, double width, double margin, double longitudinal_spacing, const std::function<bool()>& cancel)
+std::vector<Vec2d> raster(const Patch& p, double width, double margin, double longitudinal_spacing, bool ribbon, const std::function<bool()>& cancel)
 {
     std::vector<Vec2d> boundary = p.outline;
     if (margin > 0.) {
@@ -310,7 +311,9 @@ std::vector<Vec2d> raster(const Patch& p, double width, double margin, double lo
         steep = std::min(steep, n.dot(p.axis));
     if (steep < .1)
         throw Issue::NotHeightField;
-    const int rows = std::max(1, int(std::ceil((high - low) / (width * steep))));
+    const int rows = ribbon ? int(std::floor((high - low) / width + 1e-8)) : std::max(1, int(std::ceil((high - low) / (width * steep))));
+    if (rows < 1)
+        throw Issue::ThinWall;
     if (rows > 2000)
         throw Issue::TooLarge;
     const double sample = longitudinal_spacing > 0. ? longitudinal_spacing : std::min(.5, width);
@@ -333,7 +336,7 @@ std::vector<Vec2d> raster(const Patch& p, double width, double margin, double lo
     for (int row = 0; row < rows; ++row) {
         if (cancel && cancel())
             throw Issue::Canceled;
-        const double y = low + (high - low) * (row + .5) / rows;
+        const double y = low + (ribbon ? width : (high - low) / rows) * (row + .5);
         std::vector<Hit> hits;
         for (int i = 0; i < int(boundary.size()); ++i) {
             const Vec2d a = boundary[i], b = boundary[(i + 1) % boundary.size()];
@@ -345,6 +348,18 @@ std::vector<Vec2d> raster(const Patch& p, double width, double margin, double lo
         std::sort(hits.begin(), hits.end(), [](const Hit& a, const Hit& b) { return a.p.x() < b.p.x(); });
         if (row % 2)
             std::swap(hits[0], hits[1]);
+        if (ribbon) {
+            const Vec2d direction = (hits[1].p - hits[0].p).normalized();
+            if ((hits[1].p - hits[0].p).norm() < width)
+                throw Issue::ThinWall;
+            const Vec2d start = hits[0].p + (row ? width / 2. : 0.) * direction;
+            const Vec2d end = hits[1].p - (row + 1 < rows ? width / 2. : 0.) * direction;
+            if (row)
+                line(previous.p, start);
+            line(start, end);
+            previous.p = end;
+            continue;
+        }
         if (row > 0) {
             // Join rows along the actual selected boundary, not across an unselected gap.
             std::vector<Vec2d> candidates[2];
@@ -446,7 +461,8 @@ bool Timeline::valid() const
             if (m.head != h || !std::isfinite(m.start) || !std::isfinite(m.end) || m.start < end || m.end <= m.start ||
                 !finite(m.from.position) || !finite(m.to.position) || !finite(m.from.axis) || !finite(m.to.axis) ||
                 std::abs(m.from.axis.norm() - 1.) > 1e-5 || std::abs(m.to.axis.norm() - 1.) > 1e-5 ||
-                m.extrusion != (m.kind == MotionKind::Extrude) || (m.process && !FormorixProcess::valid(*m.process)))
+                m.extrusion != (m.kind == MotionKind::Extrude) || (m.process && !FormorixProcess::valid(*m.process)) ||
+                !std::isfinite(m.mm3_per_mm) || m.mm3_per_mm<0. || (!m.extrusion && m.mm3_per_mm!=0.))
                 return false;
             end = m.end;
         }
@@ -602,7 +618,9 @@ Result generate(const Input& input, const FormorixSurfaces::Settings& s, const O
         result.shell_depth = s.shell_mode == FormorixSurfaces::ShellMode::Layers ? depth : requested;
         if (result.shell_depth > minimum + 1e-4)
             throw Issue::ThinWall;
-        auto path2d = follow_facets(patch, raster(patch, o.line_width, s.boundary_margin, o.longitudinal_spacing, cancel), cancel);
+        const double longitudinal = o.longitudinal_spacing>0. ? o.longitudinal_spacing :
+            std::min(.5,o.line_width*std::array<double,3>{2.,1.,.5}[s.quality]);
+        auto path2d = follow_facets(patch, raster(patch, o.line_width, s.boundary_margin, longitudinal, o.compacted_ribbon, cancel), cancel);
         if (path2d.size() * depths.size() > o.max_segments)
             throw Issue::TooLarge;
         std::vector<Pose> outer;

@@ -23,6 +23,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -355,4 +356,122 @@ TEST_CASE("The saved GUI Formorix process produces native core paths without lay
     CHECK(std::any_of(core.paths.begin(), core.paths.end(), [](const auto& p) { return is_infill(p.role); }));
     CHECK(config.opt_string("before_layer_change_gcode").empty());
     CHECK(config.opt_string("layer_change_gcode").empty());
+    std::vector<FH::UnderlaySegment> underlay;
+    for (const auto& path : core.paths)
+        for (std::size_t i = 1; i < path.points.size(); ++i)
+            underlay.push_back({path.points[i - 1], path.points[i], path.width, path.height, path.head,
+                               path.process.material_id, path.support, path.role == erInternalInfill, is_bridge(path.role)});
+    FH::audit_underlay(hybrid, underlay);
+    const auto& audit = hybrid.regions.front().underlay;
+    CHECK(audit.samples > 0);
+    CHECK(audit.missing == audit.missing_core + audit.unsuitable_infill + audit.path_gaps + audit.unknown_geometry);
+    std::cout << "SAVED_CURVED_UNDERLAY,samples=" << audit.samples << ",missing=" << audit.missing
+              << ",missing_core=" << audit.missing_core << ",excluded_infill=" << audit.unsuitable_infill
+              << ",path_gaps=" << audit.path_gaps << ",unknown=" << audit.unknown_geometry
+              << ",max_finite_gap=" << audit.maximum_finite_gap << ",no_contact_within_0.5=" << audit.no_nearby_contact << "\n";
+}
+
+TEST_CASE("Conventional underlay uses Orca rounded rectangles and finite segment endpoints", "[FormorixHybridCore]")
+{
+    namespace FH = FormorixHybrid;
+    FH::Result result;
+    result.original = result.core = geometry(Test::cube(4.));
+    result.regions.resize(1);
+    auto& region = result.regions.front();
+    region.process.layer_height = .2;
+    // At y=2.3 the .8 x .2 rounded rectangle still has a flat top at z=4.
+    // The old ellipse reported a .07386 mm gap instead of the actual .04 mm.
+    region.interface_samples = {{2., 2.3, 4.04}, {3.2, 2., 4.}};
+    region.interface_normals = {Vec3d::UnitZ(), Vec3d::UnitZ()};
+    FH::audit_underlay(result, {{{1., 2., 4.}, {3., 2., 4.}, .8, .2, 0, "PETG", false, false}});
+    CHECK(region.underlay.samples == 2);
+    CHECK(region.underlay.missing == 1);
+    CHECK(region.underlay.path_gaps == 1);
+    CHECK_THAT(region.underlay.maximum_finite_gap, WithinAbs(.04, 1e-10));
+    CHECK(region.underlay.no_nearby_contact == 1);
+    CHECK(result.path_gaps.front().isApprox(Vec3d(3.2, 2., 4.)));
+    CHECK_FALSE(region.underlay.coverage_bounded);
+}
+
+TEST_CASE("Hanging bridge geometry does not become certified conventional underlay", "[FormorixHybridCore]")
+{
+    namespace FH = FormorixHybrid;
+    FH::Result result;
+    result.original = result.core = geometry(Test::cube(4.));
+    result.regions.resize(1);
+    auto& region = result.regions.front();
+    region.process.layer_height = .2;
+    region.interface_samples = {{2., 2., 4.}};
+    region.interface_normals = {Vec3d::UnitZ()};
+    FH::audit_underlay(result, {{{1., 2., 4.}, {3., 2., 4.}, .4, .2, 1, "PVA", false, false, true}});
+    CHECK(region.underlay.missing == 1);
+    CHECK(region.underlay.unknown_geometry == 1);
+    CHECK(region.underlay.path_gaps == 0);
+}
+
+TEST_CASE("Underlay diagnostics separate absent core excluded infill and uncovered core paths", "[FormorixHybridCore]")
+{
+    namespace FH = FormorixHybrid;
+    FH::Result result;
+    result.original = result.core = geometry(Test::cube(4.));
+    result.regions.resize(1);
+    auto& region = result.regions.front();
+    region.process.layer_height = .2;
+    region.settings.use_infill = false;
+    region.interface_samples = {{2., 2., 4.}, {2., 1., 4.}, {5., 2., 4.}};
+    region.interface_normals.assign(3, Vec3d::UnitZ());
+    const std::vector<FH::UnderlaySegment> infill{{{1., 2., 4.}, {3., 2., 4.}, .8, .2, 0, "PETG", false, true}};
+    FH::audit_underlay(result, infill);
+    CHECK(region.underlay.missing == 3);
+    CHECK(region.underlay.missing_core == 1);
+    CHECK(region.underlay.unsuitable_infill == 1);
+    CHECK(region.underlay.path_gaps == 1);
+    CHECK(region.underlay.unknown_geometry == 0);
+    CHECK(result.missing_core.size() == 1);
+    CHECK(result.unsuitable_infill.size() == 1);
+    CHECK(result.path_gaps.size() == 1);
+    region.settings.use_infill = true;
+    FH::audit_underlay(result, infill);
+    CHECK(region.underlay.missing == 2);
+    CHECK(region.underlay.unsuitable_infill == 0);
+    CHECK(result.unsuitable_infill.empty());
+    CHECK_FALSE(region.underlay.coverage_bounded);
+}
+
+TEST_CASE("Missing geometry stays unknown while actual support can provide nominal contact", "[FormorixHybridCore]")
+{
+    namespace FH = FormorixHybrid;
+    FH::Result result;
+    result.regions.resize(1);
+    auto& region = result.regions.front();
+    region.process.layer_height = .2;
+    region.interface_samples = {{2., 2., 4.}};
+    region.interface_normals = {Vec3d::UnitZ()};
+    FH::audit_underlay(result, {});
+    CHECK(region.underlay.unknown_geometry == 1);
+    CHECK(region.underlay.missing_core == 0);
+    FH::audit_underlay(result, {{{1., 2., 4.}, {3., 2., 4.}, .4, .2, 1, "PVA", true, false}});
+    CHECK(region.underlay.missing == 0);
+    CHECK(result.unknown_underlay.empty());
+    CHECK_FALSE(region.underlay.coverage_bounded);
+}
+
+TEST_CASE("Underlay rays respect finite endcaps in both travel directions", "[FormorixHybridCore]")
+{
+    namespace FH = FormorixHybrid;
+    FH::Result result;
+    result.regions.resize(1);
+    auto& region = result.regions.front();
+    region.process.layer_height = .2;
+    region.interface_samples = {{1.02, 0., .9}, {1.02, 0., .9}};
+    region.interface_normals = {Vec3d::UnitX(), -Vec3d::UnitX()};
+    FH::audit_underlay(result, {{{0., 0., 1.}, {1., 0., 1.}, .8, .2, 0, "PETG", false, false}});
+    CHECK(region.underlay.samples == 2);
+    CHECK(region.underlay.missing == 1);
+    CHECK(result.missing_underlay.size() == 1);
+    region.interface_samples.resize(1);
+    region.interface_normals.resize(1);
+    FH::audit_underlay(result, {{{0., 0., .95}, {1., 0., 1.}, .8, .2, 0, "PETG", false, false}});
+    CHECK(region.underlay.missing == 1);
+    CHECK(region.underlay.unknown_geometry == 1);
 }

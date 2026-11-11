@@ -39,7 +39,9 @@ struct Partition
     std::vector<VolumePart> parts;
     std::vector<Interface> interfaces; // one shared triangulation, opposite orientations in the solids
     double input_volume = 0., volume_residual = 0.;
-    double rounding_bound = 0.; // includes shared 2^-30 mm output grid; largest vertex displacement bound
+    double rounding_bound     = 0.; // includes shared 2^-30 mm output grid; largest vertex displacement bound
+    std::size_t mitered_edges = 0, mitered_vertices = 0;
+    double miter_constraint_residual = 0.; // normal-distance residual in mm
     std::string error;
     bool ok() const { return error.empty() && !parts.empty(); }
 };
@@ -50,9 +52,13 @@ Mesh shell_cutter(const ShellRequest&);
 // Exact predicates/constructions until final double materialisation. Overlapping
 // region interiors and cutters leaving the source solid are rejected, not repaired.
 Partition partition(const Mesh& solid, const std::vector<ShellRequest>&);
-// Hybrid boundary policy: trim the requested sweep to the ORIGINAL solid. Region
-// overlap is still rejected. Caller must separately audit requested wall thickness.
-Partition partition_clipped(const Mesh& solid, const std::vector<ShellRequest>&);
+enum class SharedBoundaryPolicy { RejectOverlap, MiterAdjacentEdges };
+// Trim sweeps to the ORIGINAL solid. Explicit mitering gives adjacent regions a
+// shared inner seam by intersecting their local offset planes. It never changes
+// outer vertices or mixes materials; non-adjacent overlap remains an error.
+// Miter length is limited to 4 times the largest incident requested thickness.
+// Caller must separately audit wall thickness and deposition within each part.
+Partition partition_clipped(const Mesh& solid, const std::vector<ShellRequest>&, SharedBoundaryPolicy = SharedBoundaryPolicy::RejectOverlap);
 
 struct Deviation
 {

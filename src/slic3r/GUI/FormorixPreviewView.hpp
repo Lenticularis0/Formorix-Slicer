@@ -61,6 +61,7 @@ private:
     std::vector<std::unique_ptr<GLModel>> m_shells;
     GLModel m_core, m_invalid, m_marker, m_active, m_axis;
     GLModel m_original, m_interfaces, m_missing_underlay, m_unverified;
+    GLModel m_unsuitable_infill, m_underlay_gaps, m_unknown_underlay;
     std::vector<std::unique_ptr<GLModel>> m_core_paths;
     void rebuild(const FormorixPreview::Result&);
     void rebuild_hybrid(const FormorixPreviewState&);

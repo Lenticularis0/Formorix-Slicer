@@ -28,6 +28,7 @@ struct Motion
     bool extrusion  = true;
     int layer = 0, region = 0;
     std::optional<FormorixProcess::Profile> process; // absent for legacy nominal TCP preview
+    double mm3_per_mm = 0.; // explicit nominal supply; zero for travel and legacy previews
 };
 struct HeadState
 {
@@ -80,12 +81,14 @@ struct Options
     // Zero keeps the original longitudinal sampling tied to line width. A
     // hybrid seed supplies .5 mm and refines its compensated curve separately.
     double longitudinal_spacing = 0.;
+    bool compacted_ribbon = false; // fixed transverse pitch, inset miter turns, finite butt caps
 };
 struct Layer
 {
     double depth = 0.;
     indexed_triangle_set surface;
     std::vector<Pose> path;
+    std::vector<bool> extruding; // one value per path segment; empty means legacy all-extrusion
 };
 struct Result
 {

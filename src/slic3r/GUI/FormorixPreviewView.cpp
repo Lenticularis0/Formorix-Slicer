@@ -228,6 +228,11 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
         for (const auto& r : h.regions) {
             text += "\n\n" + format_wxstr(_L("Region %1%, head %2%: nominal volume / shell volume = %3%."),
                 r.id, r.head + 1, wxString::Format("%.4g", r.volume_ratio));
+            text += "\n" + format_wxstr(_L("Deposition model: %1%. Derived compacted width: %2% mm; supplied cross-section: %3% mm². Material deformation is not calibrated."),
+                from_u8(r.deposition_model), wxString::Format("%.6g", r.compacted_width), wxString::Format("%.6g", r.supplied_area));
+            if (r.inadmissible_material)
+                text += "\n" + format_wxstr(_L("Inadmissible material excess: %1% mm³. This region is diagnostic only; flow was not corrected."),
+                    wxString::Format("%.6g", r.excess_material_volume_mm3));
             text += "\n" + format_wxstr(_L("Material %1%; nozzle %2% mm; line width %3% mm; layer height %4% mm; temperature %5% °C; volumetric limit %6% mm³/s; speed %7% mm/s."),
                 from_u8(r.process.material_id), wxString::Format("%.4g", r.process.nozzle_diameter),
                 wxString::Format("%.4g", r.process.line_width), wxString::Format("%.4g", r.process.layer_height),
@@ -239,11 +244,18 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
                 wxString::Format("%.6g", r.coverage.sampled_rms));
             text += "\n" + format_wxstr(_L("Nominal footprint outside the selected region: %1%; sampled overlap into the core: %2% mm. This may overlap conventional material."),
                 wxString::Format("%.6g", r.coverage.outside_fraction), wxString::Format("%.6g", r.nominal_core_overlap));
+            text += "\n" + format_wxstr(_L("Projected ribbon volumes (mm³), union / uncovered / outside / overlap: %1% / %2% / %3% / %4%. Curved 3D coverage requires separate verification."),
+                wxString::Format("%.6g", r.projected_union_volume), wxString::Format("%.6g", r.projected_uncovered_volume),
+                wxString::Format("%.6g", r.projected_outside_volume), wxString::Format("%.6g", r.projected_overlap_volume));
             text += "\n" + format_wxstr(_L("Error bounds (mm), CAD / shell / conversion / path / nominal material: %1% / %2% / %3% / %4% / %5%. Infinity means unverified."),
                 wxString::Format("%.6g", r.accuracy.bounds[0]), wxString::Format("%.6g", r.accuracy.bounds[1]),
                 wxString::Format("%.6g", r.accuracy.bounds[2]), wxString::Format("%.6g", r.accuracy.bounds[3]), wxString::Format("%.6g", r.accuracy.bounds[4]));
             text += "\n" + format_wxstr(_L("Underlay: %1% missing samples of %2%; maximum gap: %3% mm. Full footprint and material adhesion remain unverified."),
                 r.underlay.missing, r.underlay.samples, wxString::Format("%.6g", r.underlay.maximum_gap));
+            text += "\n" + format_wxstr(_L("Underlay markers: red = no conventional core (%1%); orange = excluded infill (%2%); magenta = incomplete path coverage (%3%); gray = unknown geometry (%4%)."),
+                r.underlay.missing_core, r.underlay.unsuitable_infill, r.underlay.path_gaps, r.underlay.unknown_geometry);
+            text += "\n" + format_wxstr(_L("Largest observed contact gap: %1% mm; samples without eligible contact within 0.5 mm: %2%. This is not a global distance bound."),
+                wxString::Format("%.6g", r.underlay.maximum_finite_gap), r.underlay.no_nearby_contact);
         }
         for (const auto& warning : h.warnings) text += "\n" + from_u8(warning);
         if (state->conventional) {
@@ -292,7 +304,9 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
                 assessment = format_wxstr(_L("Orca core preview failed: %1%"), from_u8(state->conventional->error));
             else {
                 const bool plausible = std::all_of(h.regions.begin(), h.regions.end(), [](const auto& r) { return r.accuracy.material_volume_plausible; });
-                assessment = plausible ? _L("Nominal material volume plausible. CAD accuracy and full surface coverage: see geometry report.") :
+                const bool inadmissible = std::any_of(h.regions.begin(), h.regions.end(), [](const auto& r) { return r.inadmissible_material; });
+                assessment = inadmissible ? _L("Material excess is inadmissible. Diagnostic preview only; flow unchanged.") :
+                    plausible ? _L("Nominal material volume plausible. CAD accuracy and full surface coverage: see geometry report.") :
                     _L("Nominal material volume implausible; flow unchanged. CAD accuracy and full surface coverage are unverified.");
                 if (!h.missing_underlay.empty()) assessment += " " + _L("Geometric underlay is missing at sampled points.");
             }
@@ -388,12 +402,19 @@ void FormorixPreviewRenderer::rebuild(const FP::Result& r)
             GLModel::Geometry path, arrows;
             path.format   = {GLModel::Geometry::EPrimitiveType::Lines, GLModel::Geometry::EVertexLayout::P3};
             arrows.format = {GLModel::Geometry::EPrimitiveType::Triangles, GLModel::Geometry::EVertexLayout::P3};
-            const bool centers = layer >= 0 && std::size_t(layer) < r.layers.size() &&
-                                 r.layers[layer].path.size() == segments.size() + 1;
+            std::vector<std::size_t> center_segments;
+            if (layer >= 0 && std::size_t(layer) < r.layers.size()) {
+                const auto& source = r.layers[layer];
+                if (source.extruding.empty() || source.extruding.size() + 1 == source.path.size())
+                    for (std::size_t i = 1; i < source.path.size(); ++i)
+                        if (source.extruding.empty() || source.extruding[i - 1])
+                            center_segments.push_back(i - 1);
+            }
+            const bool centers = center_segments.size() == segments.size();
             for (std::size_t j = 0; j < segments.size(); ++j) {
                 const auto& m = *segments[j];
-                const Vec3d from = centers ? r.layers[layer].path[j].position : m.from.position;
-                const Vec3d to = centers ? r.layers[layer].path[j + 1].position : m.to.position;
+                const Vec3d from = centers ? r.layers[layer].path[center_segments[j]].position : m.from.position;
+                const Vec3d to = centers ? r.layers[layer].path[center_segments[j] + 1].position : m.to.position;
                 unsigned base = unsigned(path.vertices_count());
                 path.add_vertex(Vec3f(from.cast<float>()));
                 path.add_vertex(Vec3f(to.cast<float>()));
@@ -419,8 +440,8 @@ void FormorixPreviewRenderer::rebuild(const FP::Result& r)
             display->path.init_from(std::move(path));
             if (!arrows.is_empty())
                 display->arrows.init_from(std::move(arrows));
-            display->start  = centers ? r.layers[layer].path.front().position : segments.front()->from.position;
-            display->finish = centers ? r.layers[layer].path.back().position : segments.back()->to.position;
+            display->start  = centers ? r.layers[layer].path[center_segments.front()].position : segments.front()->from.position;
+            display->finish = centers ? r.layers[layer].path[center_segments.back() + 1].position : segments.back()->to.position;
             m_paths.push_back(std::move(display));
         }
     }
@@ -434,6 +455,7 @@ void FormorixPreviewRenderer::rebuild(const FP::Result& r)
 void FormorixPreviewRenderer::rebuild_hybrid(const FormorixPreviewState& s)
 {
     m_original.reset(); m_interfaces.reset(); m_missing_underlay.reset(); m_unverified.reset();
+    m_unsuitable_infill.reset(); m_underlay_gaps.reset(); m_unknown_underlay.reset();
     m_core_paths.clear();
     if (!s.hybrid) return;
     const auto& h = *s.hybrid;
@@ -468,7 +490,10 @@ void FormorixPreviewRenderer::rebuild_hybrid(const FormorixPreviewState& s)
         }
         if (!g.is_empty()) model.init_from(std::move(g));
     };
-    points(m_missing_underlay, h.missing_underlay);
+    points(m_missing_underlay, h.missing_core);
+    points(m_unsuitable_infill, h.unsuitable_infill);
+    points(m_underlay_gaps, h.path_gaps);
+    points(m_unknown_underlay, h.unknown_underlay);
     points(m_unverified, h.unverified);
     if (s.conventional) for (int head = 0; head < 3; ++head) {
         GLModel::Geometry g;
@@ -546,6 +571,12 @@ void FormorixPreviewRenderer::render(const FormorixPreviewState& s, const Camera
     if (s.missing_underlay) {
         m_missing_underlay.set_color(ColorRGBA(1.f, .1f, .12f, 1.f));
         m_missing_underlay.render();
+        m_unsuitable_infill.set_color(ColorRGBA(1.f, .55f, .05f, 1.f));
+        m_unsuitable_infill.render();
+        m_underlay_gaps.set_color(ColorRGBA(.95f, .15f, .9f, 1.f));
+        m_underlay_gaps.render();
+        m_unknown_underlay.set_color(ColorRGBA(.6f, .6f, .6f, 1.f));
+        m_unknown_underlay.render();
     }
     if (s.unverified) {
         m_unverified.set_color(ColorRGBA(1.f, .35f, .85f, 1.f));
@@ -611,7 +642,8 @@ void FormorixPreviewRenderer::render(const FormorixPreviewState& s, const Camera
                 (s.layer < 0 || track[state.segment].layer == s.layer)) {
                 m_active.reset();
                 m_active.init_from(lines({track[state.segment].from, track[state.segment].to}));
-                m_active.set_color(ColorRGBA(1.f, 1.f, 1.f, 1.f));
+                m_active.set_color(state.kind == FP::MotionKind::Travel ? ColorRGBA(1.f, .5f, .1f, 1.f) :
+                                                                         ColorRGBA(1.f, 1.f, 1.f, 1.f));
                 m_active.render();
             }
         }

@@ -41,8 +41,9 @@ struct Accuracy
 {
     // CAD import, shell construction, float/Orca conversion, path interpolation, nominal deposition.
     std::array<double, 5> bounds{{INFINITY, INFINITY, INFINITY, INFINITY, INFINITY}};
-    bool whole_surface_covered     = false;
-    bool material_volume_plausible = false;
+    bool whole_surface_covered       = false;
+    bool material_volume_plausible   = false;
+    bool material_partition_verified = false; // strict per-layer finite-cell identity, separate from a coarse volume ratio
     bool verified(double tolerance = .01) const;
 };
 struct Coverage
@@ -56,8 +57,11 @@ struct Coverage
 struct Underlay
 {
     std::size_t samples = 0, missing = 0;
-    double maximum_gap    = 0.;
-    bool coverage_bounded = false; // sample success alone never proves a complete footprint
+    std::size_t missing_core = 0, unsuitable_infill = 0, path_gaps = 0, unknown_geometry = 0;
+    std::size_t no_nearby_contact = 0;
+    double maximum_gap            = 0.;
+    double maximum_finite_gap     = 0.;    // observed contact within the finite search range, not a global nearest-distance bound
+    bool coverage_bounded         = false; // sample success alone never proves a complete footprint
 };
 struct RegionResult
 {
@@ -66,7 +70,13 @@ struct RegionResult
     FormorixProcess::Profile process;
     FormorixSurfaces::Settings settings;
     double shell_depth = 0., shell_volume = 0., deposited_volume = 0., volume_ratio = 0., pitch = 0.;
-    double nominal_core_overlap = 0.; // sampled projection past the local core interface, not a global collision certificate
+    double nominal_core_overlap  = 0.; // sampled projection past the local core interface, not a global collision certificate
+    std::string deposition_model = "CoalescedOrcaStadiumRibbon/v1";
+    double compacted_width = 0., supplied_area = 0.;
+    bool inadmissible_material        = false;
+    double excess_material_volume_mm3 = 0.;
+    // Projected diagnostics, not certified 3D volumes on curved surfaces.
+    double projected_union_volume = 0., projected_uncovered_volume = 0., projected_outside_volume = 0., projected_overlap_volume = 0.;
     Accuracy accuracy;
     Coverage coverage;
     Underlay underlay;
@@ -80,6 +90,7 @@ struct Result
     FormorixPreview::Result preview; // material centers in layers; actual TCPs in the 5D-only timeline
     std::vector<RegionResult> regions;
     std::vector<Vec3d> missing_underlay, unverified;
+    std::vector<Vec3d> missing_core, unsuitable_infill, path_gaps, unknown_underlay;
     std::vector<std::string> warnings;
     std::string error;
     bool ok() const { return error.empty() && partition.ok() && preview.ok(); }
@@ -98,6 +109,7 @@ struct UnderlaySegment
     std::string material;
     bool support = false;
     bool infill  = false; // sparse conventional infill, excluded when region.use_infill is false
+    bool bridge  = false; // hanging bead placement is not certified by the supported rounded-rectangle audit
 };
 // Geometric contact against actual Orca extrusion sweeps. No strength/adhesion/schedule claim.
 void audit_underlay(Result&, const std::vector<UnderlaySegment>&, const std::function<bool()>& canceled = {});

@@ -4,8 +4,10 @@
 #include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include "libslic3r/FormorixHybrid.hpp"
+#include "libslic3r/FormorixDeposition.hpp"
 #include "libslic3r/FormorixGeometry.hpp"
 #include "libslic3r/FormorixProcess.hpp"
+#include "libslic3r/FormorixPreview.hpp"
 #include "libslic3r/FormorixSurfaces.hpp"
 #include "libslic3r/Model.hpp"
 #include "libslic3r/TriangleMesh.hpp"
@@ -23,6 +25,7 @@
 #include <cstddef>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <string>
 #include <utility>
@@ -137,14 +140,166 @@ FH::Input fixture(int shape, bool split = false, bool whole = false)
 void metrics(const char* name, const FH::Result& result)
 {
     for (const auto& r : result.regions) {
+        double timeline_volume = 0.;
+        for (const auto& track : result.preview.timeline.heads)
+            for (const auto& motion : track)
+                if (motion.region == r.id) {
+                    const double length = (motion.to.position - motion.from.position).norm();
+                    if (motion.extrusion) {
+                        timeline_volume += length * motion.mm3_per_mm;
+                        REQUIRE(motion.process);
+                        CHECK(length * motion.mm3_per_mm / (motion.end - motion.start) <= motion.process->volumetric_limit + 1e-7);
+                    } else
+                        CHECK_THAT(motion.mm3_per_mm, WithinAbs(0., 1e-12));
+                }
+        CHECK_THAT(timeline_volume, WithinAbs(r.deposited_volume, 1e-8 * std::max(1., r.deposited_volume)));
         std::cout << "HYBRID " << name << "," << r.id << "," << std::setprecision(17) << result.partition.volume_residual << ","
                   << r.accuracy.bounds[2] << "," << r.coverage.sampled_maximum << "," << r.coverage.sampled_mean << ","
                   << r.coverage.sampled_rms << "," << r.coverage.uncovered_fraction << "," << r.coverage.outside_fraction << ","
                   << r.volume_ratio << "," << r.accuracy.verified() << "\n";
     }
 }
+TEST_CASE("A commensurate planar ribbon exactly partitions finite cells without changing flow", "[FormorixHybrid][RibbonBaseline]")
+{
+    auto input                          = fixture(0);
+    input.regions[0].process.line_width = .75 + .2 * (1. - std::acos(-1.) / 4.);
+    const auto before                   = input.regions[0].process;
+    const auto result                   = FH::generate(input);
+    INFO(result.error);
+    REQUIRE(result.ok());
+    const auto& r = result.regions[0];
+    CHECK_THAT(r.compacted_width, WithinAbs(.75, 1e-12));
+    CHECK_THAT(r.volume_ratio, WithinAbs(1., 1e-8));
+    CHECK_THAT(r.projected_overlap_volume, WithinAbs(0., 1e-8));
+    CHECK_THAT(r.projected_outside_volume, WithinAbs(0., 1e-8));
+    CHECK_THAT(r.projected_uncovered_volume, WithinAbs(0., 1e-8));
+    CHECK_THAT(r.coverage.sampled_maximum, WithinAbs(0., 1e-8));
+    CHECK(r.accuracy.material_partition_verified);
+    CHECK(r.accuracy.verified());
+    CHECK_THAT(input.regions[0].process.flow_ratio, WithinAbs(before.flow_ratio, 1e-12));
+    CHECK_THAT(input.regions[0].process.line_width, WithinAbs(before.line_width, 1e-12));
+    metrics("commensurate_plane", result);
+}
+TEST_CASE("A complete fine outer layer cannot certify missing inner ribbon cells", "[FormorixHybrid]")
+{
+    auto input                                  = fixture(0);
+    input.regions[0].process.line_width         = .75 + .1 * (1. - std::acos(-1.) / 4.);
+    input.regions[0].settings.fine_final_layers = 1;
+    input.regions[0].settings.fine_layer_height = .1;
+    const auto result                           = FH::generate(input);
+    INFO(result.error);
+    REQUIRE(result.ok());
+    CHECK(result.regions[0].projected_uncovered_volume > 0.);
+    CHECK_FALSE(result.regions[0].accuracy.material_partition_verified);
+    CHECK_FALSE(result.regions[0].accuracy.verified());
+}
+TEST_CASE("Different nozzle ribbons meet at an identical planar material boundary without geometric gaps",
+          "[FormorixHybrid][RibbonBaseline]")
+{
+    auto input                          = fixture(0, true);
+    input.regions[0].process.line_width = .75 + .2 * (1. - std::acos(-1.) / 4.);
+    input.regions[1].process.line_width = .375 + .2 * (1. - std::acos(-1.) / 4.);
+    input.regions[1].settings.layers    = 3;
+    const auto result                   = FH::generate(input);
+    INFO(result.error);
+    REQUIRE(result.ok());
+    REQUIRE(result.regions.size() == 2);
+    CHECK(std::abs(result.regions[0].process.nozzle_diameter - result.regions[1].process.nozzle_diameter) > .1);
+    CHECK(result.regions[0].process.material_id != result.regions[1].process.material_id);
+    for (const auto& region : result.regions) {
+        CHECK_THAT(region.volume_ratio, WithinAbs(1., 1e-8));
+        CHECK_THAT(region.projected_overlap_volume, WithinAbs(0., 1e-8));
+        CHECK_THAT(region.projected_uncovered_volume, WithinAbs(0., 1e-8));
+        CHECK_THAT(region.projected_outside_volume, WithinAbs(0., 1e-8));
+        CHECK(region.accuracy.material_partition_verified);
+        CHECK(region.accuracy.verified());
+    }
+    const auto seam = std::find_if(result.partition.interfaces.begin(), result.partition.interfaces.end(),
+                                   [](const FG::Interface& interface) { return interface.first == 1 && interface.second == 2; });
+    REQUIRE(seam != result.partition.interfaces.end());
+    REQUIRE_FALSE(seam->mesh.faces.empty());
+    for (const auto& p : seam->mesh.vertices)
+        CHECK_THAT(p.x(), WithinAbs(0., 1e-9));
+    metrics("mixed_nozzle_commensurate", result);
+}
+TEST_CASE("Timeline supply validation rejects invalid numbers and extrusion on travel", "[FormorixHybrid]")
+{
+    FormorixPreview::Timeline timeline;
+    FormorixPreview::Motion motion;
+    motion.head       = 0;
+    motion.start      = 0.;
+    motion.end        = 1.;
+    motion.from       = {{0., 0., 0.}, Vec3d::UnitZ()};
+    motion.to         = {{1., 0., 0.}, Vec3d::UnitZ()};
+    motion.mm3_per_mm = .1;
+    timeline.heads[0].push_back(motion);
+    REQUIRE(timeline.valid());
+    for (double invalid : {-1., std::numeric_limits<double>::infinity(), std::numeric_limits<double>::quiet_NaN()}) {
+        timeline.heads[0][0].mm3_per_mm = invalid;
+        CHECK_FALSE(timeline.valid());
+    }
+    timeline.heads[0][0].mm3_per_mm = 0.;
+    CHECK(timeline.valid()); // Legacy motion has no explicit volumetric density.
+    timeline.heads[0][0].kind      = FormorixPreview::MotionKind::Travel;
+    timeline.heads[0][0].extrusion = false;
+    CHECK(timeline.valid());
+    timeline.heads[0][0].mm3_per_mm = .1;
+    CHECK_FALSE(timeline.valid());
+}
+TEST_CASE("Curved ribbon timing preserves supply when the TCP has a contact offset", "[FormorixHybrid]")
+{
+    auto input                              = fixture(2);
+    input.regions[0].process.contact_to_tcp = 7.;
+    const auto result                       = FH::generate(input);
+    INFO(result.error);
+    REQUIRE(result.ok());
+    metrics("curved_tcp_offset", result);
+}
+TEST_CASE("Fine surface quality increases longitudinal resolution without changing material supply or pitch", "[FormorixHybrid]")
+{
+    auto input                        = fixture(2);
+    input.regions[0].settings.quality = 0;
+    const auto draft                  = FH::generate(input);
+    INFO(draft.error);
+    REQUIRE(draft.ok());
+    input.regions[0].settings.quality = 2;
+    const auto fine                   = FH::generate(input);
+    INFO(fine.error);
+    REQUIRE(fine.ok());
+    auto points = [](const FH::Result& result) {
+        std::size_t count = 0;
+        for (const auto& layer : result.preview.layers)
+            count += layer.path.size();
+        return count;
+    };
+    CHECK(points(fine) > points(draft));
+    CHECK_THAT(fine.regions[0].compacted_width, WithinAbs(draft.regions[0].compacted_width, 1e-12));
+    CHECK_THAT(fine.regions[0].supplied_area, WithinAbs(draft.regions[0].supplied_area, 1e-12));
+    CHECK_THAT(fine.regions[0].process.flow_ratio, WithinAbs(draft.regions[0].process.flow_ratio, 1e-12));
+    CHECK_THAT(fine.regions[0].process.line_width, WithinAbs(draft.regions[0].process.line_width, 1e-12));
+    CHECK_FALSE(draft.regions[0].accuracy.verified());
+    CHECK_FALSE(fine.regions[0].accuracy.verified());
+    std::cout << "RIBBON_QUALITY draft=" << points(draft) << " fine=" << points(fine)
+              << " unchanged_pitch=" << fine.regions[0].compacted_width << "\n";
+}
+TEST_CASE("The original surface preview also applies quality only to longitudinal samples", "[FormorixHybrid]")
+{
+    const auto model = fixture(0);
+    const FormorixPreview::Input input{FH::to_float(model.regions[0].surface).mesh, FH::to_float(model.solid).mesh, {}};
+    auto settings    = model.regions[0].settings;
+    settings.quality = 0;
+    const FormorixPreview::Options options;
+    const auto draft = FormorixPreview::generate(input, settings, options);
+    REQUIRE(draft.ok());
+    settings.quality = 2;
+    const auto fine  = FormorixPreview::generate(input, settings, options);
+    REQUIRE(fine.ok());
+    CHECK(fine.layers.front().path.size() > draft.layers.front().path.size());
+    CHECK_THAT(fine.shell_depth, WithinAbs(draft.shell_depth, 1e-12));
+    CHECK(fine.layers.size() == draft.layers.size());
+}
 } // namespace
-TEST_CASE("Hybrid partition and compensated layers preserve a planar reference while exposing excess material", "[FormorixHybrid]")
+TEST_CASE("Hybrid partition preserves a planar reference and exposes an unfilled final ribbon strip", "[FormorixHybrid]")
 {
     const auto input  = fixture(0);
     const auto before = input.solid.vertices;
@@ -160,7 +315,7 @@ TEST_CASE("Hybrid partition and compensated layers preserve a planar reference w
     CHECK(r.accuracy.bounds[1] < .01);
     CHECK(r.accuracy.bounds[2] < .01);
     CHECK(r.accuracy.bounds[3] < .01);
-    CHECK(r.volume_ratio > 1.1);
+    CHECK(r.volume_ratio < 1.1);
     CHECK_FALSE(r.accuracy.material_volume_plausible);
     CHECK_FALSE(r.accuracy.verified());
     CHECK(result.preview.timeline.valid());
@@ -170,9 +325,13 @@ TEST_CASE("Hybrid partition and compensated layers preserve a planar reference w
     for (size_t layer = 0; layer < result.preview.layers.size(); ++layer) {
         size_t count = 0;
         for (const auto& move : result.preview.timeline.heads[0])
-            if (move.extrusion && move.layer == int(layer))
+            if (move.layer == int(layer) && (move.to.position - move.from.position).norm() > 0. &&
+                move.kind != FormorixPreview::MotionKind::Wait)
                 ++count;
-        CHECK(count + 1 == result.preview.layers[layer].path.size());
+        // Inter-layer travel is an extra motion outside the layer path.
+        const auto& path = result.preview.layers[layer];
+        CHECK(path.extruding.size() + 1 == path.path.size());
+        CHECK(count >= path.extruding.size());
     }
     metrics("plane", result);
 }
@@ -212,7 +371,7 @@ TEST_CASE("Adjacent hybrid regions retain their own heads widths and materials w
     CHECK(result.preview.timeline.heads[1].front().start >= result.preview.timeline.heads[0].back().end);
     metrics("adjacent_materials", result);
 }
-TEST_CASE("A vertical hybrid wall uses the same exact core boundary and explicit orientation allowance", "[FormorixHybrid]")
+TEST_CASE("A rigid tilted section is rejected instead of intersecting the conventional core", "[FormorixHybrid]")
 {
     auto input = fixture(0);
     // Exact coordinate permutation avoids inventing CAD rotation rounding in this reference.
@@ -231,17 +390,9 @@ TEST_CASE("A vertical hybrid wall uses the same exact core boundary and explicit
     input.regions[0].settings.allow_deviation = true;
     auto result                               = FH::generate(input);
     INFO(result.error);
-    REQUIRE(result.ok());
-    CHECK(FG::valid_solid(result.core));
-    CHECK_FALSE(result.regions[0].accuracy.verified());
-    // The inclined ellipse has normal thickness about .298656 mm instead of
-    // the .2 mm local layer height. This is a detected core/material conflict.
-    CHECK_THAT(result.regions[0].nominal_core_overlap, WithinAbs(.098656, 2e-6));
-    CHECK_FALSE(result.regions[0].accuracy.material_volume_plausible);
-    CHECK(std::any_of(result.warnings.begin(), result.warnings.end(), [](const std::string& warning) {
-        return warning.find("bead crosses the local core interface") != std::string::npos;
-    }));
-    metrics("vertical_wall", result);
+    REQUIRE_FALSE(result.ok());
+    CHECK(result.error.find("perpendicular nozzle") != std::string::npos);
+    CHECK(result.preview.layers.empty());
 }
 TEST_CASE("Saved surface paint extracts all regions without changing the original object", "[FormorixHybrid]")
 {
@@ -395,18 +546,11 @@ TEST_CASE("Whole top faces either retain internal material centers or explicitly
     const int shape = GENERATE(1, 2, 3, 4);
     auto result     = FH::generate(fixture(shape, false, true));
     INFO("shape=" << shape << " " << result.error);
-    if (shape == 2) {
-        REQUIRE(result.ok());
-        CHECK(FG::valid_solid(result.core));
-        metrics("complete_convex_top_boundary", result);
-    } else {
-        // The inward normal at these lateral boundaries points outside the
-        // original solid. Clipping the shell alone cannot validate those paths.
-        REQUIRE_FALSE(result.ok());
-        CHECK(result.error.find("local path termination") != std::string::npos);
-        CHECK(result.preview.layers.empty());
-        std::cout << "HYBRID unsupported_complete_top," << shape << "," << result.error << "\n";
-    }
+    REQUIRE(result.ok());
+    CHECK(FG::valid_solid(result.core));
+    for (const auto& layer : result.preview.layers)
+        CHECK(layer.extruding.size() + 1 == layer.path.size());
+    metrics("complete_top_boundary", result);
 }
 TEST_CASE("The saved curved-wall project generates a hybrid preview from its real paint", "[FormorixHybrid]")
 {
@@ -425,10 +569,11 @@ TEST_CASE("The saved curved-wall project generates a hybrid preview from its rea
     REQUIRE(input.regions.size() == 2);
     auto result = FH::generate(input);
     REQUIRE_FALSE(result.ok());
-    CHECK(result.error.find("overlaps another region") != std::string::npos);
+    CHECK(result.error.find("perpendicular nozzle") != std::string::npos);
     std::cout << "HYBRID native_curved_wall_with_side," << result.error << "\n";
     // The supplied editor demonstration also marks a perpendicular wall with
-    // a different depth. Its intersecting skin is deliberately rejected above.
+    // a different depth. Its rigid tilted material section is rejected above;
+    // the shared skin partition is independently checked by geometry tests.
     // Check the original curved marking alone without changing its triangles.
     input.regions.resize(1);
     result = FH::generate(input);
@@ -453,6 +598,9 @@ TEST_CASE("The saved curved-wall project generates a hybrid preview from its rea
         movements += track.size();
     CHECK(movements <= 500000);
     CHECK(result.preview.layers.size() == 4);
+    CHECK(result.regions[0].volume_ratio < 1.1);
+    CHECK(result.regions[0].volume_ratio > .9);
+    CHECK_THAT(input.regions[0].process.flow_ratio, WithinAbs(.98, 1e-12));
     metrics("native_curved_wall_standard04", result);
 }
 

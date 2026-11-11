@@ -173,6 +173,42 @@ CoverageCell planar_coverage(const Profile& p, double pitch)
     out.volume_balance_factor = out.union_area / out.supplied_area;
     return out;
 }
+RibbonSection ribbon_section(const Profile& p)
+{
+    require(p);
+    const double width  = p.line_width * p.width_correction;
+    const double height = p.layer_height * p.height_correction;
+    if (width < height)
+        throw std::invalid_argument("Nominal compacted ribbon requires width at least equal to height");
+    RibbonSection out;
+    out.requested_width = p.line_width;
+    out.height          = height;
+    // Same non-bridge stadium formula as Orca Flow, evaluated in double rather
+    // than converting the profile dimensions through Flow's float members.
+    out.area_before_flow = height * (width - height) + pi * height * height / 4.;
+    out.supplied_area    = out.area_before_flow * p.flow_ratio;
+    out.compacted_width  = out.supplied_area / height;
+    return out;
+}
+double ribbon_speed(const Profile& p)
+{
+    const auto section = ribbon_section(p);
+    return std::min(p.speed, p.volumetric_limit / section.supplied_area);
+}
+RibbonBalance ribbon_balance(double supplied, double target, double rounding_residual)
+{
+    if (!std::isfinite(supplied) || supplied < 0. || !std::isfinite(target) || target <= 0. || !std::isfinite(rounding_residual))
+        throw std::invalid_argument("Invalid nominal ribbon volume ledger");
+    RibbonBalance out;
+    out.excess_volume       = std::max(0., supplied - target);
+    out.numerical_tolerance = std::abs(rounding_residual) + 1e-8 * std::max(1., target);
+    if (!std::isfinite(out.numerical_tolerance))
+        throw std::invalid_argument("Unrepresentable ribbon volume tolerance");
+    out.inadmissible = out.excess_volume > out.numerical_tolerance;
+    // Compare the excess to ten percent, avoiding overflow in 1.1*target.
+    out.gross_oversupply = out.excess_volume > .1 * target + out.numerical_tolerance;
+    return out;
+}
 DepositionPath compensate_curve(const ContactCurve& curve,
                                 double first,
                                 double last,

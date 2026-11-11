@@ -906,7 +906,7 @@ void FormorixSurfaceEditor::Impl::calculate_hybrid()
                 for (const auto& path : conventional->paths)
                     for (std::size_t i = 1; i < path.points.size(); ++i)
                         underlay.push_back({path.points[i - 1], path.points[i], path.width, path.height,
-                            path.head, path.process.material_id, path.support, path.role == erInternalInfill});
+                            path.head, path.process.material_id, path.support, path.role == erInternalInfill, is_bridge(path.role)});
                 for (auto& region : hybrid->regions)
                     region.accuracy.bounds[2] += conventional->float_conversion_bound + conventional->coordinate_quantization_bound;
                 FH::audit_underlay(*hybrid, underlay, canceled);

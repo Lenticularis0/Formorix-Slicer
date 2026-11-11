@@ -14,6 +14,18 @@ Before materialization, the union preserves the supplied solid exactly and the p
 
 CAD error and offset approximation error remain separate questions. Full-wall consumption is possible when a valid cutter exactly consumes a solid. General variable-thickness full-wall offsetting, automatic patch extraction from the GUI, arbitrary self-intersection repair and generation of load-bearing supports are not part of this module. A failed request returns no partial accepted parts. Patches must match the source surface: a slightly displaced coplanar patch is not silently projected back onto it.
 
+### Explicit miter boundaries
+
+`partition_clipped(..., SharedBoundaryPolicy::MiterAdjacentEdges)` clips to the original solid and constructs a symmetric junction between adjacent offset shells. It requires exactly matching boundary-edge coordinates with opposite winding. It does not weld nearby surfaces or infer adjacency from intersecting volumes. The default policy remains `RejectOverlap`.
+
+At an outer seam vertex `p`, each incident region contributes its **own** outward normal `n_i` and requested depth `d_i`. The common inner point is `q = p - v`, where `v` is the minimum-norm solution of `n_i · v = d_i`. Constraints are geometrically sorted, so region IDs and input ordering do not choose a preferred material. Normals are not averaged across the sharp corner. Parallel neighbouring sheets retain their ordinary depth-step boundary. Inconsistent constraints and miters longer than four times the largest incident depth are rejected explicitly.
+
+Both cutters use the same inner seam points and the same canonical diagonal for each seam quadrilateral. This matters on curved common edges: independent normals produce nonplanar quads, for which opposite diagonal choices would create a gap or overlap. The original outer vertices and triangles are retained. Existing exact CGAL clipping, disjointness and total-volume checks still apply; mitering is not permission to resolve residual overlaps by region priority. A shared material interface remains explicit even for incompatible materials. No blending, bond strength or continuous extrusion across different heads is inferred.
+
+This construction retains the existing inner-sheet triangulation. If moving a boundary point past a neighbouring inner row folds a cell, the request is rejected. In particular, very fine boundary tessellations can require local retriangulation or Boolean wedge clipping even when a continuous geometric miter would exist. Neither operation is silently approximated here.
+
+`mitered_edges`, `mitered_vertices` and `miter_constraint_residual` record construction diagnostics. The residual checks normal depth at seam vertices; it is not a bound on an arbitrary curved CAD offset or on deposited material. Miter points are computed in double precision and the resulting polyhedra are processed exactly from those binary values. The existing measured CGAL-to-double rounding bound still applies, and imported CAD, interpolation and nominal deposition errors remain separate.
+
 CGAL's existing LSCM unwrap targets disk-like patches; isotropic remeshing improves triangle distribution but cannot recover a lost CAD surface. Neither is a substitute for CAD error control. See the [CGAL Boolean documentation](https://doc.cgal.org/latest/Polygon_mesh_processing/group__PMP__corefinement__grp.html) and [parameterization documentation](https://doc.cgal.org/latest/Surface_mesh_parameterization/index.html).
 
 ## Accuracy evidence
