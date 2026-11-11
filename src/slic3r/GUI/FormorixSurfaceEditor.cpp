@@ -7,6 +7,7 @@
 #include "libslic3r/FormorixPreview.hpp"
 #include "libslic3r/FormorixHybrid.hpp"
 #include "libslic3r/FormorixCorePreview.hpp"
+#include "libslic3r/FormorixUnderlay.hpp"
 #include "libslic3r/ExtrusionEntity.hpp"
 #include "libslic3r/FormorixProcess.hpp"
 #include "libslic3r/Utils.hpp"
@@ -944,34 +945,71 @@ void FormorixSurfaceEditor::Impl::calculate_hybrid()
         const std::string signature = fingerprint();
         auto hybrid = std::make_shared<FH::Result>();
         auto conventional = std::make_shared<FC::Result>();
+        auto underlay_preparation = std::make_shared<FormorixUnderlay::Preparation>();
+        auto underlay_before = std::make_shared<FormorixUnderlay::Analysis>();
+        auto underlay_after = std::make_shared<FormorixUnderlay::Analysis>();
         auto life = alive;
         message(_L("Calculating hybrid geometry and Orca core paths…"));
         const bool queued = queue_job(plater.get_ui_job_worker(),
-            [input = std::move(input), sources = std::move(sources), core_head, support_head, hybrid, conventional](Job::Ctl& ctl) {
+            [input = std::move(input), sources = std::move(sources), core_head, support_head, hybrid, conventional,
+             underlay_preparation, underlay_before, underlay_after](Job::Ctl& ctl) {
                 ScopeGuard finish_status([&ctl] { ctl.update_status(100); });
                 auto canceled = [&ctl] { return ctl.was_canceled(); };
                 ctl.update_status(0, _u8L("Calculating hybrid geometry…"));
                 *hybrid = FH::generate(input, canceled);
                 if (!hybrid->ok() || canceled()) return;
+                double conversion_bound = 0.;
+                auto account_conversion = [&] {
+                    const double bound = conventional->error.empty() ?
+                        std::max(conventional->float_conversion_bound, conventional->modifier_float_conversion_bound) +
+                            conventional->coordinate_quantization_bound + conventional->native_slice_expansion_bound : INFINITY;
+                    for (auto& region : hybrid->regions)
+                        region.accuracy.bounds[2] += std::max(0., bound - conversion_bound);
+                    conversion_bound = std::max(conversion_bound, bound);
+                };
                 ctl.update_status(35, _u8L("Calculating Orca core paths…"));
                 if (!hybrid->core.faces.empty()) {
                     *conventional = FC::slice(hybrid->core, sources, core_head, support_head, canceled);
+                    account_conversion();
                     if (!conventional->ok() || canceled()) return;
                 }
                 ctl.update_status(85, _u8L("Checking geometric underlay…"));
-                std::vector<FH::UnderlaySegment> underlay;
-                for (const auto& path : conventional->paths) {
-                    if (path.nominal_supplied_mm3_per_mm <= 0.) continue;
-                    for (std::size_t i = 1; i < path.points.size(); ++i)
-                        underlay.push_back({path.points[i - 1], path.points[i], path.width, path.height,
-                            path.head, path.process.material_id, path.support, path.role == erInternalInfill, is_bridge(path.role),
-                            path.flow_geometry_unverified});
+                *underlay_preparation = FormorixUnderlay::prepare(*hybrid, {}, canceled);
+                if (!underlay_preparation->ok() || canceled()) return;
+                auto check_underlay = [&] {
+                    std::vector<FH::UnderlaySegment> underlay;
+                    for (const auto& path : conventional->paths) {
+                        if (path.nominal_supplied_mm3_per_mm <= 0.) continue;
+                        for (std::size_t i = 1; i < path.points.size(); ++i)
+                            underlay.push_back({path.points[i - 1], path.points[i], path.width, path.height,
+                                path.head, path.process.material_id, path.support, path.role == erInternalInfill,
+                                is_bridge(path.role), path.flow_geometry_unverified, path.dense_transition});
+                    }
+                    FH::audit_underlay(*hybrid, underlay, canceled);
+                    return FormorixUnderlay::analyze(*hybrid, *underlay_preparation, *conventional, {}, canceled);
+                };
+                *underlay_before = check_underlay();
+                if (!underlay_before->ok() || canceled()) return;
+                *underlay_after = *underlay_before;
+                if (!underlay_before->dense_requests.empty()) {
+                    ctl.update_status(90, _u8L("Calculating local Orca underlay…"));
+                    auto revised = FC::slice(hybrid->core, sources, core_head, support_head, canceled,
+                                             underlay_before->dense_requests);
+                    if (!revised.ok() || canceled()) {
+                        // Keep the measured baseline and its visible gaps. A failed
+                        // density request does not erase the previously valid paths.
+                        *underlay_after = {};
+                        underlay_after->error = revised.error;
+                        return;
+                    }
+                    *conventional = std::move(revised);
+                    account_conversion();
+                    *underlay_after = check_underlay();
+                    if (!underlay_after->ok() || canceled()) return;
                 }
-                for (auto& region : hybrid->regions)
-                    region.accuracy.bounds[2] += conventional->float_conversion_bound + conventional->coordinate_quantization_bound;
-                FH::audit_underlay(*hybrid, underlay, canceled);
             },
-            [this, life, hybrid, conventional, signature](bool canceled, std::exception_ptr& error) {
+            [this, life, hybrid, conventional, signature, underlay_preparation, underlay_before, underlay_after]
+            (bool canceled, std::exception_ptr& error) {
                 wxString failure;
                 if (error) {
                     try { std::rethrow_exception(error); }
@@ -984,9 +1022,11 @@ void FormorixSurfaceEditor::Impl::calculate_hybrid()
                 if (!failure.empty()) { message(format_wxstr(_L("Hybrid preview failed: %1%"), failure)); return; }
                 if (signature != fingerprint()) { message(_L("Model or settings changed. Calculate the preview again.")); return; }
                 preview_signature = signature;
-                preview->set_hybrid(hybrid, conventional);
+                preview->set_hybrid(hybrid, conventional, underlay_preparation, underlay_before, underlay_after);
                 if (!hybrid->error.empty()) message(format_wxstr(_L("Hybrid geometry failed: %1%"), from_u8(hybrid->error)));
                 else if (!conventional->error.empty()) message(format_wxstr(_L("Orca core preview failed: %1%"), from_u8(conventional->error)));
+                else if (!underlay_preparation->ok() || !underlay_before->ok() || !underlay_after->ok())
+                    message(_L("Underlay verification is incomplete. See the geometry report."));
                 else message(_L("Hybrid preview ready. Review coverage, material volume and underlay; export remains blocked."));
                 plater.get_view3D_canvas3D()->zoom_to_selection();
                 wxGetApp().mainframe->request_select_tab(TAB_ID_PREVIEW);

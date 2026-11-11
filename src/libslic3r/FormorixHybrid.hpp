@@ -61,10 +61,22 @@ struct Underlay
 {
     std::size_t samples = 0, missing = 0;
     std::size_t missing_core = 0, unsuitable_infill = 0, path_gaps = 0, unknown_geometry = 0;
+    std::size_t native_layer_gaps = 0; // even a fully filled actual Orca layer cannot reach this sample
+    std::size_t raw_missing = 0; // raw native geometry only, disregarding uncalibrated nonunit supply
     std::size_t no_nearby_contact = 0;
     double maximum_gap            = 0.;
     double maximum_finite_gap     = 0.;    // observed contact within the finite search range, not a global nearest-distance bound
     bool coverage_bounded         = false; // sample success alone never proves a complete footprint
+};
+enum class UnderlayKind { Contact, MissingCore, ExcludedInfill, PathGap, UnknownGeometry, NativeLayerGap };
+struct UnderlayContact
+{
+    Vec3d position = Vec3d::Zero(), inward = Vec3d::Zero();
+    UnderlayKind kind = UnderlayKind::UnknownGeometry;
+    double gap = INFINITY, raw_gap = INFINITY;
+    // Index into the actually supplied UnderlaySegment vector; no synthetic contact.
+    std::size_t path_index = std::numeric_limits<std::size_t>::max();
+    bool raw_geometry_unknown = false;
 };
 struct RegionResult
 {
@@ -90,6 +102,7 @@ struct RegionResult
     Underlay underlay;
     std::vector<Vec3d> interface_samples;
     std::vector<Vec3d> interface_normals;
+    std::vector<UnderlayContact> underlay_contacts;
 };
 struct Result
 {
@@ -101,6 +114,8 @@ struct Result
     std::vector<RegionResult> regions;
     std::vector<Vec3d> missing_underlay, unverified;
     std::vector<Vec3d> missing_core, unsuitable_infill, path_gaps, unknown_underlay;
+    std::vector<Vec3d> native_layer_gaps;
+    FormorixProcess::Dependencies manufacturing_dependencies; // geometric requests, never a completed schedule
     std::vector<std::string> warnings;
     std::string error;
     bool ok() const { return error.empty() && partition.ok() && preview.ok(); }
@@ -121,6 +136,7 @@ struct UnderlaySegment
     bool infill  = false; // sparse conventional infill, excluded when region.use_infill is false
     bool bridge  = false; // hanging bead placement is not certified by the supported rounded-rectangle audit
     bool flow_geometry_unverified = false; // changed supply has no calibrated native cross-section
+    bool dense_transition = false; // actual native modifier region, not an inferred/fictitious path
 };
 // Geometric contact against actual Orca extrusion sweeps. No strength/adhesion/schedule claim.
 void audit_underlay(Result&, const std::vector<UnderlaySegment>&, const std::function<bool()>& canceled = {});

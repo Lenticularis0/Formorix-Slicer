@@ -651,7 +651,7 @@ TEST_CASE("Hybrid evidence distinguishes missing underlay unknown CAD and lossy 
         return std::any_of(local.warnings.begin(), local.warnings.end(),
                            [&](const std::string& warning) { return warning.find(text) != std::string::npos; });
     };
-    CHECK(has_warning("dense transition underlay is not generated"));
+    CHECK(has_warning("dense transition underlay is a requested native operation"));
     CHECK(has_warning("additional 5D support is not generated"));
     CHECK(has_warning("soluble support material suitability"));
     FG::Mesh points;
@@ -824,6 +824,49 @@ TEST_CASE("The saved curved-wall project generates a hybrid preview from its rea
     CHECK(result.regions[0].volume_ratio > .9);
     CHECK_THAT(input.regions[0].process.flow_ratio, WithinAbs(.98, 1e-12));
     metrics("native_curved_wall_standard04", result);
+}
+
+TEST_CASE("Underlay contact records separate raw geometry unknown flow and explicitly requested dense regions", "[FormorixHybrid]")
+{
+    FH::Result result;
+    result.original = result.core = fixture(0).solid;
+    result.regions.resize(1);
+    auto& region = result.regions.front();
+    region.id = 1;
+    region.process = profile();
+    region.interface_samples = {{0., 0., 5.}};
+    region.interface_normals = {Vec3d::UnitZ()};
+    FH::UnderlaySegment path{{-1., 0., 5.}, {1., 0., 5.}, .8, .2, 0, "PETG"};
+    path.flow_geometry_unverified = true;
+    FH::audit_underlay(result, {path});
+    REQUIRE(region.underlay_contacts.size() == 1);
+    CHECK(region.underlay.missing == 1);
+    CHECK(region.underlay.raw_missing == 0);
+    CHECK(region.underlay_contacts.front().kind == FH::UnderlayKind::UnknownGeometry);
+    CHECK_THAT(region.underlay_contacts.front().raw_gap, WithinAbs(0., 1e-12));
+    CHECK(std::isinf(region.underlay_contacts.front().gap));
+    CHECK(region.underlay_contacts.front().path_index == 0);
+    CHECK_FALSE(region.underlay_contacts.front().raw_geometry_unknown);
+
+    path.flow_geometry_unverified = false;
+    path.infill = path.dense_transition = true;
+    region.settings.use_infill = false;
+    FH::audit_underlay(result, {path});
+    CHECK(region.underlay_contacts.front().kind == FH::UnderlayKind::ExcludedInfill);
+    region.settings.dense_underlay = true;
+    FH::audit_underlay(result, {path});
+    CHECK(region.underlay.missing == 0);
+    CHECK(region.underlay_contacts.front().kind == FH::UnderlayKind::Contact);
+    CHECK_FALSE(region.underlay.coverage_bounded);
+    const auto warnings = result.warnings.size();
+    FH::audit_underlay(result, {path});
+    CHECK(result.warnings.size() == warnings);
+
+    FH::audit_underlay(result, {});
+    CHECK(region.underlay.missing == 1);
+    CHECK(region.underlay.raw_missing == 1);
+    CHECK(region.underlay_contacts.front().kind == FH::UnderlayKind::PathGap);
+    CHECK(region.underlay_contacts.front().path_index == std::numeric_limits<std::size_t>::max());
 }
 
 TEST_CASE("A uniform full-wall slab has no conventional core and still requires prior underlay", "[FormorixHybrid][FormorixHybridFullWall]")

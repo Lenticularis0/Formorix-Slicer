@@ -19,6 +19,7 @@
 #include "TriangleSelector.hpp"
 #include "libslic3r.h"
 #include "I18N.hpp"
+#include "format.hpp"
 #include <Eigen/Geometry>
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
@@ -1239,11 +1240,16 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
 
 void audit_underlay(Result& result, const std::vector<UnderlaySegment>& paths, const std::function<bool()>& cancel)
 {
+    auto warn = [&](const std::string& message) {
+        if (std::find(result.warnings.begin(), result.warnings.end(), message) == result.warnings.end())
+            result.warnings.push_back(message);
+    };
     result.missing_underlay.clear();
     result.missing_core.clear();
     result.unsuitable_infill.clear();
     result.path_gaps.clear();
     result.unknown_underlay.clear();
+    result.native_layer_gaps.clear();
     std::optional<Wall> core;
     if (!result.core.faces.empty())
         core.emplace(result.core);
@@ -1307,6 +1313,8 @@ void audit_underlay(Result& result, const std::vector<UnderlaySegment>& paths, c
     nearby.build();
     for (auto& region : result.regions) {
         region.underlay = {};
+        region.underlay_contacts.clear();
+        region.underlay_contacts.reserve(region.interface_samples.size());
         if (region.interface_samples.size() != region.interface_normals.size())
             throw std::invalid_argument("Inconsistent interface audit data");
         for (size_t i = 0; i < region.interface_samples.size(); ++i) {
@@ -1314,33 +1322,49 @@ void audit_underlay(Result& result, const std::vector<UnderlaySegment>& paths, c
             const Vec3d q = region.interface_samples[i], direction = -region.interface_normals[i];
             if (!q.allFinite() || !direction.allFinite() || std::abs(direction.norm() - 1.) > 1e-6)
                 throw std::invalid_argument("Invalid interface audit position or normal");
-            double nearest = INFINITY, excluded_infill = INFINITY;
-            bool unknown_section = false;
+            double nearest = INFINITY, excluded_infill = INFINITY, raw_nearest = INFINITY;
+            std::size_t raw_path = std::numeric_limits<std::size_t>::max();
+            bool unknown_section = false, raw_geometry_unknown = false;
             for (size_t path : nearby.at(q)) {
                 const auto& p = paths[path];
-                if (p.bridge || p.flow_geometry_unverified || p.width < p.height || std::abs(p.from.z() - p.to.z()) > 1e-8) {
+                const bool unsupported_shape = p.bridge || p.width < p.height || std::abs(p.from.z() - p.to.z()) > 1e-8;
+                if (unsupported_shape || p.flow_geometry_unverified) {
                     const Vec3d radius = Vec3d::Constant(std::max(p.width, p.height) / 2. +
                                                          std::min(.05, region.process.layer_height * .25));
                     const Vec3d lower  = p.from.cwiseMin(p.to) - Vec3d(0., 0., p.height / 2.) - radius;
                     const Vec3d upper  = p.from.cwiseMax(p.to) - Vec3d(0., 0., p.height / 2.) + radius;
-                    unknown_section    = unknown_section || Eigen::AlignedBox3d(lower, upper).contains(q);
-                    continue;
+                    const bool relevant = Eigen::AlignedBox3d(lower, upper).contains(q);
+                    unknown_section = unknown_section || relevant;
+                    raw_geometry_unknown = raw_geometry_unknown || (relevant && unsupported_shape);
+                    if (unsupported_shape) continue;
                 }
                 const double distance = contact_distance(p, q, direction);
-                if (p.infill && !region.settings.use_infill)
+                if (p.infill && !region.settings.use_infill && !(p.dense_transition && region.settings.dense_underlay))
                     excluded_infill = std::min(excluded_infill, distance);
-                else
-                    nearest = std::min(nearest, distance);
+                else {
+                    if (distance < raw_nearest) {
+                        raw_nearest = distance;
+                        raw_path = path;
+                    }
+                    if (!p.flow_geometry_unverified) nearest = std::min(nearest, distance);
+                }
             }
             ++region.underlay.samples;
             if (nearest > .5)
                 nearest = INFINITY;
+            if (raw_nearest > .5) {
+                raw_nearest = INFINITY;
+                raw_path = std::numeric_limits<std::size_t>::max();
+            }
+            const double allowed_gap = std::min(.05, region.process.layer_height * .25);
+            if (raw_nearest > allowed_gap) ++region.underlay.raw_missing;
+            UnderlayContact contact{q, direction, UnderlayKind::Contact, nearest, raw_nearest, raw_path, raw_geometry_unknown};
             if (std::isfinite(nearest))
                 region.underlay.maximum_finite_gap = std::max(region.underlay.maximum_finite_gap, nearest);
             else
                 ++region.underlay.no_nearby_contact;
             region.underlay.maximum_gap = std::max(region.underlay.maximum_gap, nearest);
-            if (nearest > std::min(.05, region.process.layer_height * .25)) {
+            if (nearest > allowed_gap) {
                 ++region.underlay.missing;
                 if (result.missing_underlay.size() < 10000)
                     result.missing_underlay.push_back(q);
@@ -1349,42 +1373,43 @@ void audit_underlay(Result& result, const std::vector<UnderlaySegment>& paths, c
                     if (points.size() < 10000)
                         points.push_back(q);
                 };
-                if (excluded_infill <= std::min(.05, region.process.layer_height * .25))
+                if (excluded_infill <= allowed_gap) {
+                    contact.kind = UnderlayKind::ExcludedInfill;
                     mark(region.underlay.unsuitable_infill, result.unsuitable_infill);
-                else if (unknown_section)
+                } else if (unknown_section) {
+                    contact.kind = UnderlayKind::UnknownGeometry;
                     mark(region.underlay.unknown_geometry, result.unknown_underlay);
-                else if ((core && !core->contains(q + direction * 1e-4)) || (!core && !result.original.faces.empty()))
+                } else if ((core && !core->contains(q + direction * 1e-4)) || (!core && !result.original.faces.empty())) {
+                    contact.kind = UnderlayKind::MissingCore;
                     mark(region.underlay.missing_core, result.missing_core);
-                else if (core)
+                } else if (core) {
+                    contact.kind = UnderlayKind::PathGap;
                     mark(region.underlay.path_gaps, result.path_gaps);
-                else
+                } else {
+                    contact.kind = UnderlayKind::UnknownGeometry;
                     mark(region.underlay.unknown_geometry, result.unknown_underlay);
+                }
             }
+            region.underlay_contacts.push_back(std::move(contact));
         }
-        result.warnings.push_back("Region " + std::to_string(region.id) +
-                                  ": underlay is sampled, not a full contact or material-adhesion certificate");
-        const std::string prefix = "Region " + std::to_string(region.id) + ": ";
+        warn(format(L("Region %1%: underlay is sampled, not a full contact or material-adhesion certificate"), region.id));
         if (region.settings.dense_underlay)
-            result.warnings.push_back(
-                prefix + "requested dense transition underlay is not generated; only actual conventional Orca paths were audited");
+            warn(format(L("Region %1%: dense transition underlay is a requested native operation; completion and material suitability remain unverified"), region.id));
         if (region.settings.additional_support)
-            result.warnings.push_back(
-                prefix + "additional 5D support is not generated; only existing conventional Orca support paths can contribute contact");
+            warn(format(L("Region %1%: additional 5D support is not generated; only existing conventional Orca support paths can contribute contact"), region.id));
         if (region.settings.shell_mode == FS::ShellMode::FullWall)
-            result.warnings.push_back(prefix +
-                                      "full-wall 5D requires a prior supporting structure; completion and strength remain unverified");
+            warn(format(L("Region %1%: full-wall 5D requires a prior supporting structure; completion and strength remain unverified"), region.id));
         if (!region.settings.inherit_infill_first)
-            result.warnings.push_back(prefix +
-                                      "hybrid sequencing is not implemented; the core retains the Orca process infill-first setting");
+            warn(format(L("Region %1%: hybrid sequencing is not implemented; the core retains the Orca process infill-first setting"), region.id));
         switch (region.settings.support_material) {
         case FS::SupportMaterial::Breakaway:
-            result.warnings.push_back(prefix + "breakaway support suitability and interface adhesion are unverified");
+            warn(format(L("Region %1%: breakaway support suitability and interface adhesion are unverified"), region.id));
             break;
         case FS::SupportMaterial::Soluble:
-            result.warnings.push_back(prefix + "soluble support material suitability and interface adhesion are unverified");
+            warn(format(L("Region %1%: soluble support material suitability and interface adhesion are unverified"), region.id));
             break;
         default:
-            result.warnings.push_back(prefix + "automatic support-material selection and interface compatibility are unverified");
+            warn(format(L("Region %1%: automatic support-material selection and interface compatibility are unverified"), region.id));
             break;
         }
     }

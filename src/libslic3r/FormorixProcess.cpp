@@ -311,7 +311,9 @@ bool Dependencies::valid() const
         return false;
     std::map<int, int> indegree;
     for (const auto& op : operations)
-        if (op.id <= 0 || op.region < 0 || op.head < 0 || op.head > 2 || op.material.empty() || int(op.kind) < 0 || int(op.kind) > 7 ||
+        if (op.id <= 0 || op.region < 0 ||
+            (op.assigned ? (op.head < 0 || op.head > 2 || op.material.empty()) : (op.head != -1 || !op.material.empty())) ||
+            int(op.kind) < 0 || int(op.kind) > 7 ||
             !indegree.emplace(op.id, 0).second)
             return false;
     std::set<std::pair<int, int>> unique;
@@ -342,6 +344,10 @@ bool Dependencies::prerequisites_complete(int id, const std::set<int>& completed
         pending.pop_back();
         if (!visited.insert(node).second)
             continue;
+        const auto operation = std::find_if(operations.begin(), operations.end(),
+                                            [node](const Operation& candidate) { return candidate.id == node; });
+        if (operation == operations.end() || !operation->assigned)
+            return false;
         for (const auto& e : edges)
             if (e.dependent == node) {
                 if (!completed.count(e.prerequisite))

@@ -10,6 +10,7 @@
 
 namespace Slic3r::FormorixHybrid { struct Result; }
 namespace Slic3r::FormorixCorePreview { struct Result; }
+namespace Slic3r::FormorixUnderlay { struct Preparation; struct Analysis; }
 namespace Slic3r::GUI {
 struct Camera;
 struct FormorixPreviewState
@@ -17,6 +18,8 @@ struct FormorixPreviewState
     std::shared_ptr<const FormorixPreview::Result> result;
     std::shared_ptr<const FormorixHybrid::Result> hybrid;
     std::shared_ptr<const FormorixCorePreview::Result> conventional;
+    std::shared_ptr<const FormorixUnderlay::Preparation> underlay_preparation;
+    std::shared_ptr<const FormorixUnderlay::Analysis> underlay_before, underlay_after;
     double seconds = 0.;
     int layer      = -1;
     bool shell = false, core = false;
@@ -31,7 +34,10 @@ public:
     ~FormorixPreviewPanel() override;
     std::shared_ptr<FormorixPreviewState> state() const;
     void set_result(std::shared_ptr<const FormorixPreview::Result>);
-    void set_hybrid(std::shared_ptr<const FormorixHybrid::Result>, std::shared_ptr<const FormorixCorePreview::Result>);
+    void set_hybrid(std::shared_ptr<const FormorixHybrid::Result>, std::shared_ptr<const FormorixCorePreview::Result>,
+                    std::shared_ptr<const FormorixUnderlay::Preparation> = {},
+                    std::shared_ptr<const FormorixUnderlay::Analysis> before = {},
+                    std::shared_ptr<const FormorixUnderlay::Analysis> after = {});
     void pause();
     void rescale();
     void theme();

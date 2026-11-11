@@ -36,6 +36,8 @@ set(lisbslic3r_sources
     FormorixCorePreview.hpp
     FormorixHybrid.cpp
     FormorixHybrid.hpp
+    FormorixUnderlay.cpp
+    FormorixUnderlay.hpp
     FormorixMaterial.cpp
     FormorixMaterial.hpp
     FormorixMaterialInternal.hpp

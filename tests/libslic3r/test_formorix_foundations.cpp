@@ -915,6 +915,24 @@ TEST_CASE("Orca material and nozzle indices resolve independently", "[FormorixFo
     CHECK_FALSE(FP::valid(p));
     CHECK_THROWS(FP::section_area(p));
 }
+TEST_CASE("Unassigned external underlay remains an unmet prerequisite without a fictitious head or material", "[FormorixFoundations]")
+{
+    FP::Dependencies graph;
+    graph.operations = {{1, 1, -1, "", FP::OperationKind::Solid, false},
+                        {2, 1, 2, "surface-material", FP::OperationKind::Surface}};
+    graph.edges = {{1, 2}};
+    CHECK(graph.valid());
+    CHECK_FALSE(graph.prerequisites_complete(2, {}));
+    CHECK_FALSE(graph.prerequisites_complete(2, {1}));
+    graph.operations[0].head = 0;
+    CHECK_FALSE(graph.valid());
+    graph.operations[0].material = "core-material";
+    graph.operations[0].assigned = true;
+    CHECK(graph.valid());
+    CHECK_FALSE(graph.prerequisites_complete(2, {}));
+    CHECK(graph.prerequisites_complete(2, {1}));
+}
+
 TEST_CASE("A surface requires completed compatible bounded underlay evidence", "[FormorixFoundations]")
 {
     FP::Dependencies graph;

@@ -107,6 +107,9 @@ struct Operation
     int id = 0, region = 0, head = 0;
     std::string material;
     OperationKind kind = OperationKind::Core;
+    // An external prerequisite may be required before any head/material can be
+    // assigned. It is a requirement, never a fictitious completed toolpath.
+    bool assigned = true; // false requires head=-1 and an empty material ID
 };
 struct Dependency
 {

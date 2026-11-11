@@ -12,7 +12,15 @@
 #include "Print.hpp"
 #include "PrintBase.hpp"
 #include "TriangleMesh.hpp"
+#include "ClipperUtils.hpp"
+#include "ExPolygon.hpp"
+#include "Geometry.hpp"
+#include "Polygon.hpp"
+#include "Triangulation.hpp"
+#include "Slicing.hpp"
+#include "I18N.hpp"
 #include "libslic3r.h"
+#include <boost/multiprecision/cpp_int.hpp>
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -21,13 +29,279 @@
 #include <functional>
 #include <initializer_list>
 #include <memory>
+#include <limits>
+#include <map>
+#include <set>
 #include <stdexcept>
+#include <tuple>
 #include <utility>
 #include <string>
 #include <vector>
 
 namespace Slic3r::FormorixCorePreview {
 namespace {
+void check_cancel(const std::function<bool()>& canceled)
+{
+    if (canceled && canceled())
+        throw CanceledException();
+}
+
+boost::multiprecision::int128_t twice_area(const ExPolygons& polygons)
+{
+    boost::multiprecision::int128_t total = 0;
+    for (const auto& polygon : polygons)
+        for (std::size_t ring = 0; ring < polygon.num_contours(); ++ring) {
+            const auto& points = polygon.contour_or_hole(ring).points;
+            for (std::size_t i = 0; i < points.size(); ++i) {
+                const auto& a = points[i];
+                const auto& b = points[(i + 1) % points.size()];
+                total += boost::multiprecision::int128_t(a.x()) * b.y() - boost::multiprecision::int128_t(a.y()) * b.x();
+            }
+        }
+    return total;
+}
+
+void validate_requests(const std::vector<DenseRequest>& requests, const std::function<bool()>& canceled)
+{
+    if (requests.size() > 256)
+        throw std::invalid_argument(_u8L("Too many local dense-underlay requests"));
+    std::size_t points = 0, comparisons = 0;
+    for (const auto& request : requests) {
+        check_cancel(canceled);
+        if (request.region <= 0 || !std::isfinite(request.density) || request.density < 0. || request.density > 100. ||
+            !std::isfinite(request.bottom_z) || !std::isfinite(request.top_z) || !std::isfinite(request.slice_z) ||
+            request.top_z <= request.bottom_z || request.slice_z <= request.bottom_z || request.slice_z >= request.top_z ||
+            std::abs(request.bottom_z) > 1e7 || std::abs(request.top_z) > 1e7 || request.area.empty())
+            throw std::invalid_argument(_u8L("Invalid local dense-underlay density, slice interval or area"));
+        const auto count = count_points(request.area);
+        if (count > 2048 || count > 65536 - points)
+            throw std::invalid_argument(_u8L("Local dense-underlay polygon budget exceeded"));
+        points += count;
+        std::vector<const Polygon*> rings;
+        Point low = request.area.front().contour.points.empty() ? Point(0, 0) : request.area.front().contour.points.front(), high = low;
+        for (const auto& area : request.area) {
+            if (!area.is_valid() || area.area() <= 0.)
+                throw std::invalid_argument(_u8L("Local dense-underlay contours must have valid outer and hole orientations"));
+            rings.push_back(&area.contour);
+            for (const auto& hole : area.holes) {
+                if (!area.contour.contains(hole.points.front()))
+                    throw std::invalid_argument(_u8L("A local dense-underlay hole lies outside its contour"));
+                rings.push_back(&hole);
+            }
+        }
+        for (const auto* ring : rings) {
+            std::set<std::pair<coord_t, coord_t>> unique;
+            for (const auto& p : ring->points) {
+                if (std::abs(unscale<double>(p.x())) > 1e7 || std::abs(unscale<double>(p.y())) > 1e7 ||
+                    !unique.emplace(p.x(), p.y()).second)
+                    throw std::invalid_argument(_u8L("Invalid or repeated local dense-underlay polygon vertex"));
+                low = low.cwiseMin(p);
+                high = high.cwiseMax(p);
+            }
+        }
+        // Existing integer segment predicates use 64-bit cross products. Keep
+        // both differences <=2e9 scaled units, including the 1600-mm machine.
+        if ((high - low).maxCoeff() > scale_(2000.))
+            throw std::invalid_argument(_u8L("Local dense-underlay area exceeds the supported geometric span"));
+        for (std::size_t r = 0; r < rings.size(); ++r)
+            for (std::size_t s = r; s < rings.size(); ++s)
+                for (std::size_t i = 0; i < rings[r]->points.size(); ++i)
+                    for (std::size_t j = r == s ? i + 1 : 0; j < rings[s]->points.size(); ++j) {
+                        if (++comparisons > 2000000)
+                            throw std::invalid_argument(_u8L("Local dense-underlay intersection budget exceeded"));
+                        if ((comparisons & 255) == 0)
+                            check_cancel(canceled);
+                        const auto ni = (i + 1) % rings[r]->points.size(), nj = (j + 1) % rings[s]->points.size();
+                        if (r == s && (ni == j || nj == i))
+                            continue;
+                        if (Geometry::segments_intersect(rings[r]->points[i], rings[r]->points[ni], rings[s]->points[j], rings[s]->points[nj]))
+                            throw std::invalid_argument(_u8L("Local dense-underlay boundaries intersect or touch themselves"));
+                    }
+        if (twice_area(request.area) != twice_area(union_ex(request.area)))
+            throw std::invalid_argument(_u8L("Local dense-underlay components or holes overlap"));
+    }
+}
+
+std::vector<LayerSlice> layer_slices(const Print& print, const Result& result, int head, const std::function<bool()>& canceled)
+{
+    std::vector<LayerSlice> out;
+    const Point origin(scale_(result.local_origin.x()), scale_(result.local_origin.y()));
+    for (const auto* object : print.objects())
+        for (const auto& instance : object->instances())
+            for (const auto* layer : object->layers()) {
+                check_cancel(canceled);
+                LayerSlice slice;
+                slice.layer_id = int(layer->id());
+                slice.head = head;
+                slice.area = layer->lslices;
+                translate(slice.area, instance.shift + origin);
+                for (const auto* region : layer->regions())
+                    slice.region_area.insert(slice.region_area.end(), region->raw_slices.begin(), region->raw_slices.end());
+                slice.region_area = union_ex(slice.region_area);
+                translate(slice.region_area, instance.shift + origin);
+                slice.slice_z = layer->slice_z + result.local_origin.z();
+                slice.print_bottom_z = layer->bottom_z() + result.local_origin.z();
+                slice.print_top_z = layer->print_z + result.local_origin.z();
+                slice.bottom_z = slice.print_bottom_z - object->slicing_parameters().object_print_z_min;
+                slice.top_z = slice.print_top_z - object->slicing_parameters().object_print_z_min;
+                out.push_back(std::move(slice));
+            }
+    return out;
+}
+
+double modifier_conversion_bound(const Result& result, const ExPolygons& area, double bottom, double top)
+{
+    const Point shift(scale_(result.local_origin.x()), scale_(result.local_origin.y()));
+    Vec3d maximum = Vec3d::Zero();
+    for (const auto& p : to_points(area)) {
+        const auto q = p - shift;
+        maximum = maximum.cwiseMax(Vec3d(std::abs(unscale<double>(q.x())), std::abs(unscale<double>(q.y())), 0.));
+    }
+    maximum.z() = std::max(std::abs(bottom - result.local_origin.z()), std::abs(top - result.local_origin.z()));
+    const double xy_rounding = (Vec2d(unscale<double>(shift.x()), unscale<double>(shift.y())) - result.local_origin.head<2>()).norm();
+    return std::nextafter(xy_rounding + maximum.norm() * std::numeric_limits<float>::epsilon(),
+                          std::numeric_limits<double>::infinity());
+}
+
+indexed_triangle_set modifier_mesh(Result& result, const ExPolygons& area, double bottom, double top)
+{
+    ExPolygons local = area;
+    const Point shift(scale_(result.local_origin.x()), scale_(result.local_origin.y()));
+    translate(local, -shift);
+    double planar_area = 0., perimeter = 0.;
+    std::size_t holes = 0;
+    for (const auto& polygon : local) {
+        planar_area += polygon.area() * SCALING_FACTOR * SCALING_FACTOR;
+        holes += polygon.holes.size();
+        for (std::size_t ring = 0; ring < polygon.num_contours(); ++ring) {
+            const auto& contour = polygon.contour_or_hole(ring);
+            perimeter += contour.length() * SCALING_FACTOR;
+        }
+    }
+    const double lo = bottom - result.local_origin.z(), hi = top - result.local_origin.z();
+    const double displacement = modifier_conversion_bound(result, area, bottom, top);
+    // One indexed boundary shared by caps and walls. Independent GLU cap
+    // tessellation may discard a collinear boundary vertex and leave a T-junction.
+    indexed_triangle_set mesh;
+    const Points points = to_points(local);
+    std::set<std::pair<coord_t, coord_t>> unique;
+    for (const auto& point : points)
+        if (!unique.emplace(point.x(), point.y()).second)
+            throw std::invalid_argument(_u8L("Local dense-underlay modifier boundaries touch after clipping"));
+    const auto triangles = Triangulation::triangulate(local, points);
+    const int n = int(points.size());
+    for (double z : {lo, hi})
+        for (const auto& p : points)
+            mesh.vertices.emplace_back(float(unscale<double>(p.x())), float(unscale<double>(p.y())), float(z));
+    for (const auto& t : triangles) {
+        mesh.indices.emplace_back(t[2], t[1], t[0]);
+        mesh.indices.emplace_back(t[0] + n, t[1] + n, t[2] + n);
+    }
+    int first = 0;
+    for (const auto& polygon : local)
+        for (std::size_t ring = 0; ring < polygon.num_contours(); ++ring) {
+            const int count = int(polygon.contour_or_hole(ring).points.size());
+            for (int i = 0; i < count; ++i) {
+                const int a = first + i, b = first + (i + 1) % count;
+                mesh.indices.emplace_back(a, b, a + n);
+                mesh.indices.emplace_back(b, b + n, a + n);
+            }
+            first += count;
+        }
+    if (mesh.indices.size() > 100000 || mesh.vertices.size() > 100000)
+        throw std::invalid_argument(_u8L("Local dense-underlay modifier mesh budget exceeded"));
+    FormorixGeometry::Mesh geometry;
+    geometry.faces = mesh.indices;
+    for (const auto& p : mesh.vertices)
+        geometry.vertices.push_back(p.cast<double>());
+    if (!FormorixGeometry::valid_solid(geometry))
+        throw std::invalid_argument(_u8L("Local dense-underlay modifier cannot be represented as a valid native solid"));
+    std::set<std::pair<int, int>> edges;
+    for (const auto& face : mesh.indices)
+        for (int i = 0; i < 3; ++i)
+            edges.insert(std::minmax(face[i], face[(i + 1) % 3]));
+    const auto euler = std::ptrdiff_t(mesh.vertices.size()) - std::ptrdiff_t(edges.size()) + std::ptrdiff_t(mesh.indices.size());
+    if (euler != 2 * (std::ptrdiff_t(local.size()) - std::ptrdiff_t(holes)))
+        throw std::invalid_argument(_u8L("Native modifier conversion changes a local dense-underlay component or hole"));
+    const double expected = planar_area * (top - bottom);
+    const double error = std::abs(FormorixGeometry::volume(geometry) - expected);
+    const double allowance = 8. * displacement * (2. * planar_area + perimeter * (top - bottom)) +
+                             128. * std::numeric_limits<double>::epsilon() * expected;
+    if (!(expected > 0.) || !std::isfinite(error) || error > allowance)
+        throw std::invalid_argument(_u8L("Native modifier conversion does not preserve the requested dense-underlay volume"));
+    result.modifier_float_conversion_bound = std::max(result.modifier_float_conversion_bound, displacement);
+    result.modifier_volume_error = std::max(result.modifier_volume_error, error);
+    return mesh;
+}
+
+void add_dense_modifiers(Result& result, ModelObject& object, const std::vector<LayerSlice>& layers,
+                         const std::vector<DenseRequest>& requests, double baseline, const std::function<bool()>& canceled)
+{
+    using Interval = std::tuple<double, double, double>;
+    std::map<Interval, std::map<double, ExPolygons, std::greater<double>>> grouped;
+    std::set<int> regions;
+    for (const auto& request : requests) {
+        check_cancel(canceled);
+        const auto layer = std::find_if(layers.begin(), layers.end(), [&](const LayerSlice& candidate) {
+            return candidate.bottom_z == request.bottom_z && candidate.top_z == request.top_z && candidate.slice_z == request.slice_z;
+        });
+        if (layer == layers.end())
+            throw std::invalid_argument(_u8L("Local dense-underlay request no longer matches the current native slice"));
+        if (!diff_ex(request.area, layer->area).empty())
+            throw std::invalid_argument(_u8L("Local dense-underlay request extends outside the native slice"));
+        if (request.density <= baseline)
+            continue;
+        auto& area = grouped[{request.bottom_z, request.top_z, request.slice_z}][request.density];
+        area.insert(area.end(), request.area.begin(), request.area.end());
+        ++result.dense_requests_applied;
+        regions.insert(request.region);
+    }
+    for (const auto& layer : grouped) {
+        const auto native = std::find_if(layers.begin(), layers.end(), [&](const LayerSlice& candidate) {
+            return candidate.bottom_z == std::get<0>(layer.first) && candidate.top_z == std::get<1>(layer.first) &&
+                   candidate.slice_z == std::get<2>(layer.first);
+        });
+        ExPolygons occupied;
+        for (const auto& requested : layer.second) {
+            check_cancel(canceled);
+            const auto total = union_ex(requested.second);
+            const auto requested_area = diff_ex(total, occupied);
+            occupied.insert(occupied.end(), total.begin(), total.end());
+            occupied = union_ex(occupied);
+            if (requested_area.empty())
+                continue;
+            // A Float prism coincident with a sliced mesh edge can straddle it
+            // by a few grid units. Native intersection/difference then round
+            // different intersections and may remove a real sliver of the core.
+            // Restrict only the density mask, by its measured conversion/grid
+            // uncertainty, and still require an exactly unchanged raw core below.
+            const double conversion = modifier_conversion_bound(result, requested_area, std::get<0>(layer.first), std::get<1>(layer.first));
+            const double retreat = std::ceil((conversion + result.coordinate_quantization_bound) / SCALING_FACTOR);
+            const auto disjoint = intersection_ex(requested_area, offset_ex(native->region_area, -float(retreat)));
+            if (disjoint.empty())
+                throw std::invalid_argument(_u8L("Local dense-underlay area disappears within its native conversion uncertainty"));
+            result.dense_requested_area += twice_area(requested_area).convert_to<double>() * .5 * SCALING_FACTOR * SCALING_FACTOR;
+            result.dense_applied_area += twice_area(disjoint).convert_to<double>() * .5 * SCALING_FACTOR * SCALING_FACTOR;
+            // This records construction offset extent only. Thin components may
+            // disappear, so it is not a Hausdorff certificate for the whole mask.
+            if (!diff_ex(requested_area, disjoint).empty())
+                result.modifier_boundary_retreat_bound = std::max(result.modifier_boundary_retreat_bound, std::nextafter(
+                    (DefaultMiterLimit * retreat + std::sqrt(2.)) * SCALING_FACTOR, std::numeric_limits<double>::infinity()));
+            auto mesh = modifier_mesh(result, disjoint, std::get<0>(layer.first), std::get<1>(layer.first));
+            if (mesh.indices.size() > 200000 - result.dense_modifier_triangles)
+                throw std::invalid_argument(_u8L("Combined local dense-underlay modifier mesh budget exceeded"));
+            result.dense_modifier_triangles += mesh.indices.size();
+            // Keep the generated shared Float coordinates. Re-centering each
+            // modifier would add another independent rounding at its boundary.
+            auto* modifier = object.add_volume(TriangleMesh(std::move(mesh)), ModelVolumeType::PARAMETER_MODIFIER, false);
+            modifier->name = _u8L("Formorix dense underlay");
+            modifier->config.set_key_value("sparse_infill_density", new ConfigOptionPercent(requested.first));
+            ++result.dense_modifier_volumes;
+        }
+    }
+    result.applied_dense_regions.assign(regions.begin(), regions.end());
+}
+
 void project_options(DynamicPrintConfig& config, const std::vector<std::string>& keys, std::size_t index)
 {
     for (const auto& key : keys) {
@@ -196,17 +470,21 @@ void append_entity(Result& result,
                    const Source& source,
                    const DynamicPrintConfig& config,
                    bool support,
-                   bool first_layer)
+                   bool first_layer,
+                   bool dense_transition = false,
+                   double native_density = 0.,
+                   const std::function<bool()>& canceled = {})
 {
+    check_cancel(canceled);
     if (const auto* collection = dynamic_cast<const ExtrusionEntityCollection*>(&entity)) {
         for (const auto* child : collection->entities)
-            append_entity(result, *child, z, shift, origin, head, source, config, support, first_layer);
+            append_entity(result, *child, z, shift, origin, head, source, config, support, first_layer, dense_transition, native_density, canceled);
     } else if (const auto* loop = dynamic_cast<const ExtrusionLoop*>(&entity)) {
         for (const auto& path : loop->paths)
-            append_entity(result, path, z, shift, origin, head, source, config, support, first_layer);
+            append_entity(result, path, z, shift, origin, head, source, config, support, first_layer, dense_transition, native_density, canceled);
     } else if (const auto* multi = dynamic_cast<const ExtrusionMultiPath*>(&entity)) {
         for (const auto& path : multi->paths)
-            append_entity(result, path, z, shift, origin, head, source, config, support, first_layer);
+            append_entity(result, path, z, shift, origin, head, source, config, support, first_layer, dense_transition, native_density, canceled);
     } else if (const auto* path = dynamic_cast<const ExtrusionPath*>(&entity)) {
         if (path->is_force_no_extrusion() || path->polyline.points.size() < 2)
             return;
@@ -216,6 +494,8 @@ void append_entity(Result& result,
         out.head                 = head;
         out.role                 = path->role();
         out.support              = support;
+        out.dense_transition     = dense_transition && !support;
+        out.native_infill_density = support ? 0. : native_density;
         out.width                = path->width;
         out.height               = path->height;
         out.mm3_per_mm           = path->mm3_per_mm;
@@ -257,7 +537,8 @@ void run_pass(Result& result,
               int head,
               bool support_only,
               bool collect_support,
-              const std::function<bool()>& canceled)
+              const std::function<bool()>& canceled,
+              const std::vector<DenseRequest>& requests = {})
 {
     if (canceled && canceled())
         throw CanceledException();
@@ -278,24 +559,73 @@ void run_pass(Result& result,
             print.cancel();
     });
     print.process();
-    if (canceled && canceled())
-        throw CanceledException();
+    check_cancel(canceled);
+    const auto* density_option = config.option<ConfigOptionPercent>("sparse_infill_density");
+    if (!density_option || !std::isfinite(density_option->value) || density_option->value < 0. || density_option->value > 100.)
+        throw std::invalid_argument(_u8L("Invalid native sparse-infill density for local underlay"));
+    const double baseline_density = density_option->value;
+    if (!support_only) {
+        const auto baseline_layers = layer_slices(print, result, head, canceled);
+        if (!requests.empty()) {
+            add_dense_modifiers(result, *object, baseline_layers, requests, baseline_density, canceled);
+            if (result.dense_modifier_volumes > 0) {
+                print.apply(model, config);
+                const auto modified_validation = print.validate();
+                if (!modified_validation.string.empty())
+                    throw std::invalid_argument(modified_validation.string);
+                print.process();
+                check_cancel(canceled);
+            }
+        }
+        result.layers = layer_slices(print, result, head, canceled);
+        if (result.layers.size() != baseline_layers.size())
+            throw std::invalid_argument(_u8L("Local dense-underlay modifiers changed the native layer intervals"));
+        for (std::size_t i = 0; i < result.layers.size(); ++i) {
+            check_cancel(canceled);
+            const auto& actual = result.layers[i];
+            const auto& expected = baseline_layers[i];
+            if (actual.slice_z != expected.slice_z || actual.bottom_z != expected.bottom_z || actual.top_z != expected.top_z ||
+                actual.print_bottom_z != expected.print_bottom_z || actual.print_top_z != expected.print_top_z ||
+                !diff_ex(actual.region_area, expected.region_area).empty() || !diff_ex(expected.region_area, actual.region_area).empty())
+                throw std::invalid_argument(_u8L("Local dense-underlay modifiers changed the native slice geometry"));
+            if (!diff_ex(actual.area, expected.area).empty() || !diff_ex(expected.area, actual.area).empty()) {
+                // Layer::make_slices copies one region directly, but applies
+                // this exact native safety offset as soon as two regions exist.
+                // Keep the actual native lslices; never substitute the baseline
+                // or accept an arbitrary near-equal shape.
+                const auto inflated = union_safety_offset_ex(expected.area);
+                if (!diff_ex(actual.area, inflated).empty() || !diff_ex(inflated, actual.area).empty())
+                    throw std::invalid_argument(_u8L("Local dense-underlay modifiers changed the native slice beyond its safety offset"));
+                // Clipper limits a miter to M*delta; square fallback is shorter.
+                // Add a full grid diagonal for rounded offset coordinates.
+                result.native_slice_expansion_bound = std::nextafter(
+                    (DefaultMiterLimit * ClipperSafetyOffset + std::sqrt(2.)) * SCALING_FACTOR,
+                    std::numeric_limits<double>::infinity());
+            }
+        }
+        if (result.modifier_boundary_retreat_bound > 0.)
+            result.warnings.push_back(_u8L("Local dense-underlay masks leave a boundary strip within native conversion uncertainty; the core is unchanged."));
+        if (result.native_slice_expansion_bound > 0.)
+            result.warnings.push_back(_u8L("Native merged slice outlines include Orca's safety expansion; their raw region union remains unchanged."));
+    }
     if (config.opt_bool("small_area_infill_flow_compensation"))
-        result.warnings.push_back("Nominal conventional supply excludes Orca's small-area G-code flow compensation.");
+        result.warnings.push_back(_u8L("Nominal conventional supply excludes Orca's small-area G-code flow compensation."));
     for (const auto* printed : print.objects()) {
         for (const auto& instance : printed->instances()) {
             if (!support_only)
                 for (const auto* layer : printed->layers())
                     for (const auto* region : layer->regions()) {
+                        const double density = region->region().config().sparse_infill_density.value;
+                        const bool dense = density > baseline_density;
                         append_entity(result, region->perimeters, layer->print_z, instance.shift, result.local_origin, head, source, config,
-                                      false, layer->id() == 0 && std::abs(layer->bottom_z()) < EPSILON);
+                                      false, layer->id() == 0 && std::abs(layer->bottom_z()) < EPSILON, dense, density, canceled);
                         append_entity(result, region->fills, layer->print_z, instance.shift, result.local_origin, head, source, config,
-                                      false, layer->id() == 0 && std::abs(layer->bottom_z()) < EPSILON);
+                                      false, layer->id() == 0 && std::abs(layer->bottom_z()) < EPSILON, dense, density, canceled);
                     }
             if (collect_support)
                 for (const auto* layer : printed->support_layers())
                     append_entity(result, layer->support_fills, layer->print_z, instance.shift, result.local_origin, head, source, config,
-                                  true, layer->id() == 0 && std::abs(layer->bottom_z()) < EPSILON);
+                                  true, layer->id() == 0 && std::abs(layer->bottom_z()) < EPSILON, false, 0., canceled);
         }
     }
 }
@@ -304,10 +634,13 @@ Result slice(const FormorixGeometry::Mesh& core,
              const std::array<Source, 3>& sources,
              int core_head,
              int support_head,
-             const std::function<bool()>& canceled)
+             const std::function<bool()>& canceled,
+             const std::vector<DenseRequest>& requests)
 {
     Result result;
     try {
+        check_cancel(canceled);
+        validate_requests(requests, canceled);
         if (core_head < 0 || core_head > 2 || support_head < -1 || support_head > 2 || !FormorixGeometry::valid_solid(core))
             throw std::invalid_argument("Invalid conventional core or head assignment");
         const auto core_config = configuration(sources[core_head]);
@@ -338,7 +671,7 @@ Result slice(const FormorixGeometry::Mesh& core,
         // Conservative accounting for input/centering/output grid conversions.
         // This does not bound Orca's perimeter simplification or material deposition.
         result.coordinate_quantization_bound = 4. * std::sqrt(3.) * SCALING_FACTOR;
-        run_pass(result, mesh, sources[core_head], core_head, false, supports && core_head == support_head, canceled);
+        run_pass(result, mesh, sources[core_head], core_head, false, supports && core_head == support_head, canceled, requests);
         if (supports && support_head != core_head) {
             run_pass(result, mesh, sources[support_head], support_head, true, true, canceled);
             result.warnings.push_back(
@@ -348,8 +681,9 @@ Result slice(const FormorixGeometry::Mesh& core,
             throw std::invalid_argument("Orca produced no conventional core or support extrusions for this volume.");
         result.warnings.push_back(
             "Conventional speeds are nominal role values; acceleration, cooling slowdown and common scheduling are not simulated.");
+        check_cancel(canceled);
     } catch (const std::exception& error) {
-        result.paths.clear();
+        result = {};
         result.error = error.what();
     }
     return result;

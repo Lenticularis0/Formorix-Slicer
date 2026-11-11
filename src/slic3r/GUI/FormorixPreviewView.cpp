@@ -12,6 +12,7 @@
 #include "libslic3r/Point.hpp"
 #include "libslic3r/FormorixHybrid.hpp"
 #include "libslic3r/FormorixCorePreview.hpp"
+#include "libslic3r/FormorixUnderlay.hpp"
 #include "libslic3r/FormorixGeometry.hpp"
 #include "slic3r/GUI/GUI.hpp"
 #include "slic3r/GUI/GLCanvas3D.hpp"
@@ -250,14 +251,33 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
             text += "\n" + format_wxstr(_L("Error bounds (mm), CAD / shell / conversion / path / nominal material: %1% / %2% / %3% / %4% / %5%. Infinity means unverified."),
                 wxString::Format("%.6g", r.accuracy.bounds[0]), wxString::Format("%.6g", r.accuracy.bounds[1]),
                 wxString::Format("%.6g", r.accuracy.bounds[2]), wxString::Format("%.6g", r.accuracy.bounds[3]), wxString::Format("%.6g", r.accuracy.bounds[4]));
-            text += "\n" + format_wxstr(_L("Underlay: %1% missing samples of %2%; maximum gap: %3% mm. Full footprint and material adhesion remain unverified."),
+            text += "\n" + format_wxstr(_L("Underlay: contact unconfirmed at %1% of %2% samples; maximum gap: %3% mm. Full footprint and material adhesion remain unverified."),
                 r.underlay.missing, r.underlay.samples, wxString::Format("%.6g", r.underlay.maximum_gap));
             text += "\n" + format_wxstr(_L("Underlay markers: red = no conventional core (%1%); orange = excluded infill (%2%); magenta = incomplete path coverage (%3%); gray = unknown geometry (%4%)."),
                 r.underlay.missing_core, r.underlay.unsuitable_infill, r.underlay.path_gaps, r.underlay.unknown_geometry);
             text += "\n" + format_wxstr(_L("Largest observed contact gap: %1% mm; samples without eligible contact within 0.5 mm: %2%. This is not a global distance bound."),
                 wxString::Format("%.6g", r.underlay.maximum_finite_gap), r.underlay.no_nearby_contact);
+            text += "\n" + format_wxstr(_L("Raw native contact not demonstrated: %1% samples; native-layer gaps: %2%. Unsupported cross-sections are included in the first count; material suitability remains unverified."),
+                r.underlay.raw_missing, r.underlay.native_layer_gaps);
         }
         for (const auto& warning : h.warnings) text += "\n" + from_u8(warning);
+        if (state->underlay_preparation && !state->underlay_preparation->ok())
+            text += "\n" + from_u8(state->underlay_preparation->error);
+        auto underlay_report = [&](const FormorixUnderlay::Analysis& analysis, const wxString& label) {
+            text += "\n\n" + label;
+            if (!analysis.ok()) text += "\n" + from_u8(analysis.error);
+            for (const auto& region : analysis.regions) {
+                text += "\n" + format_wxstr(_L("Region %1%: sampled interface area %2% mm²; raw missing / native-layer gaps / path gaps / unknown: %3% / %4% / %5% / %6% mm². Area-weighted samples, not a complete contact certificate."),
+                    region.region, wxString::Format("%.6g", region.interface_area),
+                    wxString::Format("%.6g", region.raw_missing_area), wxString::Format("%.6g", region.native_layer_gap_area),
+                    wxString::Format("%.6g", region.path_gap_area), wxString::Format("%.6g", region.unknown_area));
+                if (region.external_support_required)
+                    text += "\n" + _L("No core interface: an external underlay operation is required and remains unassigned.");
+            }
+            for (const auto& warning : analysis.warnings) text += "\n" + from_u8(warning);
+        };
+        if (state->underlay_before) underlay_report(*state->underlay_before, _L("Underlay before local Orca refinement"));
+        if (state->underlay_after) underlay_report(*state->underlay_after, _L("Underlay after local Orca refinement"));
         if (state->conventional) {
             const auto& c = *state->conventional;
             text += "\n\n" + format_wxstr(_L("Orca conversion bound: %1% mm; coordinate quantization: %2% mm; volume residual: %3% mm³."),
@@ -265,6 +285,13 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
                 wxString::Format("%.9g", c.converted_volume_residual));
             if (!c.error.empty()) text += "\n" + from_u8(c.error);
             for (const auto& warning : c.warnings) text += "\n" + from_u8(warning);
+            text += "\n" + format_wxstr(_L("Native underlay requests applied: %1%; modifier volumes: %2%; modifier conversion bound: %3% mm. Manufacturing dependencies remain pending."),
+                c.dense_requests_applied, c.dense_modifier_volumes, wxString::Format("%.9g", c.modifier_float_conversion_bound));
+            text += "\n" + format_wxstr(_L("Native slice safety expansion bound: %1% mm. Original core geometry is unchanged."),
+                wxString::Format("%.9g", c.native_slice_expansion_bound));
+            text += "\n" + format_wxstr(_L("Requested / applied density area summed over native layers: %1% / %2% mm²; modifier offset allowance: %3% mm. This does not bound the distance across removed thin mask features."),
+                wxString::Format("%.9g", c.dense_requested_area), wxString::Format("%.9g", c.dense_applied_area),
+                wxString::Format("%.9g", c.modifier_boundary_retreat_bound));
         }
         show_info(&panel, text, _L("Hybrid geometry report"));
     }
@@ -308,7 +335,21 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
                 assessment = inadmissible ? _L("Material excess is inadmissible. Diagnostic preview only; flow unchanged.") :
                     plausible ? _L("Nominal material volume plausible. CAD accuracy and full surface coverage: see geometry report.") :
                     _L("Nominal material volume implausible; flow unchanged. CAD accuracy and full surface coverage are unverified.");
-                if (!h.missing_underlay.empty()) assessment += " " + _L("Geometric underlay is missing at sampled points.");
+                if (!h.missing_underlay.empty()) assessment += " " + _L("Underlay contact is missing or unverified at sampled points.");
+                if (state->underlay_before && state->underlay_after && state->underlay_after->ok()) {
+                    const auto& before = state->underlay_before->regions;
+                    const auto& after = state->underlay_after->regions;
+                    if (before.size() == after.size())
+                        for (std::size_t i = 0; i < before.size(); ++i)
+                            if (after[i].unknown_area > before[i].unknown_area) {
+                                assessment += " " + _L("Local density creates unverified cross-sections. See the geometry report.");
+                                break;
+                            }
+                }
+                if ((state->underlay_preparation && !state->underlay_preparation->ok()) ||
+                    (state->underlay_before && !state->underlay_before->ok()) ||
+                    (state->underlay_after && !state->underlay_after->ok()))
+                    assessment += " " + _L("Underlay verification is incomplete. See the geometry report.");
             }
         }
         validation->SetLabel(assessment);
@@ -329,6 +370,9 @@ void FormorixPreviewPanel::set_result(std::shared_ptr<const FP::Result> result)
     p.state->result  = std::move(result);
     p.state->hybrid.reset();
     p.state->conventional.reset();
+    p.state->underlay_preparation.reset();
+    p.state->underlay_before.reset();
+    p.state->underlay_after.reset();
     p.state->seconds = 0.;
     p.state->layer   = -1;
     p.layers->Clear();
@@ -341,12 +385,18 @@ void FormorixPreviewPanel::set_result(std::shared_ptr<const FP::Result> result)
     p.changed();
 }
 void FormorixPreviewPanel::set_hybrid(std::shared_ptr<const FormorixHybrid::Result> hybrid,
-                                    std::shared_ptr<const FormorixCorePreview::Result> conventional)
+                                    std::shared_ptr<const FormorixCorePreview::Result> conventional,
+                                    std::shared_ptr<const FormorixUnderlay::Preparation> preparation,
+                                    std::shared_ptr<const FormorixUnderlay::Analysis> before,
+                                    std::shared_ptr<const FormorixUnderlay::Analysis> after)
 {
     if (!hybrid) { set_result({}); return; }
     set_result(std::shared_ptr<const FP::Result>(hybrid, &hybrid->preview));
     m_impl->state->hybrid = std::move(hybrid);
     m_impl->state->conventional = std::move(conventional);
+    m_impl->state->underlay_preparation = std::move(preparation);
+    m_impl->state->underlay_before = std::move(before);
+    m_impl->state->underlay_after = std::move(after);
     m_impl->update();
     m_impl->changed();
 }
