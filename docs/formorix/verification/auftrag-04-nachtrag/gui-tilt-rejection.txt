@@ -1,0 +1,60 @@
+Window: "*curved-wall - Formorix Slicer", App: orca-slicer.exe.
+	0 window *curved-wall - Formorix Slicer Secondary Actions: Raise
+		26 pane control ID: 3200
+			27 pane control ID: -31990
+		28 pane ID: -31965
+			29 pane panel ID: -31950
+				96 pane panel ID: -31798
+					1112 pane panel ID: -31797
+						1113 pane OrcaSceneCanvas ID: -31795
+				1225 pane panel ID: -31181
+					1226 button Start ID: -31180
+					1227 button Pause ID: -31179
+					1228 button |< ID: -31178
+					1229 button -1 s ID: -31177
+					1230 button +1 s ID: -31176
+					1231 pane 4x ID: -31175
+					1232 text 5D: 0.0 / 0.0 s (estimate) ID: -31172
+					1233 button ? ID: -31171
+					1234 slider (disabled, settable, float) 5D: 0.0 / 0.0 s (estimate) Value: 0 ID: -31170
+						1235 thumb Position
+						1236 button Page right
+					1237 pane All 5D layers ID: -31169
+					1238 button ID: -31166
+					1239 text Original model ID: -31165
+					1240 button ID: -31164
+					1241 text Remaining core ID: -31163
+					1242 button ID: -31162
+					1243 text Orca core paths ID: -31161
+					1244 button ID: -31160
+					1245 text 5D shell ID: -31159
+					1246 button ID: -31158
+					1247 text 5D paths ID: -31157
+					1248 button ID: -31156
+					1249 text Shared interfaces ID: -31155
+					1250 button ID: -31154
+					1251 text Missing underlay ID: -31153
+					1252 button ID: -31152
+					1253 text Unverified regions ID: -31151
+					1254 button Orca preview ID: -31150
+					1255 button Geometry report ID: -31149
+					1256 text Hybrid geometry failed: The rigid tilted nozzle-section does not fit the requested normal layer thickness; the compacted ribbon requires a perpendicular nozzle ID: -31148
+					1257 text Head 1: Unassigned | Head 2: Unassigned | Head 3: Unassigned ID: -31147
+					1258 text Time: 5D part only. Orca core paths are not synchronized; supports and waiting times are excluded. ID: -31146
+					1259 text Layer-change travel: collision check pending. ID: -31145
+					1260 scroll bar (settable, float) Vertical Value: 0 ID: NonClientVerticalScrollBar
+						1261 button Line up ID: UpButton
+						1262 thumb Position ID: ScrollbarThumb
+						1263 button Page down ID: DownPageButton
+						1264 button Line down ID: DownButton
+			99 pane control ID: -31964
+				106 button ID: -31962
+				107 button ID: -31612
+				108 button Prepare ID: -31601
+				109 button Preview ID: -31600
+				110 button 5D Surfaces ID: -31599
+				111 button Device ID: -31591
+
+The focused UI element is 1113 pane OrcaSceneCanvas ID: -31795.
+
+Focused element: 1113 pane OrcaSceneCanvas ID: -31795

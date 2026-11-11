@@ -1,0 +1,93 @@
+Window: "hybrid-verified - Formorix Slicer", App: orca-slicer.exe.
+	0 window hybrid-verified - Formorix Slicer Secondary Actions: Raise
+		26 pane control ID: 3200
+			27 pane control ID: -31990
+		28 pane ID: -31965
+			29 pane panel ID: -31950
+				886 pane panel ID: -31949
+					887 pane panel ID: -31948
+						888 pane ID: -31961
+							889 pane panel ID: -31951
+								890 pane Layer height ID: -31545
+								891 pane ID: -31544
+									892 pane mm ID: -31543
+										893 edit (settable, string) Value: 0.2 ID: -31542
+									894 pane mm ID: -31541
+										895 edit (settable, string) Value: 0.2 ID: -31540
+									896 button ID: -31539
+								897 pane Seam ID: -31518
+								898 pane ID: -31517
+									899 pane Aligned ID: -31516
+								900 pane Precision ID: -31478
+								901 pane ID: -31477
+									902 button ID: -31457
+								903 pane Walls and surfaces ID: -31395
+								904 pane ID: -31394
+									905 button ID: -31361
+									906 button ID: -31360
+							907 pane panel ID: -31780
+								908 pane panel ID: -31776
+									909 pane 0.20mm Standard @Formorix 5D(hybrid-04-curved.3mf)(hybrid-verified.3mf) ID: -31779
+									910 button ID: -31775
+									911 button ID: -31774
+									912 button ID: -31773
+									913 button ID: -31772
+								914 pane panel ID: -31767
+									915 button Quality ID: -31761
+									916 button Strength ID: -31760
+									917 button Support ID: -31759
+									918 button Multimaterial ID: -31758
+									919 button Others ID: -31757
+						920 pane panel ID: -31960
+							921 button ID: -31959
+							922 text Process ID: -31958
+							923 button ID: -31957
+							924 button ID: -31955
+							925 pane panel ID: -31954
+							926 button ID: -31953
+							927 button ID: -31952
+						928 pane panel ID: -31947
+							929 button ID: -31946
+							930 text Printer ID: -31945
+							931 button ID: -31944
+							932 button ID: -31942
+						933 pane panel ID: -31941
+						934 pane panel ID: -31940
+							935 pane panel ID: -31939
+								936 image ID: -31937
+								937 pane Formorix 5D 0.4 nozzle(hybrid-04-curved.3mf)(hybrid-verified.3mf) ID: -31936
+							938 pane panel ID: -31932
+								939 text Variant ID: -31931
+								940 pane 0.4 ID: -31930
+								941 text - ID: -31927
+						942 pane panel ID: -31846
+							943 button ID: -31845
+							944 text Filament ID: -31844
+							945 button ID: -31839
+							946 button ID: -31836
+						947 pane panel ID: -31842
+						948 pane panel ID: -31835
+							949 pane panel ID: -31834
+								950 pane Generic PLA ID: -31833
+								951 button 1 ID: -31830
+								952 button ID: -31829
+				96 pane panel ID: -31798
+					953 pane panel ID: -31793
+						954 pane OrcaSceneCanvas ID: -31792
+			99 pane control ID: -31964
+				955 pane panel ID: -31988
+					956 pane (disabled) Export G-code file ID: -31985
+					957 pane ID: -31984
+				958 pane panel ID: -31989
+					959 pane (disabled) Slice plate ID: -31987
+					960 pane ID: -31986
+				106 button ID: -31962
+				107 button Project ID: -31612
+				108 button Prepare ID: -31601
+				109 button Preview ID: -31600
+				110 button 5D Surfaces ID: -31599
+				111 button Device ID: -31591
+
+The focused UI element is 954 pane OrcaSceneCanvas ID: -31792.
+
+Focused element: 954 pane OrcaSceneCanvas ID: -31792

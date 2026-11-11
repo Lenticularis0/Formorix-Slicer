@@ -1,5 +1,7 @@
 # Auftrag 04 – Hybrid-Slicing-Prototyp
 
+Historischer Ausgangsbericht. Die späteren Korrekturen an Materialmenge, Übergängen und Auflagenprüfung sowie die aktuelle Abnahme stehen im [Nachtrag zu Auftrag 04](Formorix-Auftrag-04-Nachtrag.md). Die folgenden Messwerte dokumentieren den ursprünglichen Stand.
+
 Der Prototyp verbindet gespeicherte Formorix-Oberflächenmarkierungen mit einer CGAL-Kern-/Schalenteilung, echten konventionellen Orca-Extrusionsbahnen und einer gemeinsamen 3D-Vorschau. Die experimentelle Exportsperre bleibt aktiv. Es entstehen keine ausführbaren Hybrid-/5D-Druckdateien.
 
 **Die geometrische Gesamtabweichung von höchstens 0,01 mm ist nicht nachgewiesen.** Die berechneten Volumenkörper ergänzen sich, aber die nominale Materialablage hat weiterhin einen erheblichen Volumenüberschuss und Überstände an Regionsrändern. Geringe Oberflächen-Stichprobenfehler sind keine globale Genauigkeitsbestätigung und keine Aussage über reale Druckgenauigkeit.

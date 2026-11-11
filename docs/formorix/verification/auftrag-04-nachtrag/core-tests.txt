@@ -1,0 +1,16 @@
+Filters: [FormorixHybridCore],[Formorix5D]
+RNG seed: 42
+st=1,
+[2026-11-11 09:30:02.399925] [0x00000a20] [error]   Slic3r::Print::get_hrc_by_nozzle_type: parse info\nozzle_info.json got a nlohmann::detail::parse_error, reason = [json.exception.parse_error.101] parse error at line 1, column 1: syntax error while parsing value - unexpected end of input; expected '[', '{', or a literal
+st=1,
+st=1,
+st=1,
+st=1,
+st=1,
+st=1,
+st=1,
+st=1,
+SAVED_CURVED_UNDERLAY,samples=22400,missing=6006,missing_core=0,excluded_infill=0,path_gaps=6006,unknown=0,max_finite_gap=0.494771,no_contact_within_0.5=54
+st=1,
+st=1,
+All tests passed (5237 assertions in 18 test cases)

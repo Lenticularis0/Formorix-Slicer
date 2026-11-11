@@ -1,0 +1,51 @@
+Window: "*tilt-rejected - Formorix Slicer", App: orca-slicer.exe.
+	0 window *tilt-rejected - Formorix Slicer Secondary Actions: Raise
+		19 pane control ID: 3200
+			20 pane control ID: -31990
+		21 pane ID: -31965
+			22 pane panel ID: -31950
+				99 pane panel ID: -31798
+					661 pane panel ID: -31797
+						662 pane OrcaSceneCanvas ID: -31795
+				774 pane panel ID: -31186
+					775 button Start ID: -31185
+					776 button Pause ID: -31184
+					777 button |< ID: -31183
+					778 button -1 s ID: -31182
+					779 button +1 s ID: -31181
+					780 pane 1x ID: -31180
+					781 text 5D: 0.0 / 0.0 s (estimate) ID: -31177
+					782 button ? ID: -31176
+					783 slider (disabled, settable, float) 5D: 0.0 / 0.0 s (estimate) Value: 0 ID: -31175
+						784 thumb Position
+						785 button Page right
+					786 pane All 5D layers ID: -31174
+					787 button ID: -31171
+					788 text Original model ID: -31170
+					789 button ID: -31169
+					790 text Remaining core ID: -31168
+					791 button ID: -31167
+					792 text Orca core paths ID: -31166
+					793 button ID: -31165
+					794 text 5D shell ID: -31164
+					795 button ID: -31163
+					796 text 5D paths ID: -31162
+					797 button ID: -31161
+					798 text Shared interfaces ID: -31160
+					799 button ID: -31159
+					800 text Missing underlay ID: -31158
+					801 button ID: -31157
+					802 text Unverified regions ID: -31156
+					803 button Orca preview ID: -31155
+					804 button Geometry report ID: -31154
+					805 text Hybrid geometry failed: The rigid tilted nozzle-section does not fit the requested normal layer thickness; the compacted ribbon requires a perpendicular nozzle ID: -31153
+					806 text Head 1: Unassigned | Head 2: Unassigned | Head 3: Unassigned ID: -31152
+					807 text Time: 5D part only. Orca core paths are not synchronized; supports and waiting times are excluded. ID: -31151
+					808 text Layer-change travel: collision check pending. ID: -31150
+			102 pane control ID: -31964
+				109 button ID: -31962
+				110 button ID: -31612
+				111 button Prepare ID: -31601
+				112 button Preview ID: -31600
+				113 button 5D Surfaces ID: -31599
+				114 button Device ID: -31591

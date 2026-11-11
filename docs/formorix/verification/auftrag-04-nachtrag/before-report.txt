@@ -1,0 +1,62 @@
+Window: "*hybrid-04-curved - Formorix Slicer", App: orca-slicer.exe.
+	0 window *hybrid-04-curved - Formorix Slicer Secondary Actions: Raise
+		1 pane control ID: 3200
+			2 pane control ID: -31990
+		3 pane ID: -31965
+			4 pane panel ID: -31950
+				5 pane panel ID: -31798
+					192 pane panel ID: -31797
+						193 pane OrcaSceneCanvas ID: -31795
+				407 pane panel ID: -31204
+					408 button (disabled) Starten ID: -31203
+					409 button (disabled) Pause ID: -31202
+					410 button (disabled) |< ID: -31201
+					411 button (disabled) -1 s ID: -31200
+					412 button (disabled) +1 s ID: -31199
+					413 pane 4x ID: -31198
+					414 text 5D: 0,0 / 1185,2 s (geschätzt) ID: -31195
+					415 button (disabled) ? ID: -31194
+					416 slider (settable, float) 5D: 0,0 / 1185,2 s (geschätzt) Value: 0 ID: -31193
+						417 thumb Position
+						418 button Page right
+					419 pane Alle 5D-Schichten ID: -31192
+					420 button ID: -31189
+					421 text Originalmodell ID: -31188
+					422 button ID: -31187
+					423 text Verbleibender Kern ID: -31186
+					424 button ID: -31185
+					425 text Orca-Kernbahnen ID: -31184
+					426 button ID: -31183
+					427 text 5D-Schale ID: -31182
+					428 button ID: -31181
+					429 text 5D-Bahnen ID: -31180
+					430 button ID: -31179
+					431 text Gemeinsame Grenzflächen ID: -31178
+					432 button ID: -31177
+					433 text Fehlende Auflage ID: -31176
+					434 button ID: -31175
+					435 text Ungeprüfte Bereiche ID: -31174
+					436 button (disabled) Orca-Vorschau ID: -31173
+					437 button (disabled) Geometriebericht ID: -31172
+					438 text Nominales Materialvolumen unplausibel; Flow unverändert. CAD-Genauigkeit und vollständige Abdeckung sind ungeprüft. An geprüften Punkten fehlt eine geometrische Auflage. ID: -31171
+					439 text Kopf 1: Arbeitet | Kopf 2: Ohne Aufgabe | Kopf 3: Ohne Aufgabe ID: -31170
+					440 text Zeit: nur 5D-Teil. Orca-Kernbahnen sind nicht synchronisiert; Supports und Wartezeiten fehlen. ID: -31169
+					441 text Verfahrbewegungen beim Lagenwechsel: Kollisionsprüfung ausstehend. ID: -31168
+			8 pane control ID: -31964
+				15 button (disabled) ID: -31962
+				16 button (disabled) Projekt ID: -31612
+				17 button (disabled) Vorbereiten ID: -31601
+				18 button (disabled) Vorschau ID: -31600
+				19 button (disabled) 5D-Oberflächen ID: -31599
+				20 button (disabled) Gerät ID: -31596
+		442 dialog Formorix Slicer - Hybrid-Geometriebericht Secondary Actions: Raise
+			443 image ID: -30704
+			444 button OK ID: 5100
+			445 pane panel ID: -30702
+				446 text Nur numerische Vorschau. Physikalische Genauigkeit, Haftung und Kollisionen sind ungeprüft. Originalvolumen: 18211,86 mm³; Restfehler der Aufteilung: 3,63797881e-12 mm³. Bereich 1, Kopf 1: nominales Materialvolumen / Schalenvolumen = 4,642. Material OFDSrzZ8; Düse 0,4 mm; Linienbreite 0,42 mm; Schichtdicke 0,2 mm; Temperatur 220 °C; maximaler Volumenfluss 12 mm³/s; Geschwindigkeit 60 mm/s. Abdeckungsproben: 22400; unbedeckter Anteil: 0. Stichprobenfehler max. / Mittel / RMS: 0,00138933 / 0,000497067 / 0,00069225 mm. Nominale Aufstandsfläche außerhalb des markierten Bereichs: 0,0172985; gemessener Überstand in den Kern: 4,29895e-14 mm. Eine Überlagerung mit konventionellem Material ist möglich. Fehlergrenzen (mm), CAD / Schale / Konvertierung / Bahn / nominales Material: inf / inf / 7,75173e-06 / inf / inf. Unendlich bedeutet ungeprüft. Auflage: 7926 fehlende Proben von 22400; maximaler Abstand: inf mm. Vollständiger Kontakt und Materialhaftung sind ungeprüft. Region 1: nominal material volume is inconsistent; flow was not corrected Region 1: 0.01 mm whole-surface accuracy is not verified Region 1: underlay is sampled, not a full contact or material-adhesion certificate Region 1: automatic support-material selection and interface compatibility are unverified Orca-Konvertierungsgrenze: 8,23523534e-07 mm; Koordinatenraster: 6,92820323e-06 mm; Volumenrestfehler: 0,000146663879 mm³. Conventional speeds are nominal role values; acceleration, cooling slowdown and common scheduling are not simulated. ID: -30701
+			447 title bar (settable, string) Value: Formorix Slicer - Hybrid-Geometriebericht
+				448 button Close
+
+The focused UI element is 442 dialog Formorix Slicer - Hybrid-Geometriebericht Secondary Actions: Raise.
+
+Focused element: 442 dialog Formorix Slicer - Hybrid-Geometriebericht Secondary Actions: Raise
