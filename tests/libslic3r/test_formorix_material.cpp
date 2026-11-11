@@ -459,3 +459,18 @@ TEST_CASE("An isolated input vertex is rejected before invoking volume orientati
     CHECK(result.regions.empty());
     CHECK(std::isinf(result.boundary_distance.maximum));
 }
+
+TEST_CASE("Invalid lateral endpoints are rejected before a redundant station can be removed", "[FormorixMaterial]")
+{
+    auto r = run();
+    r.stations.insert(r.stations.begin() + 1, {{1., .5, .5}, Vec3d::UnitZ(), 1., 1.});
+    r.supplied_volumes = {1., 1.};
+    for (auto& s : r.stations)
+        s.lateral_endpoints = std::array<Vec3d, 2>{{{s.center.x(), 0., .5}, {s.center.x(), 1., .5}}};
+    for (auto& endpoint : *r.stations[1].lateral_endpoints)
+        endpoint.y() += .25;
+    const auto result = FM::audit({target()}, {}, {r});
+    CHECK(result.status == FM::Status::InvalidInput);
+    CHECK(result.error.find("lateral endpoints disagree") != std::string::npos);
+    CHECK(result.regions.empty());
+}

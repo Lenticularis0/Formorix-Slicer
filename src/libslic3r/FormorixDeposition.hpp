@@ -31,7 +31,10 @@ struct RibbonSection
 // Requires corrected width >= corrected height. Callers must separately account
 // for tilt, curvature, finite endpoints, turns and interfaces between materials.
 RibbonSection ribbon_section(const Profile&);
+// A different width requires explicit limits. Does not mutate the nominal profile.
+RibbonSection ribbon_section(const Profile&, double requested_width);
 double ribbon_speed(const Profile&);
+double ribbon_speed(const Profile&, double requested_width);
 
 struct RibbonBalance
 {

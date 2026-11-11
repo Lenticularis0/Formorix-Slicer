@@ -38,4 +38,21 @@ Die konservativ addierte Fehlerschranke der drei ebenen Referenzregionen liegt j
 
 Die Regression deckt außerdem Abbruch, Eingabe-/Arbeitslimits, fehlende Stichproben, leere Ablage, ungültige Zwischenpunkte, unterschiedliche Materialien, Kernintrusion und unzureichend darstellbare Boolean-Ergebnisse ab. Gefundene Stack- und Zugriffsfehler sowie eine nicht initialisierte CGAL-Hilfsgröße wurden vor diesem Prüflauf korrigiert. Ein Topologie verändernder Schalen-Ausgabefallback erhält keine pauschale Genauigkeitsbestätigung.
 
-Die weiteren Arbeitspakete, native GUI-Abnahme, vollständige CTest-Regression, gettext, clang-tidy, Projekt-Roundtrip und Exportregression sind noch nicht abgeschlossen und werden erst nach tatsächlicher Durchführung eingetragen.
+## Geprüfter Zwischenstand: adaptive Randfüllung und Profile
+
+Die Randfüllung unterstützt ein ebenes Rechteck mit endlichen Gehrungen und gemeinsamen Seitenkoordinaten. Aus ausdrücklich angegebenen Breitenlimits bestimmt sie eine passende Anzahl von Bahnen und deren lokale Querschnitte. Ohne Limits bleiben Reststreifen sichtbar. Prozessprofile, Düse und Material sind je Kopf unabhängig; Filament-, Druck- und Außenwandfaktoren bleiben getrennt erhalten. Die native Auto-Linienbreite verwendet Orcas vorhandene Auflösung. Projekt-Schema 4 speichert optionale Prozessbindungen und Breitenlimits; alte Projekte erhalten keine erfundenen Breitenfreigaben. [Modul und Grenzen](HLSD/FormorixBoundary.md).
+
+Die gezielte Windows-Release-Regression besteht mit **113 Fällen / 220.131 Assertions**; zusätzlich bestehen **20 native Orca-/Exportsperrenfälle / 9.111 Assertions**. [Geometrie, Profile und Speicherung](formorix/verification/auftrag-05/package2-tests.txt), [native Kernintegration](formorix/verification/auftrag-05/package2-core.txt). Die kompaktere ebene Bahn benötigt weniger redundante Stationsassertions. Der Ressourcentest setzt seine Obergrenze nun ausdrücklich und prüft weiterhin die Ablehnung statt von der früheren Punktunterteilung abzuhängen. Die feste maximale Bewegungsgrenze bleibt unverändert.
+
+| Referenz | Tatsächliches Ergebnis |
+| --- | --- |
+| 12 × 6,1 mm, zwei Lagen à 0,2 mm | Acht Reihen je Lage; kompaktierte Breite 0,7625 mm; angeforderte lokale Breite etwa 0,8054203673 mm innerhalb der deklarierten Grenzen 0,74–0,84 mm. Räumliches Materialvolumen 29,280000000000022 mm³, Zufuhr 29,280000000000001 mm³. Fehlvolumen, Überstand, Mehrfachbelegung und Kerneingriff jeweils exakt 0 mm³. |
+| Vollständige Fehlerbilanz dieses Rechtecks | Gemessenes Maximum/Mittel/RMS 0 mm; konservative Gesamtschranke unter 2,528 × 10⁻⁷ mm. Positive nominale CAD-Bestätigung, keine physische Druckfreigabe. |
+| Feste Breite ohne erlaubte Anpassung | Im integrierten Test fehlen 0,24000000000000044 mm³; keine Überextrusion, kein Überstand, keine Genauigkeitsbestätigung. Beobachtetes räumliches Maximum 0,10000000000000009 mm; vollständige Abstandsschranke und Mittel/RMS bleiben bei ausgeschöpftem Arbeitsbudget unbekannt. |
+| Unterschiedliche Lagenhöhen und große Koordinaten | Das eigenständige Randmodul vereinigt 0,2-/0,1-mm-Lagen auf X = 1588–1600 mm lücken- und überlappungsfrei. |
+
+Ein zunächst ausgeschöpftes Vergleichsbudget beim fein triangulierten Rechteck wurde durch den vorhandenen exakten Vergleich koplanarer Flächen gelöst. Dessen zulässige Eingabegröße wurde erweitert; die kombinatorische Arbeitsgrenze und die Genauigkeitsregeln bleiben aktiv. Vier regionale Hybrid-Referenzen besitzen nun einen positiven nominalen Gesamtnachweis.
+
+Die native Orca-Berechnung trennt rohe Geometrie und erst beim G-Code-Export angewendete statische Materialfaktoren. Nullzufuhr kann keine Auflage liefern. Bei verändertem Flow bleibt die daraus tatsächlich entstehende Strangform ungeprüft; unveränderte rohe Kernpfade bleiben für geometrische Vergleiche verfügbar. Die neuen nativen Tests prüfen getrennte Rollen-, Erstschicht- und Supportfaktoren sowie die Volumenstromgrenze.
+
+Die weiteren Arbeitspakete, native GUI-Abnahme, vollständige CTest-Regression, gettext, clang-tidy und vollständiger Projekt-/GUI-Roundtrip sind noch nicht abgeschlossen und werden erst nach tatsächlicher Durchführung eingetragen.

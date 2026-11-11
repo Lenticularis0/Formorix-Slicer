@@ -5,6 +5,7 @@
 #include "PrintConfig.hpp"
 #include <array>
 #include <cstddef>
+#include <optional>
 #include <string>
 
 namespace Slic3r {
@@ -21,6 +22,7 @@ struct Source
     DynamicPrintConfig machine; // actual active machine; empty in standalone sources
     std::size_t nozzle_index = 0;
     double layer_height      = 0.; // zero inherits the current Orca process
+    std::optional<FormorixProcess::WidthLimits> local_width_limits;
 };
 struct Resolved
 {

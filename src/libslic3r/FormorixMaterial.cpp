@@ -74,6 +74,19 @@ Ring ring(const SweepRun& run, std::size_t i, const Options& options)
         lateral = sum / denominator;
     }
     lateral *= s.width / 2.;
+    if (s.lateral_endpoints) {
+        const auto& endpoints = *s.lateral_endpoints;
+        if (!endpoints[0].allFinite() || !endpoints[1].allFinite())
+            throw detail::Failure(Status::InvalidInput, "Nonfinite shared material lateral endpoints");
+        const double scale = std::max(
+            {1., s.center.cwiseAbs().maxCoeff(), endpoints[0].cwiseAbs().maxCoeff(), endpoints[1].cwiseAbs().maxCoeff()});
+        const double allowance = 64. * std::numeric_limits<double>::epsilon() * scale;
+        if ((endpoints[1] - endpoints[0]).dot(lateral) <= 0. || (endpoints[0] - (s.center - lateral)).norm() > allowance ||
+            (endpoints[1] - (s.center + lateral)).norm() > allowance)
+            throw detail::Failure(Status::InvalidInput, "Shared material lateral endpoints disagree with the nominal miter");
+        const Vec3d lower = centers[0] - s.center, upper = centers[1] - s.center;
+        return {{endpoints[0] + lower, endpoints[1] + lower, endpoints[1] + upper, endpoints[0] + upper}};
+    }
     // Identical shared rings and diagonal choices on both incident cells.
     return {{centers[0] - lateral, centers[0] + lateral, centers[1] + lateral, centers[1] - lateral}};
 }
@@ -145,6 +158,9 @@ Result audit(const std::vector<Target>& targets,
             stations += run.stations.size();
             for (const auto& station : run.stations)
                 (void) height_centers(station); // validate even stations removed by exact collinear reduction
+            for (std::size_t i = 0; i < run.stations.size(); ++i)
+                if (run.stations[i].lateral_endpoints)
+                    (void) ring(run, i, options); // validate original rails before any station is removed
             for (double supply : run.supplied_volumes)
                 if (!std::isfinite(supply) || supply <= 0.)
                     throw detail::Failure(Status::InvalidInput, "Extruding material segment requires positive finite supply");

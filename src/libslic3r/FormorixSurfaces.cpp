@@ -1,5 +1,6 @@
 #include "FormorixSurfaces.hpp"
 #include "FormorixProcess.hpp"
+#include "I18N.hpp"
 #include <string>
 #include <cstdint>
 #include <exception>
@@ -16,6 +17,8 @@
 #include <stdexcept>
 #include <utility>
 
+#define L(s) Slic3r::I18N::translate(s)
+
 namespace Slic3r::FormorixSurfaces {
 using nlohmann::json;
 void Head::assign_material(const std::string& preset)
@@ -29,6 +32,20 @@ void Head::assign_nozzle(const std::string& printer, unsigned index)
     printer_preset = printer;
     nozzle_index = index;
 }
+void Head::assign_process(const std::string& preset)
+{
+    if (preset != process_preset) process.reset();
+    process_preset = preset;
+}
+void Head::assign_width_limits(std::optional<FormorixProcess::WidthLimits> limits)
+{
+    if (limits && !FormorixProcess::valid(*limits))
+        throw std::invalid_argument(L("Invalid declared local line width limits"));
+    if (bool(limits) != bool(local_width_limits) ||
+        (limits && (limits->minimum_mm != local_width_limits->minimum_mm || limits->maximum_mm != local_width_limits->maximum_mm)))
+        process.reset();
+    local_width_limits = limits;
+}
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Settings, shell_mode, layers, shell_thickness, layer_height,
     preserve_dimensions, use_infill, inherit_infill_first, dense_underlay, underlay_density,
     additional_support, support_material, allow_deviation, max_deviation, allow_vertical,
@@ -38,13 +55,18 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Region, id, name, visible, continuous, settin
 void to_json(json& j, const Head& h)
 {
     j = json{{"enabled", h.enabled}, {"material_preset", h.material_preset}, {"tasks", h.tasks},
-        {"printer_preset", h.printer_preset}, {"nozzle_index", h.nozzle_index}};
+        {"printer_preset", h.printer_preset}, {"nozzle_index", h.nozzle_index}, {"process_preset", h.process_preset}};
+    if (h.local_width_limits) j["local_width_limits"] = *h.local_width_limits;
     if (h.process) j["process"] = *h.process;
 }
 void from_json(const json& j, Head& h)
 {
     j.at("enabled").get_to(h.enabled); j.at("material_preset").get_to(h.material_preset); j.at("tasks").get_to(h.tasks);
     h.printer_preset = j.value("printer_preset", std::string{});
+    h.process_preset = j.value("process_preset", std::string{});
+    h.local_width_limits.reset();
+    if (j.contains("local_width_limits") && !j.at("local_width_limits").is_null())
+        h.local_width_limits = j.at("local_width_limits").get<FormorixProcess::WidthLimits>();
     if (j.contains("nozzle_index") && (!j.at("nozzle_index").is_number_integer() || j.at("nozzle_index") < 0 || j.at("nozzle_index") > 255))
         throw std::invalid_argument("Invalid Formorix nozzle slot");
     h.nozzle_index = j.value("nozzle_index", 0u);
@@ -109,6 +131,7 @@ static void validate(const Project &p)
     }
     for (const Head &h : p.heads)
         if (h.tasks == 0 || h.tasks > 31 || h.material_preset.size() > 4096 || h.printer_preset.size() > 4096 || h.nozzle_index > 255 ||
+            h.process_preset.size() > 4096 || (h.local_width_limits && !FormorixProcess::valid(*h.local_width_limits)) ||
             (h.process && !FormorixProcess::valid(*h.process)))
             throw std::invalid_argument("Invalid Formorix head assignment");
     std::set<std::pair<int, int>> pairs;
@@ -129,11 +152,19 @@ std::optional<Project> Project::decode(const std::string &text, std::string &err
         auto data = json::parse(text);
         if (!data.is_object()) throw std::invalid_argument("Invalid Formorix surface object");
         const int version = data.at("version").get<int>();
-        if (version == 1 || version == 2) data["version"] = schema_version;
-        if (data.at("version").get<int>() != schema_version)
+        if (version < 1 || version > schema_version)
             throw std::invalid_argument("Unsupported Formorix surface schema");
         if (data.contains("heads") && (!data["heads"].is_array() || data["heads"].size() != 3))
             throw std::invalid_argument("Formorix requires three head assignments");
+        if (version < schema_version) {
+            data["version"] = schema_version;
+            for (auto& head : data.at("heads")) {
+                head.erase("local_width_limits");
+                head.erase("process_preset");
+                if (head.contains("process") && head["process"].is_object())
+                    head["process"].erase("local_width_limits");
+            }
+        }
         Project p = data.get<Project>();
         validate(p);
         return p;

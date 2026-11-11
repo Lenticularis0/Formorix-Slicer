@@ -20,6 +20,9 @@ struct Station
     // Optional shared lower/upper section centers, explicitly constructed by the
     // planner. They are authoritative input coordinates; the audit never snaps them.
     std::optional<std::array<Vec3d, 2>> height_endpoints;
+    // Optional shared miter rail points at center height, ordered minus/plus
+    // lateral. These describe constructed geometry, never audit-side snapping.
+    std::optional<std::array<Vec3d, 2>> lateral_endpoints;
 };
 // Split travel and profile changes BEFORE creating a run. No implicit extrusion.
 struct SweepRun

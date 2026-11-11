@@ -424,7 +424,7 @@ Distance directed_distance(const Exact& source, const Exact& target, Control& co
 bool identical_coplanar(const Exact& a, const Exact& b, Control& control)
 {
     const std::size_t triangles = a.number_of_faces() + b.number_of_faces();
-    if (a.is_empty() || b.is_empty() || triangles > 128)
+    if (a.is_empty() || b.is_empty() || triangles > 512)
         return false;
     const std::size_t edges = triangles * 3;
     // An arrangement can grow quadratically despite a small input. Bound all
@@ -536,7 +536,7 @@ std::vector<Station> simplify_stations(const std::vector<Station>& input)
     std::vector<Station> result;
     auto same_section = [](const Station& a, const Station& b) {
         return a.width == b.width && a.height == b.height && (a.axis.array() == b.axis.array()).all() &&
-               bool(a.height_endpoints) == bool(b.height_endpoints);
+               bool(a.height_endpoints) == bool(b.height_endpoints) && bool(a.lateral_endpoints) == bool(b.lateral_endpoints);
     };
     auto point = [](const Vec3d& p) { return Point(p.x(), p.y(), p.z()); };
     for (const auto& s : input) {
@@ -548,6 +548,13 @@ std::vector<Station> simplify_stations(const std::vector<Station>& input)
                     const auto x = point((*result[result.size() - 2].height_endpoints)[k]);
                     const auto y = point((*result.back().height_endpoints)[k]);
                     const auto z = point((*s.height_endpoints)[k]);
+                    collinear    = collinear && CGAL::collinear(x, y, z) && CGAL::collinear_are_ordered_along_line(x, y, z);
+                }
+            if (collinear && s.lateral_endpoints)
+                for (int k = 0; k < 2; ++k) {
+                    const auto x = point((*result[result.size() - 2].lateral_endpoints)[k]);
+                    const auto y = point((*result.back().lateral_endpoints)[k]);
+                    const auto z = point((*s.lateral_endpoints)[k]);
                     collinear    = collinear && CGAL::collinear(x, y, z) && CGAL::collinear_are_ordered_along_line(x, y, z);
                 }
             if (collinear) {

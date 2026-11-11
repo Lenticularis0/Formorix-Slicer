@@ -20,6 +20,7 @@
 #include <wx/string.h>
 #include <exception>
 #include <memory>
+#include <optional>
 
 #include "GUI_App.hpp"
 #include "GUI.hpp"
@@ -87,8 +88,10 @@ struct FormorixSurfaceEditor::Impl : wxEvtHandler {
     std::array<wxStaticText *, 3> assignments{};
     std::array<::ComboBox *, 3> materials{};
     std::array<::ComboBox *, 3> nozzle_presets{};
+    std::array<::ComboBox *, 3> process_presets{};
     std::vector<std::string> material_names;
     std::vector<std::string> printer_names;
+    std::vector<std::string> process_names;
     std::array<std::string, 3> source_signatures;
     std::vector<std::function<void()>> refreshers;
     std::vector<wxWindow *> region_controls;
@@ -164,8 +167,8 @@ struct FormorixSurfaceEditor::Impl : wxEvtHandler {
     {
         if (updating || !writable) return;
         FS::Project candidate = project;
-        change(candidate);
         try {
+            change(candidate);
             const std::string encoded = candidate.encode();
             if (encoded == cached_json) return;
             plater.take_snapshot(_u8L("Edit 5D surface settings"));
@@ -282,8 +285,11 @@ struct FormorixSurfaceEditor::Impl : wxEvtHandler {
         value->GetTextCtrl()->SetName(title);
         value->SetToolTip(wxString::Format(_L("Allowed range: %1$.4g to %2$.4g"), low, high));
         parent->GetSizer()->Add(value, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, parent->FromDIP(5));
-        auto commit = [this, value, set, low, high, integer] {
+        auto commit = [this, value, get, set, low, high, integer] {
             if (updating || !value->IsEnabled()) return true;
+            // Focusing an unchanged rounded display must not replace its exact
+            // stored value, especially an automatic width used as a fixed limit.
+            if (value->GetTextCtrl()->GetValue() == wxString::Format("%.6g", get())) return true;
             double input = 0.;
             if (!value->GetTextCtrl()->GetValue().ToDouble(&input) || !std::isfinite(input) || input < low || input > high ||
                 (integer && input != std::floor(input))) {
@@ -566,6 +572,34 @@ void FormorixSurfaceEditor::Impl::build_heads(wxWindow *parent)
         number(parent, _L("Nozzle slot"), [this, i] { return project.heads[i].nozzle_index + 1.; },
             [this, i](double value) { edit([&](auto& p) { p.heads[i].assign_nozzle(p.heads[i].printer_preset, unsigned(value) - 1); }); },
             1., 32., true, false);
+        process_presets[i] = choice(parent, _L("Orca process profile"), {}, [this, i] {
+            const auto it = std::find(process_names.begin(), process_names.end(), project.heads[i].process_preset);
+            return it == process_names.end() ? 0 : int(it - process_names.begin());
+        }, [this, i](int value) {
+            if (value >= 0 && value < int(process_names.size()))
+                edit([&](auto& p) { p.heads[i].assign_process(process_names[value]); });
+        }, false);
+        check(parent, _L("Declare local line width limits"), [this, i] { return project.heads[i].local_width_limits.has_value(); },
+            [this, i](bool enabled) { edit([&](auto& p) {
+                if (!enabled) p.heads[i].assign_width_limits(std::nullopt);
+                else {
+                    const double width = FR::resolve(FR::source(*wxGetApp().preset_bundle, p.heads[i])).process.line_width;
+                    p.heads[i].assign_width_limits(FormorixProcess::WidthLimits{width, width});
+                }
+            }); }, false);
+        for (bool minimum : {true, false}) {
+            const wxString title = minimum ? _L("Minimum local line width (mm)") : _L("Maximum local line width (mm)");
+            auto* control = number(parent, title, [this, i, minimum] {
+                const auto& limits = project.heads[i].local_width_limits;
+                return limits ? (minimum ? limits->minimum_mm : limits->maximum_mm) : 0.;
+            }, [this, i, minimum](double value) { edit([&](auto& p) {
+                if (!p.heads[i].local_width_limits) return;
+                auto limits = *p.heads[i].local_width_limits;
+                (minimum ? limits.minimum_mm : limits.maximum_mm) = value;
+                p.heads[i].assign_width_limits(limits);
+            }); }, .01, 10., false, false);
+            depend(control, [this, i] { return project.heads[i].local_width_limits.has_value(); });
+        }
         for (int role = 0; role < 5; ++role)
             check(parent, tasks[role], [this, i, role] { return (project.heads[i].tasks & (1u << role)) != 0; }, [this, i, role](bool v) {
                 edit([i, role, v](auto &p) {
@@ -578,6 +612,7 @@ void FormorixSurfaceEditor::Impl::build_heads(wxWindow *parent)
         assignments[i] = label(parent, wxEmptyString);
     }
     label(parent, _L("Material suitability: not checked."));
+    label(parent, _L("Declared width limits are not material calibration."));
 }
 
 void FormorixSurfaceEditor::Impl::refresh_list()
@@ -735,6 +770,20 @@ void FormorixSurfaceEditor::Impl::sync()
         }
         refresh_values();
     }
+    std::vector<std::string> processes{std::string{}};
+    for (const auto& preset : wxGetApp().preset_bundle->prints.get_presets())
+        if (!preset.is_default) processes.push_back(preset.name);
+    for (const auto& head : project.heads)
+        if (!head.process_preset.empty() && std::find(processes.begin(), processes.end(), head.process_preset) == processes.end())
+            processes.push_back(head.process_preset);
+    if (processes != process_names) {
+        process_names = std::move(processes);
+        for (auto* box : process_presets) {
+            box->Clear(); box->Append(_L("Current Orca process"));
+            for (std::size_t i = 1; i < process_names.size(); ++i) box->Append(from_u8(process_names[i]));
+        }
+        refresh_values();
+    }
     if (writable && FR::invalidate_changed(project, *wxGetApp().preset_bundle, source_signatures)) {
         store();
         message(_L("Orca profile changed. Derived head values were invalidated and will be refreshed before calculation."));
@@ -775,8 +824,16 @@ std::string FormorixSurfaceEditor::Impl::fingerprint() const
     out<<hash;
     const auto*bundle=wxGetApp().preset_bundle;
     config(bundle->prints.get_edited_preset().config);config(bundle->printers.get_edited_preset().config);config(bundle->filaments.get_edited_preset().config);
-    for(const auto&head:project.heads)if(const auto*preset=bundle->filaments.find_preset(head.material_preset))config(preset->config);
-    for(const auto&head:project.heads)if(const auto*preset=bundle->printers.find_preset(head.printer_preset))config(preset->config);
+    for (std::size_t head = 0; head < project.heads.size(); ++head) {
+        out << "|formorix_source[" << head << "]=";
+        try {
+            out << FR::signature(FR::source(*bundle, project.heads[head]));
+        } catch (const std::exception& error) {
+            // Missing/deleted sources must invalidate a running result as well;
+            // no fallback to the current preset or a serialized snapshot.
+            out << "unresolved:" << error.what();
+        }
+    }
     config(bundle->project_config);
     return out.str();
 }
@@ -903,10 +960,13 @@ void FormorixSurfaceEditor::Impl::calculate_hybrid()
                 }
                 ctl.update_status(85, _u8L("Checking geometric underlay…"));
                 std::vector<FH::UnderlaySegment> underlay;
-                for (const auto& path : conventional->paths)
+                for (const auto& path : conventional->paths) {
+                    if (path.nominal_supplied_mm3_per_mm <= 0.) continue;
                     for (std::size_t i = 1; i < path.points.size(); ++i)
                         underlay.push_back({path.points[i - 1], path.points[i], path.width, path.height,
-                            path.head, path.process.material_id, path.support, path.role == erInternalInfill, is_bridge(path.role)});
+                            path.head, path.process.material_id, path.support, path.role == erInternalInfill, is_bridge(path.role),
+                            path.flow_geometry_unverified});
+                }
                 for (auto& region : hybrid->regions)
                     region.accuracy.bounds[2] += conventional->float_conversion_bound + conventional->coordinate_quantization_bound;
                 FH::audit_underlay(*hybrid, underlay, canceled);

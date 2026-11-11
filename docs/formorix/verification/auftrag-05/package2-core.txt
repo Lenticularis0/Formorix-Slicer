@@ -1,0 +1,38 @@
+Filters: [FormorixHybridCore],[Formorix5D]
+Randomness seeded to: 42
+st=1, 
+[2026-11-11 13:01:20.320949] [0x000047d8] [error]   Slic3r::Print::get_hrc_by_nozzle_type: parse info\nozzle_info.json got a nlohmann::detail::parse_error, reason = [json.exception.parse_error.101] parse error at line 1, column 1: syntax error while parsing value - unexpected end of input; expected '[', '{', or a literal
+st=1, 
+0.083 s: Disabled Formorix settings leave conventional motion commands unchanged
+0.018 s: Nonneutral shrink compensation cannot silently separate hybrid core and shell
+st=1, 
+0.064 s: Switching to Formorix invalidates a previously exported conventional job
+0.006 s: Zero native role flow retains display geometry without claiming material supply
+0.025 s: Native support paths use their independent support head configuration
+st=1, 
+st=1, 
+st=1, 
+st=1, 
+st=1, 
+st=1, 
+0.013 s: Only immutable previews omit E-addressing export macro validation
+0.000 s: Underlay rays respect finite endcaps in both travel directions
+0.000 s: Missing geometry stays unknown while actual support can provide nominal contact
+0.013 s: Native Orca core paths retain source coordinates and head-specific extrusion metadata
+0.006 s: An explicitly selected second nozzle retains its process variant in the isolated core pass
+0.002 s: Invalid and canceled hybrid core requests retain no partial paths
+SAVED_CURVED_UNDERLAY,samples=22400,missing=6006,missing_core=0,excluded_infill=0,path_gaps=6006,unknown=0,max_finite_gap=0.494771,no_contact_within_0.5=54
+3.296 s: The saved GUI Formorix process produces native core paths without layer G-code macros
+st=1, 
+0.004 s: Experimental Formorix jobs are blocked before slicing or writing output
+0.000 s: Conventional underlay uses Orca rounded rectangles and finite segment endpoints
+0.023 s: Native flow metadata applies export ratios once without changing Orca geometry
+3.440 s: A saved painted curved surface feeds a genuinely curved partitioned core through Orca
+st=1, 
+0.008 s: An immutable hybrid preview can slice but cannot export after configuration changes
+0.000 s: Underlay diagnostics separate absent core excluded infill and uncovered core paths
+0.000 s: Hanging bridge geometry does not become certified conventional underlay
+3.312 s: Marked shell partition feeds actual Orca core slicing and actual underlay evidence
+===============================================================================
+All tests passed (9111 assertions in 20 test cases)
+

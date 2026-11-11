@@ -19,6 +19,7 @@
 #include <cmath>
 #include <exception>
 #include <functional>
+#include <initializer_list>
 #include <memory>
 #include <stdexcept>
 #include <utility>
@@ -157,6 +158,35 @@ double nominal_speed(const DynamicPrintConfig& config, ExtrusionRole role, doubl
         return fallback;
     }
 }
+double native_role_flow(const DynamicPrintConfig& config, ExtrusionRole role)
+{
+    // Match the static role factors in GCode::_extrude. Bridge geometry and
+    // ironing flow already contribute to ExtrusionPath::mm3_per_mm.
+    switch (role) {
+    case erTopSolidInfill: return config.opt_float("top_solid_infill_flow_ratio", 0);
+    case erBottomSurface: return config.opt_float("bottom_solid_infill_flow_ratio");
+    case erInternalBridgeInfill: return config.opt_float("internal_bridge_flow");
+    case erBrim: return config.opt_float("brim_flow_ratio");
+    default: break;
+    }
+    if (config.opt_bool("set_other_flow_ratios")) {
+        const char* key = nullptr;
+        switch (role) {
+        case erExternalPerimeter: key = "outer_wall_flow_ratio"; break;
+        case erPerimeter: key = "inner_wall_flow_ratio"; break;
+        case erOverhangPerimeter: key = "overhang_flow_ratio"; break;
+        case erInternalInfill: key = "sparse_infill_flow_ratio"; break;
+        case erSolidInfill: key = "internal_solid_infill_flow_ratio"; break;
+        case erGapFill: key = "gap_fill_flow_ratio"; break;
+        case erSupportMaterial: key = "support_flow_ratio"; break;
+        case erSupportMaterialInterface: key = "support_interface_flow_ratio"; break;
+        default: break; // SupportTransition, bridges and ironing have no extra role factor here.
+        }
+        if (key)
+            return config.opt_float(key);
+    }
+    return 1.;
+}
 void append_entity(Result& result,
                    const ExtrusionEntity& entity,
                    double z,
@@ -165,17 +195,18 @@ void append_entity(Result& result,
                    int head,
                    const Source& source,
                    const DynamicPrintConfig& config,
-                   bool support)
+                   bool support,
+                   bool first_layer)
 {
     if (const auto* collection = dynamic_cast<const ExtrusionEntityCollection*>(&entity)) {
         for (const auto* child : collection->entities)
-            append_entity(result, *child, z, shift, origin, head, source, config, support);
+            append_entity(result, *child, z, shift, origin, head, source, config, support, first_layer);
     } else if (const auto* loop = dynamic_cast<const ExtrusionLoop*>(&entity)) {
         for (const auto& path : loop->paths)
-            append_entity(result, path, z, shift, origin, head, source, config, support);
+            append_entity(result, path, z, shift, origin, head, source, config, support, first_layer);
     } else if (const auto* multi = dynamic_cast<const ExtrusionMultiPath*>(&entity)) {
         for (const auto& path : multi->paths)
-            append_entity(result, path, z, shift, origin, head, source, config, support);
+            append_entity(result, path, z, shift, origin, head, source, config, support, first_layer);
     } else if (const auto* path = dynamic_cast<const ExtrusionPath*>(&entity)) {
         if (path->is_force_no_extrusion() || path->polyline.points.size() < 2)
             return;
@@ -189,10 +220,28 @@ void append_entity(Result& result,
         out.height               = path->height;
         out.mm3_per_mm           = path->mm3_per_mm;
         out.process              = source.process;
+        // Explicit adaptive 5D limits do not constrain Orca's native role widths.
+        out.process.local_width_limits.reset();
+        out.process.surface_flow_ratio = 1.; // The resolved 5D outer-wall factor is not a native role factor.
+        out.process.print_flow_ratio = config.opt_float("print_flow_ratio");
+        out.process.flow_ratio = config.opt_float("filament_flow_ratio", 0);
+        out.role_flow_ratio = native_role_flow(config, out.role);
+        if (first_layer && config.opt_bool("set_other_flow_ratios") && out.role != erBrim && out.role != erSkirt)
+            out.first_layer_flow_ratio = config.opt_float("first_layer_flow_ratio");
+        for (double factor : {out.process.flow_ratio, out.process.print_flow_ratio, out.role_flow_ratio, out.first_layer_flow_ratio})
+            if (!std::isfinite(factor) || factor < 0.)
+                throw std::invalid_argument("Hybrid core preview requires nonnegative finite native flow factors");
+        out.nominal_supplied_mm3_per_mm = out.mm3_per_mm * out.process.flow_ratio * out.process.print_flow_ratio *
+                                          out.role_flow_ratio * out.first_layer_flow_ratio;
+        if (!std::isfinite(out.nominal_supplied_mm3_per_mm) || out.nominal_supplied_mm3_per_mm < 0.)
+            throw std::invalid_argument("Invalid nominal conventional material supply");
+        out.flow_geometry_unverified = out.process.flow_ratio * out.process.print_flow_ratio * out.role_flow_ratio *
+                                           out.first_layer_flow_ratio != 1. || config.opt_bool("small_area_infill_flow_compensation");
         out.process.line_width   = out.width;
         out.process.layer_height = out.height;
-        out.process.speed        = std::min(nominal_speed(config, out.role, source.process.speed),
-                                            source.process.volumetric_limit / std::max(out.mm3_per_mm * source.process.flow_ratio, 1e-12));
+        out.process.speed = nominal_speed(config, out.role, source.process.speed);
+        if (out.nominal_supplied_mm3_per_mm > 0.)
+            out.process.speed = std::min(out.process.speed, source.process.volumetric_limit / out.nominal_supplied_mm3_per_mm);
         for (const auto& p : path->polyline.points)
             out.points.emplace_back(unscale<double>(p.x() + shift.x()) + origin.x(), unscale<double>(p.y() + shift.y()) + origin.y(),
                                     z + origin.z());
@@ -231,20 +280,22 @@ void run_pass(Result& result,
     print.process();
     if (canceled && canceled())
         throw CanceledException();
+    if (config.opt_bool("small_area_infill_flow_compensation"))
+        result.warnings.push_back("Nominal conventional supply excludes Orca's small-area G-code flow compensation.");
     for (const auto* printed : print.objects()) {
         for (const auto& instance : printed->instances()) {
             if (!support_only)
                 for (const auto* layer : printed->layers())
                     for (const auto* region : layer->regions()) {
                         append_entity(result, region->perimeters, layer->print_z, instance.shift, result.local_origin, head, source, config,
-                                      false);
+                                      false, layer->id() == 0 && std::abs(layer->bottom_z()) < EPSILON);
                         append_entity(result, region->fills, layer->print_z, instance.shift, result.local_origin, head, source, config,
-                                      false);
+                                      false, layer->id() == 0 && std::abs(layer->bottom_z()) < EPSILON);
                     }
             if (collect_support)
                 for (const auto* layer : printed->support_layers())
                     append_entity(result, layer->support_fills, layer->print_z, instance.shift, result.local_origin, head, source, config,
-                                  true);
+                                  true, layer->id() == 0 && std::abs(layer->bottom_z()) < EPSILON);
         }
     }
 }

@@ -32,6 +32,7 @@ struct Input
     FormorixGeometry::Mesh solid;
     std::vector<RegionInput> regions;
     FormorixMaterial::Options material_options;
+    std::size_t max_motions = 500000; // caller may lower the fixed preview resource ceiling
 };
 struct FloatMesh
 {
@@ -75,6 +76,10 @@ struct RegionResult
     double nominal_core_overlap  = 0.; // sampled projection past the local core interface, not a global collision certificate
     std::string deposition_model = "CoalescedOrcaStadiumRibbon/v1";
     double compacted_width = 0., supplied_area = 0.;
+    double minimum_local_width = INFINITY, maximum_local_width = 0.;
+    double maximum_boundary_remainder = 0.;
+    bool adaptive_boundary = false;
+    std::string boundary_diagnostic;
     bool inadmissible_material        = false;
     double excess_material_volume_mm3 = 0.;
     // Projected diagnostics, not certified 3D volumes on curved surfaces.
@@ -114,6 +119,7 @@ struct UnderlaySegment
     bool support = false;
     bool infill  = false; // sparse conventional infill, excluded when region.use_infill is false
     bool bridge  = false; // hanging bead placement is not certified by the supported rounded-rectangle audit
+    bool flow_geometry_unverified = false; // changed supply has no calibrated native cross-section
 };
 // Geometric contact against actual Orca extrusion sweeps. No strength/adhesion/schedule claim.
 void audit_underlay(Result&, const std::vector<UnderlaySegment>&, const std::function<bool()>& canceled = {});

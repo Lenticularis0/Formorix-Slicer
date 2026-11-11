@@ -996,3 +996,76 @@ TEST_CASE("Ribbon volume ledgers reject invalid quantities and nonfinite uncerta
     const double maximum = std::numeric_limits<double>::max();
     CHECK_THROWS(FP::ribbon_balance(maximum, maximum, maximum));
 }
+
+TEST_CASE("Local ribbon widths require declared limits and preserve every configured flow component",
+          "[FormorixFoundations][RibbonModel]")
+{
+    auto p = profile(0);
+    p.line_width = .88;
+    p.layer_height = .2;
+    p.flow_ratio = .98;
+    p.print_flow_ratio = 1.03;
+    p.surface_flow_ratio = .97;
+    p.speed = 500.;
+    p.volumetric_limit = 8.;
+    CHECK_THROWS(FP::ribbon_section(p, .9));
+    p.local_width_limits = FP::WidthLimits{.8, 1.};
+    const nlohmann::json before = p;
+    for (double width : {.8, .9, 1.}) {
+        const auto section = FP::ribbon_section(p, width);
+        const double area = (.2 * (width - .2) + pi * .2 * .2 / 4.) * .98 * 1.03 * .97;
+        CHECK_THAT(section.requested_width, WithinAbs(width, 1e-12));
+        CHECK_THAT(section.supplied_area, WithinAbs(area, 1e-12));
+        CHECK_THAT(section.compacted_width * section.height, WithinAbs(area, 1e-12));
+        CHECK_THAT(FP::ribbon_speed(p, width), WithinAbs(8. / area, 1e-12));
+    }
+    CHECK(nlohmann::json(p) == before);
+    CHECK_THROWS(FP::ribbon_section(p, .799));
+    CHECK_THROWS(FP::ribbon_section(p, 1.001));
+    CHECK_THROWS(FP::ribbon_section(p, std::numeric_limits<double>::quiet_NaN()));
+    // A declared interval cannot waive the actual layer/corrected-section limits.
+    p.line_width = .3;
+    p.local_width_limits = FP::WidthLimits{.1, .5};
+    CHECK_THROWS(FP::ribbon_section(p, .19));
+    p.layer_height = .1;
+    CHECK_NOTHROW(FP::ribbon_section(p, .19));
+    p.surface_flow_ratio = .001; // Orca permits positive role factors below 0.01.
+    CHECK_NOTHROW(FP::ribbon_section(p, .19));
+    p.surface_flow_ratio = 0.;
+    CHECK_THROWS(FP::ribbon_section(p, .19));
+    p.surface_flow_ratio = std::numeric_limits<double>::denorm_min();
+    p.flow_ratio = .1;
+    p.print_flow_ratio = .01;
+    CHECK_THROWS(FP::effective_surface_flow(p));
+    CHECK_THROWS(FP::ribbon_section(p, .19));
+    p.flow_ratio = p.print_flow_ratio = 1.;
+    CHECK_THAT(FP::effective_surface_flow(p), WithinAbs(std::numeric_limits<double>::denorm_min(), 0.));
+    CHECK_THROWS(FP::ribbon_section(p, .19));
+    CHECK_THROWS(FP::ribbon_speed(p, .19));
+}
+
+TEST_CASE("Legacy process snapshots have neutral additional flow and no adaptive width authorization",
+          "[FormorixFoundations][RibbonModel]")
+{
+    auto p = profile(1);
+    p.local_width_limits = FP::WidthLimits{.3, .8};
+    p.print_flow_ratio = 1.1;
+    p.surface_flow_ratio = .9;
+    auto data = nlohmann::json(p);
+    const auto restored = data.get<FP::Profile>();
+    REQUIRE(restored.local_width_limits);
+    CHECK_THAT(restored.print_flow_ratio, WithinAbs(1.1, 1e-12));
+    CHECK_THAT(restored.surface_flow_ratio, WithinAbs(.9, 1e-12));
+    data.erase("local_width_limits");
+    data.erase("print_flow_ratio");
+    data.erase("surface_flow_ratio");
+    const auto legacy = data.get<FP::Profile>();
+    CHECK_FALSE(legacy.local_width_limits);
+    CHECK_THAT(FP::effective_surface_flow(legacy), WithinAbs(legacy.flow_ratio, 1e-12));
+    for (double bad : {0., -1., std::numeric_limits<double>::infinity(), std::numeric_limits<double>::quiet_NaN()}) {
+        auto invalid = legacy;
+        invalid.print_flow_ratio = bad;
+        CHECK_FALSE(FP::valid(invalid));
+        CHECK_THROWS(FP::ribbon_section(invalid));
+    }
+}

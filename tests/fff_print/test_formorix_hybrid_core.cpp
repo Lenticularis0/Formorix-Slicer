@@ -161,6 +161,11 @@ TEST_CASE("Native support paths use their independent support head configuration
     auto configs = sources();
     for (auto& s : configs)
         s.config.set_deserialize_strict({{"enable_support", "1"}, {"support_threshold_angle", "60"}, {"support_type", "normal(auto)"}});
+    configs[1].process.flow_ratio = .91;
+    configs[1].process.surface_flow_ratio = 1.7; // 5D outer-wall metadata must not affect native support.
+    configs[1].config.set_deserialize_strict({{"print_flow_ratio", "1.13"}, {"set_other_flow_ratios", "1"},
+                                            {"support_flow_ratio", "0.66"}, {"support_interface_flow_ratio", "0.77"},
+                                            {"first_layer_flow_ratio", "1.15"}});
     const auto result = CP::slice(core, configs, 0, 1);
     INFO(result.error);
     REQUIRE(result.ok());
@@ -172,8 +177,105 @@ TEST_CASE("Native support paths use their independent support head configuration
             CHECK(path.process.material_id == "PVA");
             CHECK_THAT(path.process.nozzle_diameter, WithinAbs(.4, 1e-12));
             CHECK(path.width > 0.);
+            const double role_factor = path.role == erSupportMaterial ? .66 : path.role == erSupportMaterialInterface ? .77 : 1.;
+            CHECK_THAT(path.role_flow_ratio, WithinAbs(role_factor, 1e-12));
+            CHECK_THAT(path.process.surface_flow_ratio, WithinAbs(1., 1e-12));
+            CHECK_THAT(path.nominal_supplied_mm3_per_mm,
+                       WithinAbs(path.mm3_per_mm * .91 * 1.13 * role_factor * path.first_layer_flow_ratio, 1e-12));
         }
     CHECK(found);
+}
+TEST_CASE("Native flow metadata applies export ratios once without changing Orca geometry", "[FormorixHybridCore]")
+{
+    const auto core = geometry(Test::cube(8.));
+    const auto baseline = CP::slice(core, sources(), 0, -1);
+    INFO(baseline.error);
+    REQUIRE(baseline.ok());
+    const std::vector<std::pair<ExtrusionRole, double>> optional_role_factors{
+        {erExternalPerimeter, .82}, {erPerimeter, .88}, {erInternalInfill, .93}, {erSolidInfill, 1.04}, {erGapFill, .97}};
+    const std::vector<std::pair<ExtrusionRole, double>> always_role_factors{
+        {erTopSolidInfill, .79}, {erBottomSurface, 1.21}, {erInternalBridgeInfill, 1.07}};
+    for (bool enabled : {false, true}) {
+        auto configs = sources();
+        auto& source = configs[0];
+        source.process.flow_ratio = .91;
+        source.process.print_flow_ratio = .77; // The actual projected Orca pass is authoritative.
+        source.process.surface_flow_ratio = 1.7;
+        source.process.local_width_limits = FormorixProcess::WidthLimits{.8, .95};
+        source.process.volumetric_limit = .2;
+        source.config.set_deserialize_strict({{"print_flow_ratio", "1.13"},
+                                             {"set_other_flow_ratios", enabled ? "1" : "0"},
+                                             {"outer_wall_flow_ratio", "0.82"}, {"inner_wall_flow_ratio", "0.88"},
+                                             {"sparse_infill_flow_ratio", "0.93"}, {"internal_solid_infill_flow_ratio", "1.04"},
+                                             {"gap_fill_flow_ratio", "0.97"}, {"top_solid_infill_flow_ratio", "0.79"},
+                                             {"bottom_solid_infill_flow_ratio", "1.21"}, {"internal_bridge_flow", "1.07"},
+                                             {"first_layer_flow_ratio", "1.15"}});
+        const auto result = CP::slice(core, configs, 0, -1);
+        INFO(result.error);
+        REQUIRE(result.ok());
+        REQUIRE(result.paths.size() == baseline.paths.size());
+        bool external = false, sparse = false, top = false, bottom = false, first_layer = false;
+        for (std::size_t i = 0; i < result.paths.size(); ++i) {
+            const auto& path = result.paths[i];
+            const auto& original = baseline.paths[i];
+            CHECK(path.points == original.points);
+            CHECK(path.role == original.role);
+            CHECK_THAT(path.width, WithinAbs(original.width, 1e-12));
+            CHECK_THAT(path.height, WithinAbs(original.height, 1e-12));
+            CHECK_THAT(path.mm3_per_mm, WithinAbs(original.mm3_per_mm, 1e-12));
+            double role_factor = 1.;
+            for (const auto& factor : optional_role_factors)
+                if (enabled && path.role == factor.first)
+                    role_factor = factor.second;
+            for (const auto& factor : always_role_factors)
+                if (path.role == factor.first)
+                    role_factor = factor.second;
+            const bool on_first = std::abs(path.points.front().z() - .2) < 1e-6;
+            const double first_factor = enabled && on_first ? 1.15 : 1.;
+            CHECK_THAT(path.role_flow_ratio, WithinAbs(role_factor, 1e-12));
+            CHECK_THAT(path.first_layer_flow_ratio, WithinAbs(first_factor, 1e-12));
+            CHECK_THAT(path.process.flow_ratio, WithinAbs(.91, 1e-12));
+            CHECK_THAT(path.process.print_flow_ratio, WithinAbs(1.13, 1e-12));
+            CHECK_THAT(path.process.surface_flow_ratio, WithinAbs(1., 1e-12));
+            CHECK_FALSE(path.process.local_width_limits);
+            CHECK(path.flow_geometry_unverified);
+            const double expected_supply = original.mm3_per_mm * .91 * 1.13 * role_factor * first_factor;
+            CHECK_THAT(path.nominal_supplied_mm3_per_mm, WithinAbs(expected_supply, 1e-12));
+            CHECK_THAT(path.process.speed * path.nominal_supplied_mm3_per_mm, WithinAbs(.2, 1e-10));
+            external |= path.role == erExternalPerimeter;
+            sparse |= path.role == erInternalInfill;
+            top |= path.role == erTopSolidInfill;
+            bottom |= path.role == erBottomSurface;
+            first_layer |= on_first;
+        }
+        CHECK(external);
+        CHECK(sparse);
+        CHECK(top);
+        CHECK(bottom);
+        CHECK(first_layer);
+        CHECK_THAT(source.process.print_flow_ratio, WithinAbs(.77, 1e-12));
+        CHECK_THAT(source.process.surface_flow_ratio, WithinAbs(1.7, 1e-12));
+        REQUIRE(source.process.local_width_limits);
+        CHECK_THAT(source.process.local_width_limits->minimum_mm, WithinAbs(.8, 1e-12));
+    }
+}
+TEST_CASE("Zero native role flow retains display geometry without claiming material supply", "[FormorixHybridCore]")
+{
+    auto configs = sources();
+    configs[0].config.set_deserialize_strict("top_solid_infill_flow_ratio", "0");
+    const auto result = CP::slice(geometry(Test::cube(8.)), configs, 0, -1);
+    INFO(result.error);
+    REQUIRE(result.ok());
+    bool top = false;
+    for (const auto& path : result.paths)
+        if (path.role == erTopSolidInfill) {
+            top = true;
+            CHECK(path.mm3_per_mm > 0.);
+            CHECK_THAT(path.nominal_supplied_mm3_per_mm, WithinAbs(0., 1e-15));
+            CHECK(path.flow_geometry_unverified);
+            CHECK(std::isfinite(path.process.speed));
+        }
+    CHECK(top);
 }
 TEST_CASE("An explicitly selected second nozzle retains its process variant in the isolated core pass", "[FormorixHybridCore]")
 {

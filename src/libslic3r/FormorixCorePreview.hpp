@@ -22,7 +22,12 @@ struct Path
     std::vector<Vec3d> points; // source model coordinates; top of the conventional bead
     int head = 0;
     FormorixProcess::Profile process;
-    double width = 0., height = 0., mm3_per_mm = 0.;
+    double width = 0., height = 0., mm3_per_mm = 0.; // native geometric flow, before export-only ratios
+    double role_flow_ratio = 1., first_layer_flow_ratio = 1.;
+    // Static Orca export factors applied once; no small-area or dynamic G-code compensation.
+    double nominal_supplied_mm3_per_mm = 0.;
+    // Static flow changes do not establish a new deposited cross-section.
+    bool flow_geometry_unverified = false;
     ExtrusionRole role = erNone;
     bool support       = false;
 };

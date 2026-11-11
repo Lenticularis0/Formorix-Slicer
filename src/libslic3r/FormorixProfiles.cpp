@@ -5,6 +5,8 @@
 #include "PresetBundle.hpp"
 #include "PrintConfig.hpp"
 #include "Config.hpp"
+#include "Flow.hpp"
+#include "I18N.hpp"
 #include <nlohmann/json.hpp>
 #include <algorithm>
 #include <array>
@@ -16,6 +18,8 @@
 #include <utility>
 #include <vector>
 
+#define L(s) Slic3r::I18N::translate(s)
+
 namespace Slic3r::FormorixProfiles {
 namespace {
 const Preset& current(const PresetCollection& collection, const std::string& name)
@@ -25,7 +29,7 @@ const Preset& current(const PresetCollection& collection, const std::string& nam
         return edited;
     const auto* saved = collection.find_preset(name, false);
     if (!saved)
-        throw std::invalid_argument("An assigned Formorix material or nozzle preset is missing");
+        throw std::invalid_argument(L("An assigned Formorix material, nozzle or process preset is missing"));
     return *saved;
 }
 nlohmann::json contents(const DynamicPrintConfig& config)
@@ -49,7 +53,7 @@ Source source(const PresetBundle& bundle, const FormorixSurfaces::Head& head, do
     Source s;
     s.printer  = current(bundle.printers, head.printer_preset);
     s.material = current(bundle.filaments, head.material_preset);
-    s.process  = bundle.prints.get_edited_preset();
+    s.process  = current(bundle.prints, head.process_preset);
     s.project  = bundle.project_config;
     s.machine  = bundle.printers.get_edited_preset().config;
     // A separately assigned nozzle source has its own volume type; the active
@@ -59,21 +63,24 @@ Source source(const PresetBundle& bundle, const FormorixSurfaces::Head& head, do
             s.project.set_key_value("nozzle_volume_type", type->clone());
     s.nozzle_index = head.nozzle_index;
     s.layer_height = layer_height;
+    s.local_width_limits = head.local_width_limits;
     return s;
 }
 std::string signature(const Source& s)
 {
     // Exact serialized contents, not a name, timestamp or collision-prone hash.
-    return nlohmann::json{{"printer", contents(s.printer)}, {"material", contents(s.material)}, {"process", contents(s.process)},
+    nlohmann::json result{{"printer", contents(s.printer)}, {"material", contents(s.material)}, {"process", contents(s.process)},
                           {"project", contents(s.project)}, {"machine", contents(s.machine)},   {"nozzle_index", s.nozzle_index},
-                          {"layer_height", s.layer_height}}
-        .dump();
+                          {"layer_height", s.layer_height}};
+    if (s.local_width_limits) result["local_width_limits"] = *s.local_width_limits;
+    return result.dump();
 }
 Resolved resolve(const Source& source)
 {
     if (source.printer.type != Preset::TYPE_PRINTER || source.material.type != Preset::TYPE_FILAMENT ||
         source.process.type != Preset::TYPE_PRINT || source.printer.name.empty() || source.material.name.empty() ||
-        !std::isfinite(source.layer_height) || source.layer_height < 0.)
+        !std::isfinite(source.layer_height) || source.layer_height < 0. ||
+        (source.local_width_limits && !FormorixProcess::valid(*source.local_width_limits)))
         throw std::invalid_argument("Invalid Formorix profile source");
     const auto* nozzle = source.printer.config.option<ConfigOptionFloats>("nozzle_diameter");
     if (!nozzle || source.nozzle_index >= nozzle->values.size())
@@ -118,12 +125,16 @@ Resolved resolve(const Source& source)
         resolved_nozzles->values[out.nozzle_index] != nozzle->values[source.nozzle_index])
         throw std::invalid_argument("The nozzle preset layout could not be resolved without changing its slot");
     const double diameter = resolved_nozzles->values[out.nozzle_index];
-    double width          = out.config.get_abs_value("outer_wall_line_width", diameter);
-    if (width == 0.)
-        width = out.config.get_abs_value("line_width", diameter);
-    if (width == 0.)
-        width = diameter * 1.05;
     const double height = source.layer_height > 0. ? source.layer_height : out.config.opt_float("layer_height");
+    const auto* width_option = out.config.option<ConfigOptionFloatOrPercent>("outer_wall_line_width");
+    if (width_option && width_option->value == 0.)
+        width_option = out.config.option<ConfigOptionFloatOrPercent>("line_width");
+    if (!width_option) throw std::invalid_argument(L("Missing Orca surface line width"));
+    const auto native_flow = Flow::new_from_config_width(frExternalPerimeter, *width_option, float(diameter), float(height));
+    // Preserve explicitly configured dimensions in double precision; only the
+    // existing native automatic-width rule has a float-valued result.
+    const double width = !width_option->percent && width_option->value <= 0. ?
+                             double(native_flow.width()) : width_option->get_abs_value(diameter);
     const auto* speeds  = dynamic_cast<const ConfigOptionVector<double>*>(out.config.option("outer_wall_speed"));
     if (!speeds || speeds->values.empty())
         throw std::invalid_argument("Missing Formorix surface speed");
@@ -133,6 +144,9 @@ Resolved resolve(const Source& source)
                                         source.material.filament_id;
     out.process = FormorixProcess::from_orca(out.config, out.nozzle_index, 0, material_id,
                                              source.printer.name + " / " + std::to_string(out.nozzle_index), width, height, speed);
+    out.process.local_width_limits = source.local_width_limits;
+    if (!FormorixProcess::valid(out.process))
+        throw std::invalid_argument(L("The Orca surface width is outside the declared local line width limits"));
     return out;
 }
 Resolved refresh(const PresetBundle& bundle, FormorixSurfaces::Head& head)

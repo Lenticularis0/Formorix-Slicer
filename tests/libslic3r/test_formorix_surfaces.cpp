@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_message.hpp>
 #include <catch2/generators/catch_generators.hpp>
+#include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include "libslic3r/FormorixSurfaces.hpp"
 #include "libslic3r/FormorixProcess.hpp"
@@ -18,6 +19,8 @@
 #include <nlohmann/json.hpp>
 #include <algorithm>
 #include <memory>
+#include <limits>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -87,11 +90,16 @@ TEST_CASE("Per-head deposition profiles survive native project archives", "[Form
         project->heads[h].material_preset = "Orca material " + std::to_string(h);
         project->heads[h].printer_preset = "Orca nozzle source " + std::to_string(h);
         project->heads[h].nozzle_index = unsigned(h);
+        project->heads[h].process_preset = "Orca process " + std::to_string(h);
+        project->heads[h].local_width_limits = FormorixProcess::WidthLimits{.3 + .2 * h, .6 + .2 * h};
         Slic3r::FormorixProcess::Profile process;
         process.material_id = "material-" + std::to_string(h);
         process.nozzle_profile = "nozzle-" + std::to_string(h);
         process.nozzle_diameter = .4 + .2 * h;
         process.line_width = process.nozzle_diameter * 1.1;
+        process.local_width_limits = project->heads[h].local_width_limits;
+        process.print_flow_ratio = .95 + .02 * h;
+        process.surface_flow_ratio = 1.01 + .01 * h;
         project->heads[h].process = process;
     }
     model.formorix_surfaces = project->encode();
@@ -154,6 +162,35 @@ TEST_CASE("Surface project input rejects unsupported schemas and invalid bounds"
     std::string error;
     CHECK_FALSE(FS::Project::decode(data.dump(), error));
     CHECK_FALSE(error.empty());
+}
+
+TEST_CASE("Declared head widths reject invalid ranges and clear only derived process snapshots", "[FormorixSurfaces]")
+{
+    FS::Project project;
+    auto& head = project.heads[0];
+    head.process = FormorixProcess::Profile{};
+    head.process->material_id = "material";
+    head.process->nozzle_profile = "nozzle";
+    head.assign_width_limits(FormorixProcess::WidthLimits{.3, .6});
+    CHECK_FALSE(head.process);
+    head.assign_process("Existing Orca process");
+    const auto saved = nlohmann::json::parse(project.encode());
+    for (const auto& invalid : {nlohmann::json{{"minimum_mm", .7}, {"maximum_mm", .6}},
+                               nlohmann::json{{"minimum_mm", 0.}, {"maximum_mm", .6}},
+                               nlohmann::json{{"minimum_mm", .3}, {"maximum_mm", nullptr}},
+                               nlohmann::json{{"minimum_mm", ".3"}, {"maximum_mm", .6}}}) {
+        auto data = saved;
+        data["heads"][0]["local_width_limits"] = invalid;
+        std::string error;
+        CHECK_FALSE(FS::Project::decode(data.dump(), error));
+        CHECK_FALSE(error.empty());
+    }
+    CHECK_THROWS(head.assign_width_limits(FormorixProcess::WidthLimits{.3, std::numeric_limits<double>::infinity()}));
+    REQUIRE(head.local_width_limits);
+    CHECK_THAT(head.local_width_limits->maximum_mm, Catch::Matchers::WithinAbs(.6, 1e-12));
+    head.assign_width_limits(std::nullopt);
+    CHECK_FALSE(head.local_width_limits);
+    CHECK(head.process_preset == "Existing Orca process");
 }
 
 TEST_CASE("Merging regions preserves paint ownership and records continuous path intent", "[FormorixSurfaces]")

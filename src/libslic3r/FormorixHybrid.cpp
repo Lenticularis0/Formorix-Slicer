@@ -1,4 +1,5 @@
 #include "FormorixHybrid.hpp"
+#include "FormorixBoundary.hpp"
 #include "FormorixDeposition.hpp"
 #include "Formorix5D.hpp"
 #include "FormorixGeometry.hpp"
@@ -696,18 +697,66 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
             if (!assigned)
                 throw std::runtime_error("Missing allocated 5D skin");
             Wall allocated(*assigned);
-            // Draft/standard/fine affect only longitudinal interpolation work.
-            // The volume-derived transverse pitch and configured flow are fixed.
+            // Quality affects longitudinal interpolation. Adaptive transverse
+            // widths require explicit limits and leave every Flow factor intact.
             const double path_step      = std::array<double, 3>{1., .5, .2}[r.settings.quality];
             const double midpoint_error = std::array<double, 3>{.002, .0005, .0001}[r.settings.quality];
             const double axis_delta     = std::array<double, 3>{.04, .015, .005}[r.settings.quality];
-            std::map<double, std::vector<PV::Pose>> outer_cache;
-            auto outer_for = [&](double h) -> const std::vector<PV::Pose>& {
+            struct OuterPath
+            {
+                std::vector<PV::Pose> poses;
+                std::vector<std::array<Vec3d, 2>> lateral;
+                PS::Profile profile;
+                double construction_bound = 0.;
+            };
+            std::map<double, OuterPath> outer_cache;
+            auto outer_for = [&](double h) -> const OuterPath& {
                 const auto found = outer_cache.find(h);
                 if (found != outer_cache.end())
                     return found->second;
                 auto profile                  = r.process;
                 profile.layer_height          = h;
+                OuterPath planned;
+                planned.profile = profile;
+                if (flat && r.settings.boundary_margin == 0. && out.partition.mitered_vertices == 0) {
+                    Vec3d u = std::abs(normal.x()) < .8 ? Vec3d::UnitX() : Vec3d::UnitY();
+                    if (r.settings.direction == FS::Direction::Custom)
+                        u = Vec3d(r.settings.custom_direction[0], r.settings.custom_direction[1], r.settings.custom_direction[2]);
+                    if (r.settings.direction == FS::Direction::Edge && r.settings.edge_selected)
+                        u = Vec3d(r.settings.edge[3] - r.settings.edge[0], r.settings.edge[4] - r.settings.edge[1],
+                                  r.settings.edge[5] - r.settings.edge[2]);
+                    u -= normal * u.dot(normal);
+                    if (u.norm() < 1e-10)
+                        throw std::runtime_error("The requested raster direction is perpendicular to the surface");
+                    u.normalize();
+                    const Vec3d v = normal.cross(u), origin = r.surface.vertices.front();
+                    FormorixBoundary::Domain domain;
+                    for (const auto& vertex : r.surface.vertices) {
+                        const Vec3d delta = vertex - origin;
+                        domain.vertices.emplace_back(delta.dot(u), delta.dot(v));
+                    }
+                    domain.triangles = r.surface.faces;
+                    const auto boundary = FormorixBoundary::plan(domain, profile, {}, cancel);
+                    rr.boundary_diagnostic = boundary.reason;
+                    if (boundary.status == FormorixBoundary::Status::Unsupported && profile.local_width_limits)
+                        out.warnings.push_back(boundary.reason);
+                    if (boundary.status == FormorixBoundary::Status::Canceled)
+                        throw std::runtime_error("Hybrid calculation canceled");
+                    if (boundary.status != FormorixBoundary::Status::Unsupported && !boundary.ok())
+                        throw std::runtime_error(boundary.reason);
+                    if (boundary.ok()) {
+                        planned.profile = boundary.local_profile;
+                        planned.construction_bound = boundary.construction_bound + boundary.boundary_deviation_bound;
+                        auto lift = [&](const Vec2d& point) -> Vec3d { return origin + point.x() * u + point.y() * v; };
+                        for (const auto& point : boundary.path)
+                            planned.poses.push_back({lift(point), normal});
+                        for (const auto& rail : boundary.lateral_endpoints)
+                            planned.lateral.push_back({lift(rail[0]), lift(rail[1])});
+                        rr.adaptive_boundary |= boundary.width_adjusted;
+                        rr.maximum_boundary_remainder = std::max(rr.maximum_boundary_remainder, boundary.residual_width);
+                        return outer_cache.emplace(h, std::move(planned)).first->second;
+                    }
+                }
                 const auto section            = PS::ribbon_section(profile);
                 FS::Settings settings         = r.settings;
                 settings.shell_mode           = FS::ShellMode::Layers;
@@ -756,7 +805,8 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                 refined.push_back(outer.front());
                 for (size_t i = 1; i < outer.size(); ++i)
                     refine(outer[i - 1], outer[i], 0);
-                return outer_cache.emplace(h, std::move(refined)).first->second;
+                planned.poses = std::move(refined);
+                return outer_cache.emplace(h, std::move(planned)).first->second;
             };
             if (flat)
                 rr.accuracy.bounds[3] = seed_conversion + 1e-9 + 2. * plane_error + 2. * rr.shell_depth * normal_spread;
@@ -765,15 +815,23 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                 boundaries.push_back(boundaries.back() + height);
             bool all_layers_covered = true, all_supplies_match = true;
             double material_bound = 0.;
+            double construction_bound = 0.;
             size_t terminated     = 0;
             for (size_t rev = heights[index].size(); rev > 0; --rev) {
                 canceled(cancel);
                 const double h = heights[index][rev - 1];
                 const double depth = boundaries[rev - 1];
-                auto profile         = r.process;
-                profile.layer_height = h;
+                const auto& planned  = outer_for(h);
+                const auto& profile  = planned.profile;
                 const auto section   = PS::ribbon_section(profile);
-                const auto& outer    = outer_for(h);
+                const auto& outer    = planned.poses;
+                rr.minimum_local_width = std::min(rr.minimum_local_width, profile.line_width);
+                rr.maximum_local_width = std::max(rr.maximum_local_width, profile.line_width);
+                if (rev == 1) {
+                    rr.pitch = rr.compacted_width = section.compacted_width;
+                    rr.supplied_area = section.supplied_area;
+                }
+                construction_bound = std::max(construction_bound, planned.construction_bound);
                 PV::Layer layer;
                 layer.depth = depth;
                 auto mesh   = r.surface;
@@ -781,13 +839,14 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                     mesh.vertices[i] -= depth * surface.normals[i];
                 layer.surface = to_float(mesh).mesh;
                 std::vector<PV::Pose> tcp, contacts;
+                auto lateral = planned.lateral;
                 struct Node
                 {
                     PV::Pose center, tcp, contact;
                     Vec3d normal;
                 };
                 auto node = [&](const Vec3d& p) {
-                    const auto [q, n]   = surface.at(p);
+                    const auto [q, n]   = lateral.empty() ? surface.at(p) : std::make_pair(p, normal);
                     const Vec3d axis    = orientation(n, r.settings, r.max_tilt);
                     const Vec3d contact = q - depth * n;
                     return Node{{contact - h * .5 * n, axis}, {contact + axis * profile.contact_to_tcp, axis}, {q, axis}, n};
@@ -810,7 +869,7 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                     return true;
                 };
                 auto append = [&](const Node& p, bool extrusion) {
-                    if (++motion_elements > 500000)
+                    if (++motion_elements > std::min(input.max_motions, std::size_t(500000)))
                         throw std::runtime_error("Hybrid movement budget exceeded; reduce the marked area or layer count");
                     layer.path.push_back(p.center);
                     tcp.push_back(p.tcp);
@@ -822,6 +881,12 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                 };
                 append(node(outer.front().position), true);
                 for (size_t i = 1; i < outer.size(); ++i) {
+                    if (!lateral.empty()) {
+                        // The finite planar construction already terminates at
+                        // its exact rectangle. Spatial containment remains audited.
+                        append(node(outer[i].position), true);
+                        continue;
+                    }
                     const Vec3d direction                          = outer[i].position - outer[i - 1].position;
                     std::function<void(Node, Node, int)> terminate = [&](Node a, Node b, int level) {
                         const Node middle = node((a.contact.position + b.contact.position) * .5);
@@ -839,6 +904,9 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                     std::reverse(tcp.begin(), tcp.end());
                     std::reverse(contacts.begin(), contacts.end());
                     std::reverse(layer.extruding.begin(), layer.extruding.end());
+                    std::reverse(lateral.begin(), lateral.end());
+                    for (auto& rail : lateral)
+                        std::swap(rail[0], rail[1]);
                 }
                 const int global_layer = int(out.preview.layers.size());
                 auto& track            = out.preview.timeline.heads[r.head];
@@ -874,6 +942,10 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                     value.height_endpoints = std::array<Vec3d, 2>{
                         contacts[i].position - boundaries[rev] * layer.path[i].axis,
                         contacts[i].position - boundaries[rev - 1] * layer.path[i].axis};
+                    if (!lateral.empty()) {
+                        const Vec3d offset = layer.path[i].position - contacts[i].position;
+                        value.lateral_endpoints = std::array<Vec3d, 2>{lateral[i][0] + offset, lateral[i][1] + offset};
+                    }
                     return value;
                 };
                 begin_run();
@@ -924,6 +996,7 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
             }
             if (rr.deposited_volume <= 0.)
                 throw std::runtime_error("No ribbon extrusion fits inside the allocated shell");
+            rr.accuracy.bounds[3] += construction_bound;
             rr.accuracy.whole_surface_covered       = all_layers_covered;
             rr.accuracy.bounds[4]                   = material_bound;
             rr.accuracy.material_partition_verified = all_layers_covered && all_supplies_match &&
@@ -933,6 +1006,9 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                 out.warnings.push_back(
                     "Region " + std::to_string(r.id) +
                     ": local boundary termination inserted non-extruding movements; their collision safety is unverified");
+            if (rr.maximum_boundary_remainder > 0. ||
+                (r.process.local_width_limits && !rr.adaptive_boundary && !rr.boundary_diagnostic.empty()))
+                out.warnings.push_back(rr.boundary_diagnostic);
             rr.volume_ratio               = rr.shell_volume > 0. ? rr.deposited_volume / rr.shell_volume : INFINITY;
             // The global Boolean volume residual is not a bound for this individual region.
             const auto balance            = PS::ribbon_balance(rr.deposited_volume, rr.shell_volume, 0.);
@@ -1106,7 +1182,7 @@ void audit_underlay(Result& result, const std::vector<UnderlaySegment>& paths, c
             bool unknown_section = false;
             for (size_t path : nearby.at(q)) {
                 const auto& p = paths[path];
-                if (p.bridge || p.width < p.height || std::abs(p.from.z() - p.to.z()) > 1e-8) {
+                if (p.bridge || p.flow_geometry_unverified || p.width < p.height || std::abs(p.from.z() - p.to.z()) > 1e-8) {
                     const Vec3d radius = Vec3d::Constant(std::max(p.width, p.height) / 2. +
                                                          std::min(.05, region.process.layer_height * .25));
                     const Vec3d lower  = p.from.cwiseMin(p.to) - Vec3d(0., 0., p.height / 2.) - radius;

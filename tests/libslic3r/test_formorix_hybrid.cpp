@@ -212,6 +212,61 @@ TEST_CASE("A complete fine outer layer cannot certify missing inner ribbon cells
     CHECK_FALSE(result.regions[0].accuracy.material_partition_verified);
     CHECK_FALSE(result.regions[0].accuracy.verified());
 }
+TEST_CASE("Explicit local width limits fill a noncommensurate rectangle without changing flow", "[FormorixHybrid][BoundaryFill]")
+{
+    auto input = fixture(0, false, true);
+    for (auto& vertex : input.solid.vertices) {
+        vertex.x() *= 2.;
+        vertex.y() *= 6.1 / 6.;
+    }
+    for (auto& vertex : input.regions[0].surface.vertices) {
+        vertex.x() *= 2.;
+        vertex.y() *= 6.1 / 6.;
+    }
+    auto& p = input.regions[0].process;
+    p.line_width = .75 + .2 * (1. - std::acos(-1.) / 4.);
+    p.local_width_limits = PS::WidthLimits{.74, .84};
+    p.volumetric_limit = .7;
+    const auto before = p;
+    const auto result = FH::generate(input);
+    INFO(result.error);
+    INFO(result.material.error);
+    REQUIRE(result.ok());
+    REQUIRE(result.material.ok());
+    CHECK(result.regions[0].adaptive_boundary);
+    CHECK_THAT(result.regions[0].minimum_local_width, WithinAbs(.7625 + .2 * (1. - std::acos(-1.) / 4.), 1e-12));
+    CHECK(result.regions[0].accuracy.verified());
+    CHECK_THAT(result.material.union_volume, WithinAbs(12. * 6.1 * .4, 1e-10));
+    CHECK_THAT(result.material.missing_volume, WithinAbs(0., 0.));
+    CHECK_THAT(result.material.outside_volume, WithinAbs(0., 0.));
+    CHECK_THAT(result.material.duplicate_volume, WithinAbs(0., 0.));
+    for (const auto& motion : result.preview.timeline.heads[0]) {
+        if (!motion.extrusion)
+            continue;
+        REQUIRE(motion.process.has_value());
+        CHECK_THAT(motion.process->line_width, WithinAbs(result.regions[0].minimum_local_width, 1e-12));
+        CHECK_THAT(motion.process->flow_ratio, WithinAbs(before.flow_ratio, 0.));
+        const double speed = (motion.to.position - motion.from.position).norm() / (motion.end - motion.start);
+        CHECK(speed * motion.mm3_per_mm <= before.volumetric_limit + 1e-10);
+    }
+    CHECK_THAT(p.line_width, WithinAbs(before.line_width, 0.));
+    CHECK_THAT(p.flow_ratio, WithinAbs(before.flow_ratio, 0.));
+    metrics("adaptive_rectangle", result);
+}
+TEST_CASE("A fixed profile leaves an explicit noncommensurate boundary remainder", "[FormorixHybrid][BoundaryFill]")
+{
+    auto input = fixture(0);
+    input.regions[0].process.line_width = .7 + .2 * (1. - std::acos(-1.) / 4.);
+    const auto result = FH::generate(input);
+    INFO(result.error);
+    REQUIRE(result.ok());
+    CHECK_FALSE(result.regions[0].adaptive_boundary);
+    CHECK(result.regions[0].maximum_boundary_remainder > 0.);
+    CHECK_FALSE(result.regions[0].accuracy.verified());
+    CHECK(result.material.missing_volume > 0.);
+    CHECK_THAT(result.regions[0].minimum_local_width, WithinAbs(input.regions[0].process.line_width, 0.));
+    metrics("fixed_boundary_remainder", result);
+}
 TEST_CASE("Every hybrid deposition run retains its actual layer head material and supplied volume", "[FormorixHybrid]")
 {
     auto input = fixture(0, true);
@@ -596,6 +651,10 @@ TEST_CASE("Invalid head and region identities are rejected before constructing i
 TEST_CASE("Hybrid expansion bounds the final movement count across all layers", "[FormorixHybrid]")
 {
     auto input = fixture(0);
+    // Exact planar rows no longer need artificial longitudinal subdivisions.
+    // Set the resource ceiling explicitly so this still tests accumulated work,
+    // rather than depending on the old representation's redundant points.
+    input.max_motions = 200;
     for (auto& p : input.solid.vertices) {
         p.x() *= 20.;
         p.y() *= 20.;
