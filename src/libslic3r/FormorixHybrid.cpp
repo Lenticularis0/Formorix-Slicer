@@ -48,6 +48,13 @@ namespace PS = FormorixProcess;
 namespace FS = FormorixSurfaces;
 namespace {
 constexpr double pi = 3.14159265358979323846;
+double scaled_error_bound(double bound, double scale)
+{
+    constexpr double unknown = std::numeric_limits<double>::infinity();
+    if (!std::isfinite(bound) || bound < 0. || !std::isfinite(scale) || scale < 0.)
+        return unknown;
+    return bound == 0. || scale == 0. ? 0. : std::nextafter(bound * scale, unknown);
+}
 const char* preview_issue(PV::Issue issue)
 {
     switch (issue) {
@@ -456,16 +463,71 @@ void coverage(RegionResult& out,
 }
 } // namespace
 
-bool Accuracy::verified(double tolerance) const
+double add_error_bounds(double a, double b)
+{
+    constexpr double unknown = std::numeric_limits<double>::infinity();
+    if (!std::isfinite(a) || a < 0. || !std::isfinite(b) || b < 0.)
+        return unknown;
+    if (a == 0.)
+        return b;
+    if (b == 0.)
+        return a;
+    return std::nextafter(a + b, unknown);
+}
+double Accuracy::total_bound() const
 {
     double sum = 0.;
     for (double b : bounds) {
-        if (!std::isfinite(b) || b < 0.)
-            return false;
-        sum += b;
+        // Even a positive subnormal contribution must not disappear at the
+        // tolerance boundary. Zero and the first term need no addition rounding.
+        sum = add_error_bounds(sum, b);
     }
+    return sum;
+}
+bool Accuracy::verified(double tolerance) const
+{
     return whole_surface_covered && material_volume_plausible && material_partition_verified && std::isfinite(tolerance) &&
-           tolerance > 0. && sum <= tolerance;
+           tolerance > 0. && total_bound() <= tolerance;
+}
+void Accuracy::update_material_evidence(const FormorixMaterial::Result& audit, int region, const std::string& material, bool inadmissible)
+{
+    namespace FM          = FormorixMaterial;
+    whole_surface_covered = material_partition_verified = false;
+    bounds[4]                                           = std::numeric_limits<double>::infinity();
+    const auto nonnegative                              = [](double value) { return std::isfinite(value) && value >= 0.; };
+    const auto bounded                                  = [&](const FM::Distance& distance) {
+        return distance.bounded && nonnegative(distance.lower_bound) && nonnegative(distance.upper_bound) &&
+               distance.lower_bound <= distance.upper_bound && nonnegative(distance.maximum) && nonnegative(distance.mean) &&
+               nonnegative(distance.rms) && distance.maximum <= distance.upper_bound && distance.mean <= distance.upper_bound &&
+               distance.rms <= distance.upper_bound;
+    };
+    const auto supply_consistent = [&](double supplied, double residual, double rounding) {
+        return std::isfinite(supplied) && supplied > 0. && std::isfinite(residual) && nonnegative(rounding) &&
+               std::isfinite(rounding + 1e-8 * std::max(1., supplied)) && std::abs(residual) <= rounding + 1e-8 * std::max(1., supplied);
+    };
+    if (!audit.ok() || !audit.error.empty() || material.empty() || !bounded(audit.boundary_distance) ||
+        !nonnegative(audit.rounding_bound) || audit.duplicate_volume != 0. || audit.core_overlap_volume != 0. ||
+        std::any_of(audit.material_overlaps.begin(), audit.material_overlaps.end(),
+                    [](const auto& overlap) { return overlap.volume != 0.; }) ||
+        !supply_consistent(audit.supplied_volume, audit.supply_geometry_residual, audit.input_rounding_volume_bound))
+        return;
+    const auto evidence = std::find_if(audit.regions.begin(), audit.regions.end(),
+                                       [region](const auto& entry) { return entry.region == region; });
+    if (evidence == audit.regions.end() ||
+        std::count_if(audit.regions.begin(), audit.regions.end(), [region](const auto& entry) { return entry.region == region; }) != 1 ||
+        evidence->material != material || evidence->coverage != FM::Coverage::Full || evidence->missing_volume != 0. ||
+        evidence->outside_volume != 0. || evidence->duplicate_volume != 0. || evidence->core_overlap_volume != 0. ||
+        !std::isfinite(evidence->target_volume) || evidence->target_volume <= 0. || !bounded(evidence->boundary_distance) ||
+        !bounded(evidence->nominal_outer_distance) ||
+        !supply_consistent(evidence->supplied_volume, evidence->supply_geometry_residual, evidence->input_rounding_volume_bound))
+        return;
+    const double outer = evidence->nominal_outer_distance.upper_bound;
+    // The two contributions are independent conservative bounds; preserve this
+    // property through their floating-point addition as well.
+    const double outer_bound    = add_error_bounds(outer, audit.rounding_bound);
+    bounds[4]                   = std::max(evidence->boundary_distance.upper_bound, outer_bound);
+    whole_surface_covered       = true;
+    material_partition_verified = !inadmissible;
 }
 FloatMesh to_float(const FG::Mesh& source)
 {
@@ -681,14 +743,14 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                 reference.signed_distance = [distance, depth](const Vec3d& p) { return distance(p) + depth; };
                 const auto error          = FG::measure(inner, reference);
                 if (error.bounded)
-                    rr.accuracy.bounds[1] = error.upper_bound + out.partition.rounding_bound;
+                    rr.accuracy.bounds[1] = add_error_bounds(error.upper_bound, out.partition.rounding_bound);
             }
             if (out.partition.mitered_vertices > 0) {
                 // A curved CAD distance may change under the additional
                 // tangential miter displacement. The unmodified normal-offset
                 // mesh is not evidence for that displaced inner boundary.
                 if (flat && r.cad_reference && r.cad_reference->identity == "analytic plane")
-                    rr.accuracy.bounds[1] += out.partition.miter_constraint_residual;
+                    rr.accuracy.bounds[1] = add_error_bounds(rr.accuracy.bounds[1], out.partition.miter_constraint_residual);
                 else
                     rr.accuracy.bounds[1] = INFINITY;
             }
@@ -762,10 +824,10 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                     if (boundary.status != FormorixBoundary::Status::Unsupported && !boundary.ok())
                         throw std::runtime_error(boundary.reason);
                     if (boundary.ok()) {
-                        planned.profile = boundary.local_profile;
-                        planned.direct_carriers = true;
-                        planned.construction_bound = boundary.construction_bound + boundary.boundary_deviation_bound;
-                        auto lift = [&](const Vec2d& point) -> Vec3d { return origin + point.x() * u + point.y() * v; };
+                        planned.profile            = boundary.local_profile;
+                        planned.direct_carriers    = true;
+                        planned.construction_bound = add_error_bounds(boundary.construction_bound, boundary.boundary_deviation_bound);
+                        auto lift                  = [&](const Vec2d& point) -> Vec3d { return origin + point.x() * u + point.y() * v; };
                         for (const auto& point : boundary.path)
                             planned.poses.push_back({lift(point), normal});
                         for (const auto& rail : boundary.lateral_endpoints)
@@ -830,7 +892,8 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                     plane_axis.normalize();
                     Eigen::Index dominant = 0;
                     plane_axis.cwiseAbs().maxCoeff(&dominant);
-                    if (plane_axis[dominant] < 0.) plane_axis = -plane_axis;
+                    if (plane_axis[dominant] < 0.)
+                        plane_axis = -plane_axis;
                     if (r.settings.direction == FS::Direction::Automatic) {
                         const Vec3d coordinate_axis = Vec3d::Unit(dominant);
                         // The plane family is a free planning choice. Use an
@@ -856,31 +919,37 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                     for (std::size_t row = 0; row < std::size_t(count); ++row)
                         contour_options.plane_offsets.push_back(middle + (double(row) - (count - 1.) / 2.) * section.compacted_width);
                     contour_options.max_segment_length = path_step;
-                    contour_options.normal_offset_distance = rr.shell_depth + std::abs(profile.contact_to_tcp);
+                    contour_options.normal_offset_distance = add_error_bounds(rr.shell_depth, std::abs(profile.contact_to_tcp));
                     contour_options.interpolation_tolerance = midpoint_error;
                     const auto contours = FormorixSurfacePaths::trace({r.surface, surface.normals}, contour_options, cancel);
-                    if (!contours.ok()) throw std::runtime_error(contours.reason);
+                    if (!contours.ok())
+                        throw std::runtime_error(contours.reason);
                     if (contours.runs.empty())
                         throw std::runtime_error(L("The selected surface has no usable spatial contour"));
-                    planned.direct_carriers = true;
-                    planned.construction_bound = contours.position_rounding_bound +
-                        contour_options.normal_offset_distance * contours.normal_rounding_bound;
+                    planned.direct_carriers     = true;
+                    planned.construction_bound  = add_error_bounds(contours.position_rounding_bound,
+                                                                   scaled_error_bound(contours.normal_rounding_bound,
+                                                                                      contour_options.normal_offset_distance));
                     planned.interpolation_bound = contours.interpolation_bounded ? contours.offset_interpolation_bound : INFINITY;
                     for (const auto& run : contours.runs) {
-                        if (run.knots.size() < 2) continue;
+                        if (run.knots.size() < 2)
+                            continue;
                         ++planned.contour_runs;
-                        if (run.closed) ++planned.closed_contours;
+                        if (run.closed)
+                            ++planned.closed_contours;
                         const std::size_t size = run.knots.size() + std::size_t(run.closed);
                         for (std::size_t i = 0; i < size; ++i) {
                             const auto& knot = run.knots[i % run.knots.size()];
                             const Vec3d axis = orientation(knot.normal, r.settings, r.max_tilt);
                             if (axis.dot(knot.normal) < 1. - 1e-8)
                                 throw std::runtime_error(L("The rigid tilted nozzle-section does not fit the requested normal layer thickness; the compacted ribbon requires a perpendicular nozzle"));
-                            if (!planned.poses.empty()) planned.extruding.push_back(i != 0);
+                            if (!planned.poses.empty())
+                                planned.extruding.push_back(i != 0);
                             planned.poses.push_back({knot.position, knot.normal});
                         }
                     }
-                    for (const auto& warning : contours.warnings) out.warnings.push_back(warning);
+                    for (const auto& warning : contours.warnings)
+                        out.warnings.push_back(warning);
                     return outer_cache.emplace(h, std::move(planned)).first->second;
                 }
                 if (!seed.ok())
@@ -918,7 +987,10 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                 return outer_cache.emplace(h, std::move(planned)).first->second;
             };
             if (flat)
-                rr.accuracy.bounds[3] = seed_conversion + 1e-9 + 2. * plane_error + 2. * rr.shell_depth * normal_spread;
+                rr.accuracy.bounds[3] =
+                    add_error_bounds(add_error_bounds(seed_conversion, 1e-9),
+                                     add_error_bounds(scaled_error_bound(plane_error, 2.),
+                                                      scaled_error_bound(scaled_error_bound(normal_spread, rr.shell_depth), 2.)));
             bool all_layers_covered = true, all_supplies_match = true;
             double material_bound = 0.;
             double construction_bound = 0.;
@@ -1123,15 +1195,16 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
                 throw std::runtime_error("No ribbon extrusion fits inside the allocated shell");
             if (rr.contour_runs > 0)
                 rr.accuracy.bounds[3] = contour_interpolation_bound;
-            rr.accuracy.bounds[3] += construction_bound;
+            rr.accuracy.bounds[3]   = add_error_bounds(rr.accuracy.bounds[3], construction_bound);
             double coordinate_bound = 1.;
             for (const auto& point : r.surface.vertices)
                 coordinate_bound = std::max(coordinate_bound, point.cwiseAbs().maxCoeff());
-            coordinate_bound = std::nextafter(coordinate_bound + rr.shell_depth, INFINITY);
-            coordinate_bound = std::nextafter(coordinate_bound + std::abs(r.process.contact_to_tcp), INFINITY);
+            coordinate_bound = add_error_bounds(coordinate_bound, rr.shell_depth);
+            coordinate_bound = add_error_bounds(coordinate_bound, std::abs(r.process.contact_to_tcp));
             // Conservative L1 allowance for the finite multiply/add chains that
             // materialize contact, center and TCP offsets from the proven knots.
-            rr.accuracy.bounds[3] += std::nextafter(96. * std::numeric_limits<double>::epsilon() * coordinate_bound, INFINITY);
+            rr.accuracy.bounds[3] = add_error_bounds(rr.accuracy.bounds[3],
+                                                     scaled_error_bound(coordinate_bound, 96. * std::numeric_limits<double>::epsilon()));
             rr.accuracy.whole_surface_covered       = all_layers_covered;
             rr.accuracy.bounds[4]                   = material_bound;
             rr.accuracy.material_partition_verified = all_layers_covered && all_supplies_match &&
@@ -1197,24 +1270,7 @@ Result generate(const Input& input, const std::function<bool()>& cancel)
         // Projection and contact samples remain diagnostics. They can no longer
         // grant an accuracy certificate without the all-layer spatial audit.
         for (auto& region : out.regions) {
-            const auto evidence = std::find_if(out.material.regions.begin(), out.material.regions.end(),
-                                               [&](const FormorixMaterial::Region& r) { return r.region == region.id; });
-            bool complete = out.material.ok() && out.material.boundary_distance.bounded && evidence != out.material.regions.end();
-            if (complete) {
-                complete = evidence->coverage == FormorixMaterial::Coverage::Full && evidence->outside_volume == 0. &&
-                           evidence->boundary_distance.bounded && evidence->nominal_outer_distance.bounded &&
-                           out.material.duplicate_volume == 0. &&
-                           out.material.core_overlap_volume == 0. &&
-                           std::abs(evidence->supply_geometry_residual) <= evidence->input_rounding_volume_bound +
-                                                                             1e-8 * std::max(1., evidence->supplied_volume) &&
-                           std::abs(out.material.supply_geometry_residual) <= out.material.input_rounding_volume_bound +
-                                                                                1e-8 * std::max(1., out.material.supplied_volume);
-                region.accuracy.bounds[4] = std::max(evidence->boundary_distance.upper_bound,
-                                                     evidence->nominal_outer_distance.upper_bound + out.material.rounding_bound);
-            } else
-                region.accuracy.bounds[4] = INFINITY;
-            region.accuracy.whole_surface_covered = complete;
-            region.accuracy.material_partition_verified = complete && !region.inadmissible_material;
+            region.accuracy.update_material_evidence(out.material, region.id, region.process.material_id, region.inadmissible_material);
             if (!region.accuracy.verified()) {
                 out.warnings.push_back("Region " + std::to_string(region.id) + ": 0.01 mm whole-surface accuracy is not verified");
                 if (out.unverified.size() < 10000)

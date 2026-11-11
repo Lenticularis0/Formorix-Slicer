@@ -339,6 +339,8 @@ struct FormorixPreviewPanel::Impl : wxEvtHandler
             text += "\n" + format_wxstr(_L("Error bounds (mm), CAD / shell / conversion / path / nominal material: %1% / %2% / %3% / %4% / %5%. Infinity means unverified."),
                 wxString::Format("%.6g", r.accuracy.bounds[0]), wxString::Format("%.6g", r.accuracy.bounds[1]),
                 wxString::Format("%.6g", r.accuracy.bounds[2]), wxString::Format("%.6g", r.accuracy.bounds[3]), wxString::Format("%.6g", r.accuracy.bounds[4]));
+            text += "\n" + format_wxstr(_L("Conservative combined error bound: %1% mm. Unknown CAD input keeps the total unverified."),
+                number(r.accuracy.total_bound()));
             text += "\n" + format_wxstr(_L("Underlay: contact unconfirmed at %1% of %2% samples; maximum gap: %3% mm. Full footprint and material adhesion remain unverified."),
                 r.underlay.missing, r.underlay.samples, wxString::Format("%.6g", r.underlay.maximum_gap));
             text += "\n" + format_wxstr(_L("Underlay markers: red = no conventional core (%1%); orange = excluded infill (%2%); magenta = incomplete path coverage (%3%); gray = unknown geometry (%4%)."),

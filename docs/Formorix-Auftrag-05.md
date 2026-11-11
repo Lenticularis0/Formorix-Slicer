@@ -124,3 +124,16 @@ Die zusätzlichen Anzeigen verwenden unmittelbar die Körper aus `FormorixMateri
 Die Kopfzustände führen weiterhin drei unabhängige Zeitspuren. Düsenspitzen und Achsen werden nur für tatsächlich aus diesen Spuren bekannte Posen dargestellt. Erfundenen Parkpositionen wurden entfernt; unzugeordnete Köpfe bleiben in der Statuszeile erkennbar. Der Bericht zeigt räumliche Volumen, getrennte Stichprobenstatistiken, bekannte Abstandsschranken und offene Prüfungen. Die neue [Materialhilfe](formorix/material.md) erklärt die Anzeigen außerhalb der Parameteroberfläche.
 
 Der vollständige Windows-Release-Build (`ALL_BUILD`) ist erfolgreich. **42 gezielte Vorschau-/Materialtests mit 86.355 Assertions** bestehen, Seed 42. [Testergebnisse](formorix/verification/auftrag-05/package6-tests.txt). Die lokale Hilfestruktur besitzt 13 Themen; [30 Datei-/Ankerprüfungen](formorix/verification/auftrag-05/package6-help-local.json) bestehen. Der endgültige veröffentlichte Hilfe-Pin, HTTP-Prüfung und native GUI-Abnahme erfolgen noch; diese sind damit noch nicht als bestanden ausgewiesen.
+
+## Geprüfter Zwischenstand: konservative Genauigkeitsfreigabe
+
+Die zentrale Budgetsumme rundet positive Additionen nach außen. Dieselbe Regel gilt für zusammengesetzte Schalen-, Bahn-, Material- und native Konvertierungsbeiträge. Wiederholte native Unterbaupässe ersetzen ihren Beitrag aus dem unveränderten Ausgangsbudget; eine Subtraktion früher gerundeter Beiträge entfällt. Ungültige oder unbekannte Werte bleiben unendlich. Der regionale Materialnachweis verwirft vorherige räumliche Evidenz und verlangt eindeutige aktuelle Bereichs-/Materialzuordnung, vollständige Lagenabdeckung, endliche konsistente Abstandsangaben und getrennte regionale Materialbilanzen.
+
+| Tatsächlicher Negativtest | Messung und Ergebnis |
+| --- | --- |
+| Positiver Zusatz an der 0,01-mm-Grenze | Gewöhnliche Summe bleibt 0,01 mm; konservative Summe **0,010000000000000002 mm**. Keine Freigabe. |
+| Tatsächlich entfernte innere Lage | Fehlvolumen **2,25 mm³**, obwohl die äußere Lage weiter eine Abstandsschranke von **0 mm** besitzt. Keine Freigabe. |
+| Gegenläufige Zufuhrfehler verschiedener Materialien | Regionale Reste **+0,000999999999998669 / −0,001000000000001333 mm³**, global nur **−2,817190925 × 10⁻¹⁵ mm³**. Beide regionalen Freigaben bleiben negativ. |
+| Unbekannte CAD-Referenz bei räumlich vollständig gefülltem Material | Mesh-/Materialprüfung bleibt separat verfügbar; das CAD-Gesamtbudget bleibt unbekannt. |
+
+Der vollständige Windows-Release-Build ist erfolgreich. **35 Hybrid-/Material-/Genauigkeitsfälle mit 189.901 Assertions** bestehen im endgültigen gezielten Lauf, Seed 42. [Messwerte und Tests](formorix/verification/auftrag-05/package7-tests.txt). Zuvor bestand die breite Regression des Materialvorschau-Zwischenstands mit **3.267 Tests, sechs Windows-Symlink-Skips und null Fehlern** in 290,69 s. Die abschließende Gesamtregression folgt nach den zusätzlichen Abnahmefällen und Übersetzungen; diese Zwischenprüfung ersetzt sie nicht.

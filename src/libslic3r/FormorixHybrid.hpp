@@ -40,14 +40,23 @@ struct FloatMesh
     double displacement_bound = 0.;
 };
 FloatMesh to_float(const FormorixGeometry::Mesh&);
+// Add nonnegative finite upper bounds with outward rounding. Invalid/unknown
+// operands and overflow return infinity; adding zero preserves an exact term.
+double add_error_bounds(double, double);
 struct Accuracy
 {
     // CAD import, shell construction, float/Orca conversion, path interpolation, nominal deposition.
     std::array<double, 5> bounds{{INFINITY, INFINITY, INFINITY, INFINITY, INFINITY}};
     bool whole_surface_covered       = false;
     bool material_volume_plausible   = false;
-    bool material_partition_verified = false; // strict per-layer finite-cell identity, separate from a coarse volume ratio
+    bool material_partition_verified = false; // completed all-layer spatial identity, separate from a coarse volume ratio
+    // Conservatively rounded sum; infinity also denotes an invalid individual bound.
+    double total_bound() const;
     bool verified(double tolerance = .01) const;
+    // Replace audit-dependent evidence, invalidating the previous material budget
+    // and flags first. The caller supplies the current region/material identity;
+    // CAD, shell, conversion, interpolation and coarse plausibility stay separate.
+    void update_material_evidence(const FormorixMaterial::Result&, int region, const std::string& material, bool inadmissible);
 };
 struct Coverage
 {

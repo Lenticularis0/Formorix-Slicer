@@ -28,4 +28,8 @@ Sehr dünne Dreiecke können unterhalb der numerischen Auflösung der GPU-Anzeig
 
 Eine Aussage zum Zielwert **0,01 mm** benötigt zusätzlich belastbare Fehlergrenzen für CAD-Referenz beziehungsweise Import, Schalenberechnung, interne Konvertierungen, Bahninterpolation und nominale Materialablage. Ohne bekannte CAD-Referenz ist keine allgemeine CAD-Genauigkeitsbestätigung möglich. Diese geometrische Prüfung verspricht weder reale Druckgenauigkeit noch Tragfähigkeit, Kollisionsfreiheit oder einen ausführbaren Druckauftrag.
 
+Der Bericht und die Bewertung verwenden dieselbe konservativ gerundete Summe dieser fünf Fehlergrenzen. Ein unbekannter oder ungültiger Beitrag lässt keine Bestätigung zu. Die Freigabe gehört zum aktuell geprüften Bereich und Material; ein früher positiver Prüfstatus gilt nicht als Nachweis für geänderte Daten.
+
+Auch bei einer vollständig abgedeckten Aussenfläche müssen die inneren Lagen vorhanden sein. Die Materialmenge wird pro Bereich geprüft: Ein Überschuss des einen Materials gleicht einen Mangel des anderen nicht aus. Eine passende Gesamtmenge oder ein unauffälliges Vorschaubild allein genügt deshalb nicht.
+
 Weiter: [Vorschau und Zeitleiste](preview.md) · [Hybrid-Prüfwerte](hybrid.md#was-die-prüfwerte-bedeuten) · [Unterbau und Stützen](supports.md) · [Kopf- und Materialprofile](multi-head.md).

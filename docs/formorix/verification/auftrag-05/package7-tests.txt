@@ -1,0 +1,149 @@
+Filters: [AccuracyGate],[FormorixMultiMaterial],[FormorixHybrid]
+Randomness seeded to: 42
+MATERIAL3D complete_top_boundary,status=3,supplied=nan,union=nan,missing=nan,outside=nan,duplicate=nan,core_overlap=nan,supply_residual=nan,maximum=nan,mean=nan,rms=nan,upper=nan,bounded=0,cells=26,queries=0,error=region 1: Boolean operation 0 failed (work 25, input faces 60/60): nonmanifold or invalid result
+ACCURACY complete_top_boundary,region=1,topology=1,bounds=0/1.0367978580023514e-15/2.5041230392890558e-07/1.000131983313168e-09/inf,inadmissible=0,volume_plausible=1,total_bound=inf,verified=0
+HYBRID complete_top_boundary,1,0,2.5041230392890558e-07,inf,inf,inf,0.023407000000000001,1.3534776970152056e-07,0.98455254031763939,0
+0.319 s: Whole top faces either retain internal material centers or explicitly require boundary termination
+MATERIAL3D complete_top_boundary,status=2,supplied=nan,union=nan,missing=nan,outside=nan,duplicate=nan,core_overlap=nan,supply_residual=nan,maximum=nan,mean=nan,rms=nan,upper=nan,bounded=0,cells=1392,queries=0,error=Material run 6, cell 93: Material mesh is folded, self-intersecting or does not bound a volume
+ACCURACY complete_top_boundary,region=1,topology=1,bounds=inf/inf/4.8499830593914493e-07/inf/inf,inadmissible=0,volume_plausible=0,total_bound=inf,verified=0
+HYBRID complete_top_boundary,1,0,4.8499830593914493e-07,inf,inf,inf,0.035198611401035466,0.034123614570202673,0.79424609726892326,0
+0.140 s: Whole top faces either retain internal material centers or explicitly require boundary termination
+MATERIAL3D complete_top_boundary,status=3,supplied=nan,union=nan,missing=nan,outside=nan,duplicate=nan,core_overlap=nan,supply_residual=nan,maximum=nan,mean=nan,rms=nan,upper=nan,bounded=0,cells=1150,queries=0,error=region 1: Boolean operation 0 failed (work 1111, input faces 344/1824): nonmanifold or invalid result
+ACCURACY complete_top_boundary,region=1,topology=1,bounds=inf/inf/1.3442986432049498e-07/inf/inf,inadmissible=0,volume_plausible=0,total_bound=inf,verified=0
+HYBRID complete_top_boundary,1,2.8421709430404007e-14,1.3442986432049498e-07,inf,inf,inf,0.2754865090802941,0.0001922356865218655,0.58365968276803093,0
+1.177 s: Whole top faces either retain internal material centers or explicitly require boundary termination
+MATERIAL3D complete_top_boundary,status=3,supplied=nan,union=nan,missing=nan,outside=nan,duplicate=nan,core_overlap=nan,supply_residual=nan,maximum=nan,mean=nan,rms=nan,upper=nan,bounded=0,cells=357,queries=0,error=region 1: Boolean operation 0 failed (work 350, input faces 952/992): nonmanifold or invalid result
+ACCURACY complete_top_boundary,region=1,topology=1,bounds=inf/inf/2.3814574041666901e-07/inf/inf,inadmissible=0,volume_plausible=0,total_bound=inf,verified=0
+HYBRID complete_top_boundary,1,-2.8421709430404007e-14,2.3814574041666901e-07,inf,inf,inf,0.27128589960987276,0,0.73136303526743995,0
+0.637 s: Whole top faces either retain internal material centers or explicitly require boundary termination
+MATERIAL3D fixed_boundary_remainder,status=0,supplied=3.3599999999999994,union=3.360000000000003,missing=0.24000000000000044,outside=0,duplicate=0,core_overlap=0,supply_residual=-3.3395508580724707e-15,maximum=0.10000000000000009,mean=inf,rms=inf,upper=inf,bounded=0,cells=14,queries=50000,error=
+MATERIAL3D_REGION fixed_boundary_remainder,region=1,coverage=1,missing=0.24000000000000044,outside=0,supply_residual=-3.3395508580724707e-15,boundary_bounded=0,outer_bounded=0,outer_upper=inf,input_rounding=0/0,zero_checks=1/1/1
+ACCURACY fixed_boundary_remainder,region=1,topology=1,bounds=0/3.3306690738754696e-16/9.5367431285353632e-08/1.0001152189454962e-09/inf,inadmissible=0,volume_plausible=1,total_bound=inf,verified=0
+HYBRID fixed_boundary_remainder,1,-2.8421709430404007e-14,9.5367431285353632e-08,inf,inf,inf,0.066666666666666666,0,0.93333333333333235,0
+1.744 s: A fixed profile leaves an explicit noncommensurate boundary remainder
+0.059 s: Hybrid expansion bounds the final movement count across all layers
+0.009 s: Invalid head and region identities are rejected before constructing indexed tracks
+0.008 s: Invalid head and region identities are rejected before constructing indexed tracks
+0.009 s: Invalid head and region identities are rejected before constructing indexed tracks
+1.791 s: A complete fine outer layer cannot certify missing inner ribbon cells
+MATERIAL3D plane,status=0,supplied=3.0134866776461635,union=3.0134866776461662,missing=0.58651332235383746,outside=0,duplicate=0,core_overlap=0,supply_residual=-2.4544692302141185e-15,maximum=0.2443805509807655,mean=0.021863076465104641,rms=0.065393107370892559,upper=0.24509561524307172,bounded=1,cells=10,queries=50000,error=
+MATERIAL3D_REGION plane,region=1,coverage=1,missing=0.58651332235383746,outside=0,supply_residual=-2.4544692302141185e-15,boundary_bounded=1,outer_bounded=0,outer_upper=inf,input_rounding=0/0,zero_checks=1/1/1
+ACCURACY plane,region=1,topology=1,bounds=0/3.3306690738754696e-16/9.5367431285353632e-08/1.0001155520124035e-09/inf,inadmissible=0,volume_plausible=0,total_bound=inf,verified=0
+HYBRID plane,1,-2.8421709430404007e-14,9.5367431285353632e-08,inf,inf,inf,0.16292000000000001,0,0.83707963267948915,0
+2.256 s: Hybrid partition preserves a planar reference and exposes an unfilled final ribbon strip
+0.000 s: Underlay contact records separate raw geometry unknown flow and explicitly requested dense regions
+0.001 s: The original surface preview also applies quality only to longitudinal samples
+HYBRID native_curved_wall_with_side,The rigid tilted nozzle-section does not fit the requested normal layer thickness; the compacted ribbon requires a perpendicular nozzle
+MATERIAL3D native_curved_wall,status=2,supplied=nan,union=nan,missing=nan,outside=nan,duplicate=nan,core_overlap=nan,supply_residual=nan,maximum=nan,mean=nan,rms=nan,upper=nan,bounded=0,cells=22692,queries=0,error=Material run 0, cell 156: Material mesh is folded, self-intersecting or does not bound a volume
+ACCURACY native_curved_wall,region=1,topology=1,bounds=inf/inf/3.0465656477923302e-05/inf/inf,inadmissible=0,volume_plausible=1,total_bound=inf,verified=0
+HYBRID native_curved_wall,1,3.637978807091713e-12,3.0465656477923302e-05,inf,inf,inf,0.024193280185488348,0.0022505366782189749,0.97539634136974851,0
+MATERIAL3D native_curved_wall_standard04,status=4,supplied=nan,union=nan,missing=nan,outside=nan,duplicate=nan,core_overlap=nan,supply_residual=nan,maximum=nan,mean=nan,rms=nan,upper=nan,bounded=0,cells=0,queries=0,error=Material sweep face budget exceeded
+ACCURACY native_curved_wall_standard04,region=1,topology=1,bounds=inf/inf/3.0465656477923302e-05/inf/inf,inadmissible=0,volume_plausible=1,total_bound=inf,verified=0
+HYBRID native_curved_wall_standard04,1,3.637978807091713e-12,3.0465656477923302e-05,inf,inf,inf,0.002607926872750614,0.0010320106171176836,0.99732198983257658,0
+10.064 s: The saved curved-wall project generates a hybrid preview from its real paint
+0.357 s: Replacing spatial evidence rejects stale identities and incomplete or contradictory audit records
+1.648 s: Missing nominal envelope samples never masquerade as zero geometric error
+MATERIAL3D mixed_nozzle_commensurate,status=0,supplied=4.5,union=4.5,missing=0,outside=0,duplicate=-0,core_overlap=0,supply_residual=4.649058915617843e-16,maximum=0,mean=0,rms=0,upper=4.9406564584124654e-324,bounded=1,cells=59,queries=0,error=
+MATERIAL3D_REGION mixed_nozzle_commensurate,region=1,coverage=2,missing=0,outside=0,supply_residual=-1.3877787807814457e-15,boundary_bounded=1,outer_bounded=1,outer_upper=0,input_rounding=0/0,zero_checks=1/1/1
+MATERIAL3D_REGION mixed_nozzle_commensurate,region=2,coverage=2,missing=0,outside=0,supply_residual=1.85268467234323e-15,boundary_bounded=1,outer_bounded=1,outer_upper=0,input_rounding=0/0,zero_checks=1/1/1
+ACCURACY mixed_nozzle_commensurate,region=1,topology=1,bounds=0/4.8109664400423417e-16/9.5367431285353632e-08/1.0001151079231935e-09/4.9406564584124654e-324,inadmissible=0,volume_plausible=1,total_bound=9.6367546874373517e-08,verified=1
+HYBRID mixed_nozzle_commensurate,1,0,9.5367431285353632e-08,0,0,0,0,0,0.99999999999999922,1
+ACCURACY mixed_nozzle_commensurate,region=2,topology=1,bounds=0/5.9211894646674983e-16/9.5367431285353632e-08/1.0001193711796079e-09/4.9406564584124654e-324,inadmissible=0,volume_plausible=1,total_bound=9.6367551248652231e-08,verified=1
+HYBRID mixed_nozzle_commensurate,2,0,9.5367431285353632e-08,0,0,0,0,0,1.0000000000000004,1
+0.357 s: Different nozzle ribbons meet at an identical planar material boundary without geometric gaps
+0.000 s: Timeline supply validation rejects invalid numbers and extrusion on travel
+MATERIAL3D commensurate_plane,status=0,supplied=3.6000000000000005,union=3.6000000000000032,missing=0,outside=0,duplicate=-0,core_overlap=0,supply_residual=-2.8310687127941492e-15,maximum=0,mean=0,rms=0,upper=4.9406564584124654e-324,bounded=1,cells=14,queries=0,error=
+MATERIAL3D_REGION commensurate_plane,region=1,coverage=2,missing=0,outside=0,supply_residual=-2.8310687127941492e-15,boundary_bounded=1,outer_bounded=1,outer_upper=0,input_rounding=0/0,zero_checks=1/1/1
+ACCURACY commensurate_plane,region=1,topology=1,bounds=0/3.3306690738754696e-16/9.5367431285353632e-08/1.0001151079231935e-09/4.9406564584124654e-324,inadmissible=0,volume_plausible=1,total_bound=9.6367546726343776e-08,verified=1
+HYBRID commensurate_plane,1,-2.8421709430404007e-14,9.5367431285353632e-08,0,0,0,0,0,0.99999999999999922,1
+0.180 s: A commensurate planar ribbon exactly partitions finite cells without changing flow
+4.430 s: Hybrid evidence distinguishes missing underlay unknown CAD and lossy float conversion
+0.000 s: Saved surface paint extracts all regions without changing the original object
+0.000 s: Accuracy requires finite nonnegative budgets positive tolerances and all evidence flags
+MATERIAL3D planar_hole,status=0,supplied=2.7000000000000002,union=2.7000000000000024,missing=0,outside=0,duplicate=-0,core_overlap=0,supply_residual=-1.9984014443252818e-15,maximum=0,mean=0,rms=0,upper=8.8817841970012563e-16,bounded=1,cells=12,queries=0,error=
+MATERIAL3D_REGION planar_hole,region=1,coverage=2,missing=0,outside=0,supply_residual=-1.9984014443252818e-15,boundary_bounded=1,outer_bounded=1,outer_upper=0,input_rounding=0/0,zero_checks=1/1/1
+ACCURACY planar_hole,region=1,topology=1,bounds=0/3.3306690738754696e-16/9.5367431285353632e-08/1.1510792319313628e-13/8.8817841970012563e-16,inadmissible=0,volume_plausible=1,total_bound=9.5367547614522187e-08,verified=1
+HYBRID planar_hole,1,0,9.5367431285353632e-08,0,0,0,0,0,0.99999999999999889,1
+0.246 s: Spatial contours cover a planar region with a hole without extruding across the hole
+0.011 s: Impossible hybrid partitions and canceled computations keep no accepted partial preview
+ACCURACY_GATE missing_inner_layer,missing_volume=2.25,outer_upper=0,coverage=1,verified=0
+0.339 s: A missing internal material layer invalidates accuracy despite an unchanged complete outer sheet
+MATERIAL3D adjacent_materials,status=0,supplied=4.0083450247038677,union=4.0083450247038659,missing=0.49165497529613345,outside=0,duplicate=0,core_overlap=0,supply_residual=4.3164682355614237e-16,maximum=0.2443805509807655,mean=inf,rms=inf,upper=inf,bounded=0,cells=49,queries=50000,error=
+MATERIAL3D_REGION adjacent_materials,region=1,coverage=1,missing=0.29325666117691873,outside=0,supply_residual=-1.1162123126445436e-15,boundary_bounded=0,outer_bounded=0,outer_upper=inf,input_rounding=0/0,zero_checks=1/1/1
+MATERIAL3D_REGION adjacent_materials,region=2,coverage=1,missing=0.19839831411921471,outside=0,supply_residual=1.547859136200686e-15,boundary_bounded=0,outer_bounded=0,outer_upper=inf,input_rounding=0/0,zero_checks=1/1/1
+ACCURACY adjacent_materials,region=1,topology=1,bounds=0/4.8109664400423417e-16/9.5367431285353632e-08/1.0001153299677986e-09/inf,inadmissible=0,volume_plausible=0,total_bound=inf,verified=0
+HYBRID adjacent_materials,1,0,9.5367431285353632e-08,inf,inf,inf,0.16292000000000001,0,0.83707963267948915,0
+ACCURACY adjacent_materials,region=2,topology=1,bounds=0/5.9211894646674983e-16/9.5367431285353632e-08/1.0001198152688179e-09/inf,inadmissible=0,volume_plausible=1,total_bound=inf,verified=0
+HYBRID adjacent_materials,2,0,9.5367431285353632e-08,inf,inf,inf,0.073480666666666666,0,0.92651914291880977,0
+2.363 s: Adjacent hybrid regions retain their own heads widths and materials without a scheduler
+MULTI_MATERIAL,order=012,hybrid_ok=1,material_status=0,elapsed_s=0.49189620000000001,missing=0,outside=0,duplicate=-0,core_overlap=0,error=
+MULTI_MATERIAL_REGION,id=1,nozzle=0.80000000000000004,height=0.25,depth=0.5,local_width=0.88731725920399274,supply=12,residual=-1.4988010832439613e-15,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0001821875983415e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=2,nozzle=0.40000000000000002,height=0.125,depth=0.375,local_width=0.42884336059302786,supply=9,residual=8.5348395018058909e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0003708144902253e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=3,nozzle=0.59999999999999998,height=0.1875,depth=0.75,local_width=0.7432710106556315,supply=18,residual=-3.8857805861880479e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0005919709167306e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL,order=021,hybrid_ok=1,material_status=0,elapsed_s=0.51497729999999997,missing=0,outside=0,duplicate=-0,core_overlap=0,error=
+MULTI_MATERIAL_REGION,id=1,nozzle=0.80000000000000004,height=0.25,depth=0.5,local_width=0.88731725920399274,supply=12,residual=-1.4988010832439613e-15,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0001821875983415e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=3,nozzle=0.59999999999999998,height=0.1875,depth=0.75,local_width=0.7432710106556315,supply=18,residual=-3.8857805861880479e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0005919709167306e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=2,nozzle=0.40000000000000002,height=0.125,depth=0.375,local_width=0.42884336059302786,supply=9,residual=8.5348395018058909e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0003708144902253e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL,order=102,hybrid_ok=1,material_status=0,elapsed_s=0.50115220000000005,missing=0,outside=0,duplicate=-0,core_overlap=0,error=
+MULTI_MATERIAL_REGION,id=2,nozzle=0.40000000000000002,height=0.125,depth=0.375,local_width=0.42884336059302786,supply=9,residual=8.5348395018058909e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0003708144902253e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=1,nozzle=0.80000000000000004,height=0.25,depth=0.5,local_width=0.88731725920399274,supply=12,residual=-1.4988010832439613e-15,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0001821875983415e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=3,nozzle=0.59999999999999998,height=0.1875,depth=0.75,local_width=0.7432710106556315,supply=18,residual=-3.8857805861880479e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0005919709167306e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL,order=120,hybrid_ok=1,material_status=0,elapsed_s=0.50264949999999997,missing=0,outside=0,duplicate=-0,core_overlap=0,error=
+MULTI_MATERIAL_REGION,id=2,nozzle=0.40000000000000002,height=0.125,depth=0.375,local_width=0.42884336059302786,supply=9,residual=8.5348395018058909e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0003708144902253e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=3,nozzle=0.59999999999999998,height=0.1875,depth=0.75,local_width=0.7432710106556315,supply=18,residual=-3.8857805861880479e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0005919709167306e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=1,nozzle=0.80000000000000004,height=0.25,depth=0.5,local_width=0.88731725920399274,supply=12,residual=-1.4988010832439613e-15,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0001821875983415e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL,order=201,hybrid_ok=1,material_status=0,elapsed_s=0.504243,missing=0,outside=0,duplicate=-0,core_overlap=0,error=
+MULTI_MATERIAL_REGION,id=3,nozzle=0.59999999999999998,height=0.1875,depth=0.75,local_width=0.7432710106556315,supply=18,residual=-3.8857805861880479e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0005919709167306e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=1,nozzle=0.80000000000000004,height=0.25,depth=0.5,local_width=0.88731725920399274,supply=12,residual=-1.4988010832439613e-15,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0001821875983415e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=2,nozzle=0.40000000000000002,height=0.125,depth=0.375,local_width=0.42884336059302786,supply=9,residual=8.5348395018058909e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0003708144902253e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL,order=210,hybrid_ok=1,material_status=0,elapsed_s=0.51282220000000001,missing=0,outside=0,duplicate=-0,core_overlap=0,error=
+MULTI_MATERIAL_REGION,id=3,nozzle=0.59999999999999998,height=0.1875,depth=0.75,local_width=0.7432710106556315,supply=18,residual=-3.8857805861880479e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0005919709167306e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=2,nozzle=0.40000000000000002,height=0.125,depth=0.375,local_width=0.42884336059302786,supply=9,residual=8.5348395018058909e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0003708144902253e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=1,nozzle=0.80000000000000004,height=0.25,depth=0.5,local_width=0.88731725920399274,supply=12,residual=-1.4988010832439613e-15,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0001821875983415e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+3.284 s: Three independent nozzle and material profiles fill one adjacent multilayer workpiece in every region order
+MULTI_MATERIAL_MISSING_INNER,missing=3,boundary_lower=0.12499999999999999,boundary_upper=inf,outer_B_upper=0
+3.296 s: An absent inner layer remains a regional material deficit despite two complete neighboring materials
+0.003 s: Hybrid extraction rejects model semantics which the rebuilt core cannot preserve
+2.271 s: Every hybrid deposition run retains its actual layer head material and supplied volume
+ACCURACY_GATE rounding_boundary,tolerance=0.01,contribution=2.2250738585072014e-308,naive_sum=0.01,upper_sum=0.010000000000000002,verified=0
+0.000 s: A positive budget contribution cannot disappear by rounding at the acceptance threshold
+MATERIAL3D inclined_variable_wall,status=3,supplied=nan,union=nan,missing=nan,outside=nan,duplicate=nan,core_overlap=nan,supply_residual=nan,maximum=nan,mean=nan,rms=nan,upper=nan,bounded=0,cells=10,queries=0,error=region 1: Boolean operation 0 failed (work 9, input faces 28/28): nonmanifold or invalid result
+ACCURACY inclined_variable_wall,region=1,topology=1,bounds=0/1.6653345369377348e-16/2.3898029743976268e-07/1.0001235456181808e-09/inf,inadmissible=0,volume_plausible=0,total_bound=inf,verified=0
+HYBRID inclined_variable_wall,1,-2.8421709430404007e-14,2.3898029743976268e-07,inf,inf,inf,0.16292000000000001,1.8046376479777325e-07,0.83707963267948948,0
+0.080 s: Hybrid shells process inclined convex concave and hydrofoil negative surfaces conservatively
+MATERIAL3D convex,status=2,supplied=nan,union=nan,missing=nan,outside=nan,duplicate=nan,core_overlap=nan,supply_residual=nan,maximum=nan,mean=nan,rms=nan,upper=nan,bounded=0,cells=243,queries=0,error=Material run 2, cell 35: Material mesh is folded, self-intersecting or does not bound a volume
+ACCURACY convex,region=1,topology=1,bounds=inf/inf/4.6378157937314533e-07/inf/inf,inadmissible=0,volume_plausible=0,total_bound=inf,verified=0
+HYBRID convex,1,0,4.6378157937314533e-07,inf,inf,inf,0.16470563097953927,0.0067192096813515406,0.75680877663541513,0
+0.060 s: Hybrid shells process inclined convex concave and hydrofoil negative surfaces conservatively
+MATERIAL3D concave,status=2,supplied=nan,union=nan,missing=nan,outside=nan,duplicate=nan,core_overlap=nan,supply_residual=nan,maximum=nan,mean=nan,rms=nan,upper=nan,bounded=0,cells=244,queries=0,error=Material run 2, cell 36: Material mesh is folded, self-intersecting or does not bound a volume
+ACCURACY concave,region=1,topology=1,bounds=inf/inf/1.0662926408500084e-07/inf/inf,inadmissible=0,volume_plausible=0,total_bound=inf,verified=0
+HYBRID concave,1,2.8421709430404007e-14,1.0662926408500084e-07,inf,inf,inf,0.16470531642462008,0.0067190355730124838,0.73757939017793439,0
+0.062 s: Hybrid shells process inclined convex concave and hydrofoil negative surfaces conservatively
+MATERIAL3D hydrofoil_negative,status=2,supplied=nan,union=nan,missing=nan,outside=nan,duplicate=nan,core_overlap=nan,supply_residual=nan,maximum=nan,mean=nan,rms=nan,upper=nan,bounded=0,cells=88,queries=0,error=Material run 0, cell 11: Material mesh is folded, self-intersecting or does not bound a volume
+ACCURACY hydrofoil_negative,region=1,topology=1,bounds=inf/inf/2.313266919909065e-07/inf/inf,inadmissible=0,volume_plausible=0,total_bound=inf,verified=0
+HYBRID hydrofoil_negative,1,-2.8421709430404007e-14,2.313266919909065e-07,inf,inf,inf,0.1622314319458385,0.00018126399574238799,0.83120864304567765,0
+0.046 s: Hybrid shells process inclined convex concave and hydrofoil negative surfaces conservatively
+MATERIAL3D adaptive_rectangle,status=0,supplied=29.280000000000001,union=29.280000000000022,missing=0,outside=0,duplicate=0,core_overlap=0,supply_residual=-2.2136736888000995e-14,maximum=0,mean=0,rms=0,upper=4.9406564584124654e-324,bounded=1,cells=30,queries=0,error=
+MATERIAL3D_REGION adaptive_rectangle,region=1,coverage=2,missing=0,outside=0,supply_residual=-2.2136736888000995e-14,boundary_bounded=1,outer_bounded=1,outer_upper=0,input_rounding=0/0,zero_checks=1/1/1
+ACCURACY adaptive_rectangle,region=1,topology=1,bounds=0/9.8618185625952731e-16/1.5641421744004929e-07/9.6367568597737348e-08/4.9406564584124654e-324,inadmissible=0,volume_plausible=1,total_bound=2.5278178702396864e-07,verified=1
+HYBRID adaptive_rectangle,1,-5.6843418860808015e-14,1.5641421744004929e-07,0,0,0,0,0,0.99999999999999922,1
+0.929 s: Explicit local width limits fill a noncommensurate rectangle without changing flow
+2.074 s: A uniform full-wall slab has no conventional core and still requires prior underlay
+0.053 s: An incomplete spatial audit cannot inherit a positive planar projection certificate
+MATERIAL3D wrapped_geometric_only,status=3,supplied=nan,union=nan,missing=nan,outside=nan,duplicate=nan,core_overlap=nan,supply_residual=nan,maximum=nan,mean=nan,rms=nan,upper=nan,bounded=0,cells=704,queries=0,error=regional missing: Boolean operation 2 failed (work 704, input faces 448/10032): nonmanifold or invalid result
+ACCURACY wrapped_geometric_only,region=1,topology=1,bounds=inf/inf/2.4143557290031434e-07/0.00027821244637096277/inf,inadmissible=1,volume_plausible=0,total_bound=inf,verified=0
+HYBRID wrapped_geometric_only,1,2.8421709430404007e-14,2.4143557290031434e-07,9.9301366129890925e-16,1.1827793167904628e-16,2.5796943220751003e-16,0,0.12506734876731121,1.004336403178073,0
+13.914 s: A wrapped hybrid surface retains explicit cyclic extrusion without machine clearance
+MATERIAL3D curved_tcp_offset,status=2,supplied=nan,union=nan,missing=nan,outside=nan,duplicate=nan,core_overlap=nan,supply_residual=nan,maximum=nan,mean=nan,rms=nan,upper=nan,bounded=0,cells=243,queries=0,error=Material run 2, cell 35: Material mesh is folded, self-intersecting or does not bound a volume
+ACCURACY curved_tcp_offset,region=1,topology=1,bounds=inf/inf/4.6378157937314533e-07/inf/inf,inadmissible=0,volume_plausible=0,total_bound=inf,verified=0
+HYBRID curved_tcp_offset,1,0,4.6378157937314533e-07,inf,inf,inf,0.16470563097953927,0.0067192096813515406,0.75680877663541513,0
+0.056 s: Curved ribbon timing preserves supply when the TCP has a contact offset
+ACCURACY_GATE opposite_regional_supply,region=1,global_residual=-2.8171909249863347e-15,regional_residual=0.00099999999999866862,missing_volume=0,outside_volume=0,verified=0
+ACCURACY_GATE opposite_regional_supply,region=2,global_residual=-2.8171909249863347e-15,regional_residual=-0.0010000000000013332,missing_volume=0,outside_volume=0,verified=0
+0.476 s: Opposite supply errors cannot cancel between material regions in the accuracy gate
+RIBBON_QUALITY draft=213 fine=873 unchanged_pitch=0.83707963267948982
+0.143 s: Fine surface quality increases longitudinal resolution without changing material supply or pitch
+0.107 s: A rigid tilted section is rejected instead of intersecting the conventional core
+===============================================================================
+All tests passed (189901 assertions in 35 test cases)
+

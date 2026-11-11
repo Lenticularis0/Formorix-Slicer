@@ -959,13 +959,21 @@ void FormorixSurfaceEditor::Impl::calculate_hybrid()
                 *hybrid = FH::generate(input, canceled);
                 if (!hybrid->ok() || canceled()) return;
                 double conversion_bound = 0.;
+                std::vector<double> initial_conversion_bounds;
+                for (const auto& region : hybrid->regions)
+                    initial_conversion_bounds.push_back(region.accuracy.bounds[2]);
                 auto account_conversion = [&] {
                     const double bound = conventional->error.empty() ?
-                        std::max(conventional->float_conversion_bound, conventional->modifier_float_conversion_bound) +
-                            conventional->coordinate_quantization_bound + conventional->native_slice_expansion_bound : INFINITY;
-                    for (auto& region : hybrid->regions)
-                        region.accuracy.bounds[2] += std::max(0., bound - conversion_bound);
+                        FH::add_error_bounds(
+                            FH::add_error_bounds(std::max(conventional->float_conversion_bound,
+                                                          conventional->modifier_float_conversion_bound),
+                                                 conventional->coordinate_quantization_bound),
+                            conventional->native_slice_expansion_bound) : INFINITY;
                     conversion_bound = std::max(conversion_bound, bound);
+                    // Replace from the immutable initial budget: subtracting an
+                    // earlier rounded contribution can lose its conservative bound.
+                    for (std::size_t i = 0; i < hybrid->regions.size(); ++i)
+                        hybrid->regions[i].accuracy.bounds[2] = FH::add_error_bounds(initial_conversion_bounds[i], conversion_bound);
                 };
                 ctl.update_status(35, _u8L("Calculating Orca core paths…"));
                 if (!hybrid->core.faces.empty()) {
