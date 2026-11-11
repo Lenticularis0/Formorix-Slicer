@@ -30,10 +30,17 @@ add_executable(${_TEST_NAME}_tests
     test_cut_connectors.cpp
     test_config.cpp
     test_formorix_5d.cpp
+    test_formorix_boundary.cpp
+    test_formorix_surface_paths.cpp
+    test_formorix_hydrofoil.cpp
     test_formorix_surfaces.cpp
     test_formorix_preview.cpp
     test_formorix_foundations.cpp
     test_formorix_hybrid.cpp
+    test_formorix_acceptance.cpp
+    test_formorix_underlay.cpp
+    test_formorix_material.cpp
+    test_formorix_multi_material.cpp
     test_formorix_profiles.cpp
     test_config_variant_expansion.cpp
     test_locales_utils.cpp

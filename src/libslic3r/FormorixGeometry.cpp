@@ -1,4 +1,6 @@
 #include "FormorixGeometry.hpp"
+#include "FormorixGeometryInternal.hpp"
+#include "I18N.hpp"
 #include "Point.hpp"
 #include <Eigen/Geometry>
 #include <algorithm>
@@ -22,16 +24,16 @@ namespace {
 void check_mesh(const Mesh& m)
 {
     if (m.faces.empty() || m.faces.size() > 200000 || m.vertices.size() > 200000)
-        throw std::invalid_argument("Empty mesh or geometry resource limit");
+        throw std::invalid_argument(_u8L("Empty mesh or geometry resource limit"));
     for (const auto& p : m.vertices)
         if (!p.allFinite() || p.cwiseAbs().maxCoeff() > 1e7)
-            throw std::invalid_argument("Invalid mesh coordinate");
+            throw std::invalid_argument(_u8L("Invalid mesh coordinate"));
     for (const auto& f : m.faces) {
         for (int i : f)
             if (i < 0 || std::size_t(i) >= m.vertices.size())
-                throw std::invalid_argument("Invalid vertex index");
+                throw std::invalid_argument(_u8L("Invalid vertex index"));
         if ((m.vertices[f[1]] - m.vertices[f[0]]).cross(m.vertices[f[2]] - m.vertices[f[0]]).norm() < 1e-14)
-            throw std::invalid_argument("Degenerate face");
+            throw std::invalid_argument(_u8L("Degenerate face"));
     }
 }
 struct EdgeUse
@@ -48,7 +50,7 @@ Edges edges(const Mesh& m)
             int a = m.faces[f][k], b = m.faces[f][(k + 1) % 3];
             auto& uses = out[std::minmax(a, b)];
             if (uses.size() == 2 || (!uses.empty() && uses.front().from == a))
-                throw std::invalid_argument("Non-manifold or inconsistently oriented patch");
+                throw std::invalid_argument(_u8L("Non-manifold or inconsistently oriented patch"));
             uses.push_back({int(f), a, b});
         }
     return out;
@@ -63,24 +65,28 @@ double segment_distance(const Vec3d& p, const Vec3d& a, const Vec3d& b)
 namespace {
 using VertexKey = std::array<double, 3>;
 VertexKey vertex_key(const Vec3d& p) { return {p.x(), p.y(), p.z()}; }
+struct FoldedOffset : std::invalid_argument
+{
+    FoldedOffset() : std::invalid_argument(_u8L("Folded offset or reversed normal")) {}
+};
 Mesh shell_cutter_impl(const ShellRequest& r, const std::vector<Vec3d>* inner = nullptr)
 {
     const auto boundary = edges(r.surface);
     const std::size_t n = r.surface.vertices.size();
     if (r.region <= 0 || r.depths.size() != n || r.outward_normals.size() != n)
-        throw std::invalid_argument("Invalid shell request");
+        throw std::invalid_argument(_u8L("Invalid shell request"));
     Mesh out = r.surface;
     for (std::size_t i = 0; i < n; ++i) {
         if (!std::isfinite(r.depths[i]) || r.depths[i] <= 0. || r.depths[i] > 10000. || !r.outward_normals[i].allFinite() ||
             std::abs(r.outward_normals[i].norm() - 1.) > 1e-8)
-            throw std::invalid_argument("Invalid shell depth/normal");
+            throw std::invalid_argument(_u8L("Invalid shell depth/normal"));
         out.vertices.push_back(inner ? inner->at(i) : r.surface.vertices[i] - r.depths[i] * r.outward_normals[i]);
     }
     for (const auto& f : r.surface.faces) {
         const Vec3d original = (out.vertices[f[1]] - out.vertices[f[0]]).cross(out.vertices[f[2]] - out.vertices[f[0]]);
         const Vec3d inner    = (out.vertices[f[1] + n] - out.vertices[f[0] + n]).cross(out.vertices[f[2] + n] - out.vertices[f[0] + n]);
         if (original.dot(inner) <= 0. || original.dot(r.outward_normals[f[0]] + r.outward_normals[f[1]] + r.outward_normals[f[2]]) <= 0.)
-            throw std::invalid_argument("Folded offset or reversed normal");
+            throw FoldedOffset();
         out.faces.emplace_back(f[2] + int(n), f[1] + int(n), f[0] + int(n));
     }
     for (const auto& entry : boundary)
@@ -107,6 +113,7 @@ struct SeamUse
 struct MiteredOffsets
 {
     std::vector<std::vector<Vec3d>> inner;
+    std::vector<detail::PlanarMiterSeam> seams;
     std::size_t edges = 0, vertices = 0;
     double residual = 0.;
 };
@@ -133,17 +140,18 @@ MiteredOffsets miter_offsets(const std::vector<ShellRequest>& requests)
         if (uses.size() < 2)
             continue;
         if (uses.size() != 2 || uses[0].region == uses[1].region)
-            throw std::invalid_argument("Shared shell edge is not a two-region boundary");
+            throw std::invalid_argument(_u8L("Shared shell edge is not a two-region boundary"));
         const auto& a = requests[uses[0].region];
         const auto& b = requests[uses[1].region];
         // Adjacent outward-oriented patches traverse a common edge oppositely.
         if (vertex_key(a.surface.vertices[uses[0].from]) != vertex_key(b.surface.vertices[uses[1].to]))
-            throw std::invalid_argument("Shared shell boundary has inconsistent surface orientation");
+            throw std::invalid_argument(_u8L("Shared shell boundary has inconsistent surface orientation"));
         const bool parallel = (a.outward_normals[uses[0].from] - b.outward_normals[uses[1].to]).norm() < 1e-8 &&
                               (a.outward_normals[uses[0].to] - b.outward_normals[uses[1].from]).norm() < 1e-8;
         // Different depths on a flat surface form a step, not a miter.
         if (parallel)
             continue;
+        out.seams.push_back({uses[0].region, uses[1].region, {uses[0].from, uses[0].to}, {}});
         ++out.edges;
         for (const auto& use : uses)
             for (int vertex : {use.from, use.to})
@@ -177,7 +185,7 @@ MiteredOffsets miter_offsets(const std::vector<ShellRequest>& requests)
             const double rhs = constraint.depth - constraint.normal.dot(offset);
             if (direction.squaredNorm() < 1e-16) {
                 if (std::abs(rhs) > 1e-8 * std::max(1., maximum_depth))
-                    throw std::invalid_argument("Incompatible offset planes at shared shell junction");
+                    throw std::invalid_argument(_u8L("Incompatible offset planes at shared shell junction"));
             } else {
                 direction.normalize();
                 offset += direction * (rhs / constraint.normal.dot(direction));
@@ -185,19 +193,21 @@ MiteredOffsets miter_offsets(const std::vector<ShellRequest>& requests)
             }
         }
         if (!offset.allFinite() || offset.norm() > 4. * maximum_depth)
-            throw std::invalid_argument("Shared shell junction exceeds the geometric miter limit");
+            throw std::invalid_argument(_u8L("Shared shell junction exceeds the geometric miter limit"));
         const Vec3d p(junction.first[0], junction.first[1], junction.first[2]);
         const Vec3d inner = p - offset;
         for (const auto& constraint : constraints) {
             const double residual = std::abs(constraint.normal.dot(p - inner) - constraint.depth);
             out.residual          = std::max(out.residual, residual);
             if (residual > 1e-8 * std::max(1., maximum_depth))
-                throw std::invalid_argument("Shared shell offset constraint could not be resolved");
+                throw std::invalid_argument(_u8L("Shared shell offset constraint could not be resolved"));
         }
         for (const auto& use : junction.second)
             out.inner[use.first][use.second] = inner;
         ++out.vertices;
     }
+    for (auto& seam : out.seams)
+        seam.inner = {out.inner[seam.first][seam.vertices[0]], out.inner[seam.first][seam.vertices[1]]};
     return out;
 }
 } // namespace
@@ -208,7 +218,7 @@ Partition partition(const Mesh& solid, const std::vector<ShellRequest>& requests
 {
     try {
         if (requests.empty() || requests.size() > 32)
-            throw std::invalid_argument("Invalid region count");
+            throw std::invalid_argument(_u8L("Invalid region count"));
         std::vector<std::pair<int, Mesh>> cutters;
         for (const auto& request : requests)
             cutters.emplace_back(request.region, shell_cutter(request));
@@ -224,17 +234,26 @@ Partition partition_clipped(const Mesh& solid, const std::vector<ShellRequest>& 
 {
     try {
         if (requests.empty() || requests.size() > 32)
-            throw std::invalid_argument("Invalid region count");
+            throw std::invalid_argument(_u8L("Invalid region count"));
         std::vector<std::pair<int, Mesh>> cutters;
         for (const auto& request : requests)
             cutters.emplace_back(request.region, shell_cutter(request));
         MiteredOffsets miter;
+        Partition out;
         if (policy == SharedBoundaryPolicy::MiterAdjacentEdges) {
             miter = miter_offsets(requests);
-            for (std::size_t i = 0; i < requests.size(); ++i)
-                cutters[i].second = shell_cutter_impl(requests[i], &miter.inner[i]);
-        }
-        auto out                      = partition_meshes(solid, cutters, true);
+            auto mitered = cutters;
+            try {
+                for (std::size_t i = 0; i < requests.size(); ++i)
+                    mitered[i].second = shell_cutter_impl(requests[i], &miter.inner[i]);
+                out = partition_meshes(solid, mitered, true);
+            } catch (const FoldedOffset&) {
+                // A valid prism may have a finer first row than its tangential
+                // miter displacement. Do not move/flip that row or the CAD skin.
+                out = detail::partition_planar_miters(solid, requests, cutters, miter.seams);
+            }
+        } else
+            out = partition_meshes(solid, cutters, true);
         out.mitered_edges             = miter.edges;
         out.mitered_vertices          = miter.vertices;
         out.miter_constraint_residual = miter.residual;

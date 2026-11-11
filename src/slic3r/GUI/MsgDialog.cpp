@@ -431,10 +431,14 @@ static void add_msg_content(wxWindow   *parent,
             scrolledWindow->SetScrollRate(0, scrolledWindow->FromDIP(20));
             scrolledWindow->EnableScrolling(false, true);
             wxBoxSizer *sizer_scrolled = new wxBoxSizer(wxHORIZONTAL);
-            Label *wrapped_text = new Label(scrolledWindow, font, msg, LB_AUTO_WRAP, wxSize(info_width, -1));
-            wrapped_text->SetMinSize(wxSize(info_width, -1));
-            wrapped_text->SetMaxSize(wxSize(info_width, -1));
-            wrapped_text->Wrap(info_width);
+            // The scrollbar and the existing spacer consume client width. Long
+            // reports must wrap inside that space instead of losing their right edge.
+            const int text_width = std::max(1, info_width -
+                std::max(0, wxSystemSettings::GetMetric(wxSYS_VSCROLL_X, scrolledWindow)) - 5);
+            Label *wrapped_text = new Label(scrolledWindow, font, msg, LB_AUTO_WRAP, wxSize(text_width, -1));
+            wrapped_text->SetMinSize(wxSize(text_width, -1));
+            wrapped_text->SetMaxSize(wxSize(text_width, -1));
+            wrapped_text->Wrap(text_width);
             sizer_scrolled->Add(wrapped_text, wxALIGN_LEFT ,0);
             sizer_scrolled->AddSpacer(5);
             sizer_scrolled->AddStretchSpacer();

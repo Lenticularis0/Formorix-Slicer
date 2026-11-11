@@ -1,0 +1,17 @@
+Filters: "Hybrid shells process inclined convex concave and hydrofoil negative surfaces conservatively"
+Randomness seeded to: 42
+MATERIAL3D inclined_variable_wall,status=3,supplied=nan,union=nan,missing=nan,outside=nan,duplicate=nan,core_overlap=nan,supply_residual=nan,maximum=nan,mean=nan,rms=nan,upper=nan,bounded=0,cells=10,queries=0,error=region 1: Boolean operation 0 failed (work 9, input faces 28/28): nonmanifold or invalid result
+ACCURACY inclined_variable_wall,region=1,topology=1,bounds=0/1.6653345369377348e-16/2.3898029743976268e-07/1.0001235456181808e-09/inf,inadmissible=0,volume_plausible=0,total_bound=inf,verified=0
+HYBRID inclined_variable_wall,1,-2.8421709430404007e-14,2.3898029743976268e-07,inf,inf,inf,0.16292000000000001,1.8046376479777325e-07,0.83707963267948948,0
+MATERIAL3D convex,status=2,supplied=nan,union=nan,missing=nan,outside=nan,duplicate=nan,core_overlap=nan,supply_residual=nan,maximum=nan,mean=nan,rms=nan,upper=nan,bounded=0,cells=243,queries=0,error=Material run 2, cell 35: Material mesh is folded, self-intersecting or does not bound a volume
+ACCURACY convex,region=1,topology=1,bounds=inf/inf/4.6378157937314533e-07/inf/inf,inadmissible=0,volume_plausible=0,total_bound=inf,verified=0
+HYBRID convex,1,0,4.6378157937314533e-07,inf,inf,inf,0.16470563097953927,0.0067192096813515406,0.75680877663541513,0
+MATERIAL3D concave,status=2,supplied=nan,union=nan,missing=nan,outside=nan,duplicate=nan,core_overlap=nan,supply_residual=nan,maximum=nan,mean=nan,rms=nan,upper=nan,bounded=0,cells=244,queries=0,error=Material run 2, cell 36: Material mesh is folded, self-intersecting or does not bound a volume
+ACCURACY concave,region=1,topology=1,bounds=inf/inf/1.0662926408500084e-07/inf/inf,inadmissible=0,volume_plausible=0,total_bound=inf,verified=0
+HYBRID concave,1,2.8421709430404007e-14,1.0662926408500084e-07,inf,inf,inf,0.16470531642462008,0.0067190355730124838,0.73757939017793439,0
+MATERIAL3D hydrofoil_negative,status=2,supplied=nan,union=nan,missing=nan,outside=nan,duplicate=nan,core_overlap=nan,supply_residual=nan,maximum=nan,mean=nan,rms=nan,upper=nan,bounded=0,cells=88,queries=0,error=Material run 0, cell 11: Material mesh is folded, self-intersecting or does not bound a volume
+ACCURACY hydrofoil_negative,region=1,topology=1,bounds=inf/inf/2.313266919909065e-07/inf/inf,inadmissible=0,volume_plausible=0,total_bound=inf,verified=0
+HYBRID hydrofoil_negative,1,-2.8421709430404007e-14,2.313266919909065e-07,inf,inf,inf,0.1622314319458385,0.00018126399574238799,0.83120864304567765,0
+===============================================================================
+All tests passed (1373 assertions in 1 test case)
+

@@ -14,7 +14,8 @@ enum class FormorixHelpTopic {
     Transitions,
     MultiHead,
     HighSpeed,
-    Preview
+    Preview,
+    MaterialVolume
 };
 wxString formorix_help_url(FormorixHelpTopic topic);
 wxWindow* formorix_help_button(wxWindow* parent, FormorixHelpTopic topic);

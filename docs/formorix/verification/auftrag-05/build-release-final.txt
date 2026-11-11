@@ -1,0 +1,54 @@
+MSBuild version 18.9.1+a81b43525 for .NET Framework
+
+  encoding-check.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\src\dev-utils\Release\encoding-check.exe
+  Clipper2.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\deps_src\clipper2\Release\Clipper2.lib
+  glad.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\src\glad\Release\glad.lib
+  admesh.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\deps_src\admesh\Release\admesh.lib
+  hidapi.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\deps_src\hidapi\Release\hidapi.lib
+  glu-libtess.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\deps_src\glu-libtess\Release\glu-libtess.lib
+  imgui.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\deps_src\imgui\Release\imgui.lib
+  mcut.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\deps_src\mcut\Release\mcut.lib
+  Resolving the git commit hash
+  libvgcode.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\src\libvgcode\Release\libvgcode.lib
+  md4c.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\deps_src\md4c\src\Release\md4c.lib
+  md4c-html.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\deps_src\md4c\src\Release\md4c-html.lib
+  -- Build commit: b066c16391
+  mdns.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\deps_src\mdns\Release\mdns.lib
+  minilzo_static.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\deps_src\minilzo\Release\minilzo_static.lib
+  imguizmo.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\deps_src\imguizmo\Release\imguizmo.lib
+  miniz_static.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\deps_src\miniz\Release\miniz_static.lib
+  qhullstatic.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\deps_src\qhull\Release\qhullstatic.lib
+  qoi.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\deps_src\qoi\Release\qoi.lib
+  semver.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\lib\Release\semver.lib
+  libslic3r_cgal.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\src\libslic3r\Release\libslic3r_cgal.lib
+  libslic3r.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\src\libslic3r\Release\libslic3r.lib
+  libnest2d.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\deps_src\libnest2d\Release\libnest2d.lib
+  BaseException.cpp
+  BuildCommit.cpp
+  libslic3r_gui.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\src\slic3r\Release\libslic3r_gui.lib
+     Creating library C:/Formorix Slicer/Formorix-Slicer/build/src/slic3r/Release/orca.lib and object C:/Formorix Slicer/Formorix-Slicer/build/src/slic3r/Release/orca.exp
+LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library [C:\Formorix Slicer\Formorix-Slicer\build\src\slic3r\orca_stubgen.vcxproj]
+     Creating library C:/Formorix Slicer/Formorix-Slicer/build/src/Release/OrcaSlicer.lib and object C:/Formorix Slicer/Formorix-Slicer/build/src/Release/OrcaSlicer.exp
+LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library [C:\Formorix Slicer\Formorix-Slicer\build\src\OrcaSlicer.vcxproj]
+  LINK : /LTCG specified but no code generation required; remove /LTCG from the link command line to improve linker performance
+  orca_stubgen.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\src\slic3r\Release\orca.dll
+  OrcaSlicer.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\src\Release\OrcaSlicer.dll
+  Symlinking the resources directory into the build tree	Symlinking the resources directory into the build tree	Symlinking the resources directory into the build tree	Symlinking the resources directory into the build tree	Copying Python runtime into the build tree
+  OrcaSlicer_app_gui.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\src\Release\orca-slicer.exe
+  Catch2.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\tests\catch2\src\Release\Catch2.lib
+  Shiny.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\deps_src\Shiny\Release\Shiny.lib
+  OrcaSlicer_profile_validator.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\src\Release\OrcaSlicer_profile_validator.exe
+  hintsToPot.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\deps_src\hints\Release\hintsToPot.exe
+  generate_system_cache.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\src\dev-utils\Release\generate_system_cache.exe
+  Catch2WithMain.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\tests\catch2\src\Release\Catch2Main.lib
+  texture_unwrap_dump.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\src\dev-utils\Release\texture_unwrap_dump.exe
+  libslic3r_tests.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\tests\libslic3r\Release\libslic3r_tests.exe
+  sla_print_tests.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\tests\sla_print\Release\sla_print_tests.exe
+     Creating library C:/Formorix Slicer/Formorix-Slicer/build/tests/slic3rutils/Release/slic3rutils_tests.lib and object C:/Formorix Slicer/Formorix-Slicer/build/tests/slic3rutils/Release/slic3rutils_tests.exp
+LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library [C:\Formorix Slicer\Formorix-Slicer\build\tests\slic3rutils\slic3rutils_tests.vcxproj]
+  LINK : /LTCG specified but no code generation required; remove /LTCG from the link command line to improve linker performance
+  libnest2d_tests.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\tests\libnest2d\Release\libnest2d_tests.exe
+  filament_group_tests.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\tests\filament_group\Release\filament_group_tests.exe
+  fff_print_tests.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\tests\fff_print\Release\fff_print_tests.exe
+  slic3rutils_tests.vcxproj -> C:\Formorix Slicer\Formorix-Slicer\build\tests\slic3rutils\Release\slic3rutils_tests.exe
+  Copying Python runtime for slic3rutils plugin host API tests	Copying uv for the plugin host API tests	

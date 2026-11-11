@@ -1,0 +1,221 @@
+{
+  "scope": "local working tree only; no HTTP assertion",
+  "topic_count": 13,
+  "mapping_count": 13,
+  "material_topic_index": 12,
+  "existing_pin_unchanged": true,
+  "publication_pending": "Root will repin after material.md and the related docs are committed and pushed.",
+  "checks": [
+    {
+      "origin": "FormorixHelpTopic::Surfaces",
+      "target": "index.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "FormorixHelpTopic::Selection",
+      "target": "selection.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "FormorixHelpTopic::SurfaceLayerHeight",
+      "target": "layers.md#schichtdicke",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "FormorixHelpTopic::ShellDepth",
+      "target": "layers.md#schalendicke",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "FormorixHelpTopic::Normal",
+      "target": "orientation.md#oberflachennormale",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "FormorixHelpTopic::NozzleDeviation",
+      "target": "orientation.md#abweichung-und-kippwinkel",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "FormorixHelpTopic::Supports",
+      "target": "supports.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "FormorixHelpTopic::ContinuousPaths",
+      "target": "continuous-paths.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "FormorixHelpTopic::Transitions",
+      "target": "transitions.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "FormorixHelpTopic::MultiHead",
+      "target": "multi-head.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "FormorixHelpTopic::HighSpeed",
+      "target": "high-speed.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "FormorixHelpTopic::Preview",
+      "target": "preview.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "FormorixHelpTopic::MaterialVolume",
+      "target": "material.md#nominales-materialvolumen",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "material.md",
+      "target": "preview.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "material.md",
+      "target": "hybrid.md#was-die-prüfwerte-bedeuten",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "material.md",
+      "target": "supports.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "material.md",
+      "target": "multi-head.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "index.md",
+      "target": "selection.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "index.md",
+      "target": "layers.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "index.md",
+      "target": "orientation.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "index.md",
+      "target": "multi-head.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "index.md",
+      "target": "preview.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "index.md",
+      "target": "hybrid.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "index.md",
+      "target": "material.md#nominales-materialvolumen",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "index.md",
+      "target": "supports.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "index.md",
+      "target": "continuous-paths.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "index.md",
+      "target": "transitions.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "index.md",
+      "target": "high-speed.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "index.md",
+      "target": "demo.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    },
+    {
+      "origin": "index.md",
+      "target": "../Formorix-Auftrag-03.md",
+      "file_exists": true,
+      "anchor_exists": true,
+      "ok": true
+    }
+  ],
+  "passed": true
+}

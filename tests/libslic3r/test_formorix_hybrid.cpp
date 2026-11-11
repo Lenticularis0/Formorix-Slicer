@@ -6,6 +6,7 @@
 #include "libslic3r/FormorixHybrid.hpp"
 #include "libslic3r/FormorixDeposition.hpp"
 #include "libslic3r/FormorixGeometry.hpp"
+#include "libslic3r/FormorixMaterial.hpp"
 #include "libslic3r/FormorixProcess.hpp"
 #include "libslic3r/FormorixPreview.hpp"
 #include "libslic3r/FormorixSurfaces.hpp"
@@ -22,13 +23,12 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
-#include <cstddef>
+#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <limits>
 #include <map>
 #include <string>
-#include <utility>
 #include <utility>
 #include <vector>
 
@@ -37,6 +37,7 @@ namespace FH = FormorixHybrid;
 namespace FG = FormorixGeometry;
 namespace PS = FormorixProcess;
 namespace FS = FormorixSurfaces;
+namespace FM = FormorixMaterial;
 using Catch::Matchers::WithinAbs;
 namespace {
 PS::Profile profile(int head = 0)
@@ -139,7 +140,30 @@ FH::Input fixture(int shape, bool split = false, bool whole = false)
 }
 void metrics(const char* name, const FH::Result& result)
 {
+    const auto& material = result.material;
+    const auto measured  = [&](double value) { return material.ok() ? value : std::numeric_limits<double>::quiet_NaN(); };
+    std::cout << "MATERIAL3D " << name << ",status=" << int(material.status) << ",supplied=" << std::setprecision(17)
+              << measured(material.supplied_volume) << ",union=" << measured(material.union_volume)
+              << ",missing=" << measured(material.missing_volume) << ",outside=" << measured(material.outside_volume)
+              << ",duplicate=" << measured(material.duplicate_volume) << ",core_overlap=" << measured(material.core_overlap_volume)
+              << ",supply_residual=" << measured(material.supply_geometry_residual)
+              << ",maximum=" << measured(material.boundary_distance.maximum) << ",mean=" << measured(material.boundary_distance.mean)
+              << ",rms=" << measured(material.boundary_distance.rms) << ",upper=" << measured(material.boundary_distance.upper_bound)
+              << ",bounded=" << material.boundary_distance.bounded << ",cells=" << material.cells
+              << ",queries=" << material.distance_queries << ",error=" << material.error << "\n";
+    for (const auto& r : material.regions)
+        std::cout << "MATERIAL3D_REGION " << name << ",region=" << r.region << ",coverage=" << int(r.coverage)
+                  << ",missing=" << r.missing_volume << ",outside=" << r.outside_volume << ",supply_residual=" << r.supply_geometry_residual
+                  << ",boundary_bounded=" << r.boundary_distance.bounded << ",outer_bounded=" << r.nominal_outer_distance.bounded
+                  << ",outer_upper=" << r.nominal_outer_distance.upper_bound << ",input_rounding=" << r.input_rounding_volume_bound << '/'
+                  << material.input_rounding_volume_bound << ",zero_checks=" << (r.outside_volume == 0.) << '/'
+                  << (material.duplicate_volume == 0.) << '/' << (material.core_overlap_volume == 0.) << "\n";
     for (const auto& r : result.regions) {
+        std::cout << "ACCURACY " << name << ",region=" << r.id << ",topology=" << result.partition.output_topology_preserved
+                  << ",bounds=" << r.accuracy.bounds[0] << '/' << r.accuracy.bounds[1] << '/' << r.accuracy.bounds[2] << '/'
+                  << r.accuracy.bounds[3] << '/' << r.accuracy.bounds[4] << ",inadmissible=" << r.inadmissible_material
+                  << ",volume_plausible=" << r.accuracy.material_volume_plausible << ",total_bound=" << r.accuracy.total_bound()
+                  << ",verified=" << r.accuracy.verified() << "\n";
         double timeline_volume = 0.;
         for (const auto& track : result.preview.timeline.heads)
             for (const auto& motion : track)
@@ -176,6 +200,7 @@ TEST_CASE("A commensurate planar ribbon exactly partitions finite cells without 
     CHECK_THAT(r.coverage.sampled_maximum, WithinAbs(0., 1e-8));
     CHECK(r.accuracy.material_partition_verified);
     CHECK(r.accuracy.verified());
+    CHECK(r.accuracy.bounds[2] >= FH::to_float(result.core).displacement_bound);
     CHECK_THAT(input.regions[0].process.flow_ratio, WithinAbs(before.flow_ratio, 1e-12));
     CHECK_THAT(input.regions[0].process.line_width, WithinAbs(before.line_width, 1e-12));
     metrics("commensurate_plane", result);
@@ -192,6 +217,403 @@ TEST_CASE("A complete fine outer layer cannot certify missing inner ribbon cells
     CHECK(result.regions[0].projected_uncovered_volume > 0.);
     CHECK_FALSE(result.regions[0].accuracy.material_partition_verified);
     CHECK_FALSE(result.regions[0].accuracy.verified());
+}
+TEST_CASE("Accuracy requires finite nonnegative budgets positive tolerances and all evidence flags", "[FormorixHybrid][AccuracyGate]")
+{
+    FH::Accuracy accepted;
+    accepted.bounds                = {.001, .001, .001, .001, .001};
+    accepted.whole_surface_covered = accepted.material_volume_plausible = accepted.material_partition_verified = true;
+    REQUIRE(accepted.verified());
+    CHECK_FALSE(FH::Accuracy{}.verified());
+    const double infinity = std::numeric_limits<double>::infinity();
+    for (double tolerance : {0., -1., infinity, -infinity, std::numeric_limits<double>::quiet_NaN()}) {
+        INFO(tolerance);
+        CHECK_FALSE(accepted.verified(tolerance));
+    }
+    for (std::size_t term = 0; term < accepted.bounds.size(); ++term)
+        for (double invalid : {-1., infinity, -infinity, std::numeric_limits<double>::quiet_NaN()}) {
+            INFO(term);
+            INFO(invalid);
+            auto rejected         = accepted;
+            rejected.bounds[term] = invalid;
+            CHECK_FALSE(rejected.verified());
+            CHECK_FALSE(std::isfinite(rejected.total_bound()));
+        }
+    for (bool FH::Accuracy::* flag :
+         {&FH::Accuracy::whole_surface_covered, &FH::Accuracy::material_volume_plausible, &FH::Accuracy::material_partition_verified}) {
+        auto rejected  = accepted;
+        rejected.*flag = false;
+        CHECK_FALSE(rejected.verified());
+    }
+    accepted.bounds = {std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), 0., 0., 0.};
+    CHECK_FALSE(accepted.verified(std::numeric_limits<double>::max()));
+    CHECK_FALSE(std::isfinite(accepted.total_bound()));
+}
+TEST_CASE("A positive budget contribution cannot disappear by rounding at the acceptance threshold", "[FormorixHybrid][AccuracyGate]")
+{
+    FH::Accuracy evidence;
+    evidence.whole_surface_covered = evidence.material_volume_plausible = evidence.material_partition_verified = true;
+    evidence.bounds                                                                                            = {.01, 0., 0., 0., 0.};
+    REQUIRE(evidence.verified(.01));
+    CHECK_THAT(evidence.total_bound(), WithinAbs(.01, 0.));
+    // Ordinary summation rounds .01 plus this positive contribution back to .01.
+    // The mathematical budget nevertheless exceeds the requested threshold.
+    evidence.bounds[4] = std::numeric_limits<double>::min();
+    CHECK(evidence.total_bound() > .01);
+    CHECK_FALSE(evidence.verified(.01));
+    double naive = 0.;
+    for (double term : evidence.bounds)
+        naive += term;
+    std::cout << "ACCURACY_GATE rounding_boundary,tolerance=" << std::setprecision(17) << .01 << ",contribution=" << evidence.bounds[4]
+              << ",naive_sum=" << naive << ",upper_sum=" << evidence.total_bound() << ",verified=" << evidence.verified(.01) << "\n";
+    std::reverse(evidence.bounds.begin(), evidence.bounds.end());
+    CHECK(evidence.total_bound() > .01);
+    CHECK_FALSE(evidence.verified(.01));
+}
+TEST_CASE("Replacing spatial evidence rejects stale identities and incomplete or contradictory audit records",
+          "[FormorixHybrid][AccuracyGate]")
+{
+    auto input                          = fixture(0);
+    input.regions[0].process.line_width = .75 + .2 * (1. - std::acos(-1.) / 4.);
+    const auto result                   = FH::generate(input);
+    INFO(result.error);
+    INFO(result.material.error);
+    REQUIRE(result.ok());
+    REQUIRE(result.material.ok());
+    REQUIRE(result.regions.front().accuracy.verified());
+    const auto& region = result.regions.front();
+    auto current       = region.accuracy;
+    current.update_material_evidence(result.material, region.id + 1, region.process.material_id, false);
+    CHECK_FALSE(current.verified());
+    CHECK_FALSE(current.whole_surface_covered);
+    CHECK_FALSE(std::isfinite(current.bounds[4]));
+    current = region.accuracy;
+    current.update_material_evidence(result.material, region.id, "a different current material", false);
+    CHECK_FALSE(current.verified());
+    CHECK_FALSE(current.material_partition_verified);
+    CHECK_FALSE(std::isfinite(current.bounds[4]));
+
+    const std::vector<std::pair<const char*, std::function<void(FM::Result&)>>>
+        changes{{"incomplete audit", [](auto& a) { a.status = FM::Status::ResourceLimit; }},
+                {"audit error", [](auto& a) { a.error = "incomplete replacement"; }},
+                {"missing regional record", [](auto& a) { a.regions.clear(); }},
+                {"ambiguous regional identity", [](auto& a) { a.regions.push_back(a.regions.front()); }},
+                {"different audited material", [](auto& a) { a.regions.front().material = "PVA"; }},
+                {"unbounded global distance", [](auto& a) { a.boundary_distance.bounded = false; }},
+                {"nonfinite global upper bound", [](auto& a) { a.boundary_distance.upper_bound = INFINITY; }},
+                {"undefined completed statistics", [](auto& a) { a.regions.front().boundary_distance.mean = INFINITY; }},
+                {"invalid outer interval", [](auto& a) { a.regions.front().nominal_outer_distance.upper_bound = -1.; }},
+                {"contradictory sampled maximum", [](auto& a) { a.regions.front().nominal_outer_distance.maximum = 1.; }},
+                {"nonfinite residual",
+                 [](auto& a) { a.regions.front().supply_geometry_residual = std::numeric_limits<double>::quiet_NaN(); }},
+                {"unbounded residual allowance", [](auto& a) { a.regions.front().input_rounding_volume_bound = INFINITY; }},
+                {"nonfinite output rounding", [](auto& a) { a.rounding_bound = std::numeric_limits<double>::quiet_NaN(); }},
+                {"contradictory full coverage", [](auto& a) { a.regions.front().missing_volume = .01; }},
+                {"regional core intrusion", [](auto& a) { a.regions.front().core_overlap_volume = .01; }},
+                {"cross-material overlap", [](auto& a) { a.material_overlaps.push_back({"PETG", "PVA", .01, {}}); }},
+                {"nonfinite cross-material overlap", [](auto& a) { a.material_overlaps.push_back({"PETG", "PVA", INFINITY, {}}); }}};
+    for (const auto& change : changes) {
+        INFO(change.first);
+        auto replacement = result.material;
+        change.second(replacement);
+        current = region.accuracy; // start with genuinely positive, now obsolete evidence
+        current.update_material_evidence(replacement, region.id, region.process.material_id, false);
+        CHECK_FALSE(current.whole_surface_covered);
+        CHECK_FALSE(current.material_partition_verified);
+        CHECK_FALSE(current.verified());
+        CHECK_FALSE(std::isfinite(current.bounds[4]));
+        // A subsequent successful audit is evaluated normally, rather than
+        // retaining either a stale acceptance or a permanently latched failure.
+        current.update_material_evidence(result.material, region.id, region.process.material_id, false);
+        CHECK(current.verified());
+    }
+    current.update_material_evidence(result.material, region.id, region.process.material_id, true);
+    CHECK(current.whole_surface_covered);
+    CHECK_FALSE(current.material_partition_verified);
+    CHECK_FALSE(current.verified());
+
+    input.regions[0].cad_reference.reset();
+    const auto mesh_only = FH::generate(input);
+    INFO(mesh_only.error);
+    REQUIRE(mesh_only.ok());
+    REQUIRE(mesh_only.material.ok());
+    CHECK(mesh_only.regions[0].accuracy.whole_surface_covered);
+    CHECK(mesh_only.regions[0].accuracy.material_partition_verified);
+    CHECK_FALSE(std::isfinite(mesh_only.regions[0].accuracy.bounds[0]));
+    CHECK_FALSE(mesh_only.regions[0].accuracy.verified());
+}
+TEST_CASE("A missing internal material layer invalidates accuracy despite an unchanged complete outer sheet",
+          "[FormorixHybrid][AccuracyGate]")
+{
+    auto input             = fixture(0);
+    auto& r                = input.regions.front();
+    r.process.layer_height = r.settings.layer_height = .25;
+    r.settings.layers                                = 3;
+    r.process.line_width                             = .75 + .25 * (1. - std::acos(-1.) / 4.);
+    const auto result                                = FH::generate(input);
+    INFO(result.error);
+    INFO(result.material.error);
+    REQUIRE(result.ok());
+    REQUIRE(result.regions.front().accuracy.verified());
+    auto runs = result.material_runs;
+    runs.erase(std::remove_if(runs.begin(), runs.end(), [](const auto& run) { return run.layer == 1; }), runs.end());
+    REQUIRE(runs.size() < result.material_runs.size());
+    const auto part = std::find_if(result.partition.parts.begin(), result.partition.parts.end(),
+                                   [&](const auto& p) { return p.region == r.id; });
+    REQUIRE(part != result.partition.parts.end());
+    FM::Options options;
+    options.max_distance_queries = 64; // the exact missing volume suffices; do not spend a large refinement budget on this negative case
+    const auto incomplete        = FM::audit({{r.id, r.process.material_id, part->mesh, r.surface}}, result.core, runs, options);
+    INFO(incomplete.error);
+    REQUIRE(incomplete.ok());
+    REQUIRE(incomplete.regions.size() == 1);
+    CHECK(incomplete.regions[0].coverage == FM::Coverage::Partial);
+    CHECK_THAT(incomplete.missing_volume, WithinAbs(3. * 3. * .25, 1e-10));
+    CHECK(incomplete.regions[0].nominal_outer_distance.bounded);
+    CHECK_THAT(incomplete.regions[0].nominal_outer_distance.upper_bound, WithinAbs(0., 1e-12));
+    auto accuracy = result.regions.front().accuracy;
+    accuracy.update_material_evidence(incomplete, r.id, r.process.material_id, false);
+    CHECK_FALSE(accuracy.whole_surface_covered);
+    CHECK_FALSE(accuracy.material_partition_verified);
+    CHECK_FALSE(accuracy.verified());
+    std::cout << "ACCURACY_GATE missing_inner_layer,missing_volume=" << std::setprecision(17) << incomplete.missing_volume
+              << ",outer_upper=" << incomplete.regions[0].nominal_outer_distance.upper_bound
+              << ",coverage=" << int(incomplete.regions[0].coverage) << ",verified=" << accuracy.verified() << "\n";
+}
+TEST_CASE("Opposite supply errors cannot cancel between material regions in the accuracy gate", "[FormorixHybrid][AccuracyGate]")
+{
+    auto input                          = fixture(0, true);
+    input.regions[0].process.line_width = .75 + .2 * (1. - std::acos(-1.) / 4.);
+    input.regions[1].process.line_width = .375 + .2 * (1. - std::acos(-1.) / 4.);
+    const auto result                   = FH::generate(input);
+    INFO(result.error);
+    REQUIRE(result.ok());
+    REQUIRE(result.regions.size() == 2);
+    for (const auto& region : result.regions)
+        REQUIRE(region.accuracy.verified());
+    auto runs = result.material_runs;
+    std::vector<FM::Target> targets;
+    for (std::size_t index = 0; index < input.regions.size(); ++index) {
+        const auto& region = input.regions[index];
+        const auto run     = std::find_if(runs.begin(), runs.end(), [&](const auto& entry) { return entry.region == region.id; });
+        REQUIRE(run != runs.end());
+        auto supply = std::max_element(run->supplied_volumes.begin(), run->supplied_volumes.end());
+        REQUIRE(supply != run->supplied_volumes.end());
+        REQUIRE(*supply > .001);
+        *supply += index == 0 ? .001 : -.001;
+        const auto part = std::find_if(result.partition.parts.begin(), result.partition.parts.end(),
+                                       [&](const auto& entry) { return entry.region == region.id; });
+        REQUIRE(part != result.partition.parts.end());
+        targets.push_back({region.id, region.process.material_id, part->mesh, region.surface});
+    }
+    const auto mismatched = FM::audit(targets, result.core, runs);
+    INFO(mismatched.error);
+    REQUIRE(mismatched.ok());
+    CHECK_THAT(mismatched.supply_geometry_residual, WithinAbs(0., 1e-12));
+    CHECK_THAT(mismatched.missing_volume, WithinAbs(0., 0.));
+    CHECK_THAT(mismatched.outside_volume, WithinAbs(0., 0.));
+    for (const auto& region : result.regions) {
+        const auto evidence = std::find_if(mismatched.regions.begin(), mismatched.regions.end(),
+                                           [&](const auto& entry) { return entry.region == region.id; });
+        REQUIRE(evidence != mismatched.regions.end());
+        CHECK_THAT(std::abs(evidence->supply_geometry_residual), WithinAbs(.001, 1e-12));
+        CHECK(evidence->coverage == FM::Coverage::Full);
+        auto accuracy = region.accuracy;
+        accuracy.update_material_evidence(mismatched, region.id, region.process.material_id, false);
+        CHECK_FALSE(accuracy.material_partition_verified);
+        CHECK_FALSE(accuracy.verified());
+        std::cout << "ACCURACY_GATE opposite_regional_supply,region=" << region.id << ",global_residual=" << std::setprecision(17)
+                  << mismatched.supply_geometry_residual << ",regional_residual=" << evidence->supply_geometry_residual
+                  << ",missing_volume=" << mismatched.missing_volume << ",outside_volume=" << mismatched.outside_volume
+                  << ",verified=" << accuracy.verified() << "\n";
+    }
+}
+TEST_CASE("Explicit local width limits fill a noncommensurate rectangle without changing flow", "[FormorixHybrid][BoundaryFill]")
+{
+    auto input = fixture(0, false, true);
+    for (auto& vertex : input.solid.vertices) {
+        vertex.x() *= 2.;
+        vertex.y() *= 6.1 / 6.;
+    }
+    for (auto& vertex : input.regions[0].surface.vertices) {
+        vertex.x() *= 2.;
+        vertex.y() *= 6.1 / 6.;
+    }
+    auto& p = input.regions[0].process;
+    p.line_width = .75 + .2 * (1. - std::acos(-1.) / 4.);
+    p.local_width_limits = PS::WidthLimits{.74, .84};
+    p.volumetric_limit = .7;
+    const auto before = p;
+    const auto result = FH::generate(input);
+    INFO(result.error);
+    INFO(result.material.error);
+    REQUIRE(result.ok());
+    REQUIRE(result.material.ok());
+    CHECK(result.regions[0].adaptive_boundary);
+    CHECK_THAT(result.regions[0].minimum_local_width, WithinAbs(.7625 + .2 * (1. - std::acos(-1.) / 4.), 1e-12));
+    CHECK(result.regions[0].accuracy.verified());
+    CHECK_THAT(result.material.union_volume, WithinAbs(12. * 6.1 * .4, 1e-10));
+    CHECK_THAT(result.material.missing_volume, WithinAbs(0., 0.));
+    CHECK_THAT(result.material.outside_volume, WithinAbs(0., 0.));
+    CHECK_THAT(result.material.duplicate_volume, WithinAbs(0., 0.));
+    for (const auto& motion : result.preview.timeline.heads[0]) {
+        if (!motion.extrusion)
+            continue;
+        REQUIRE(motion.process.has_value());
+        CHECK_THAT(motion.process->line_width, WithinAbs(result.regions[0].minimum_local_width, 1e-12));
+        CHECK_THAT(motion.process->flow_ratio, WithinAbs(before.flow_ratio, 0.));
+        const double speed = (motion.to.position - motion.from.position).norm() / (motion.end - motion.start);
+        CHECK(speed * motion.mm3_per_mm <= before.volumetric_limit + 1e-10);
+    }
+    CHECK_THAT(p.line_width, WithinAbs(before.line_width, 0.));
+    CHECK_THAT(p.flow_ratio, WithinAbs(before.flow_ratio, 0.));
+    metrics("adaptive_rectangle", result);
+}
+TEST_CASE("A fixed profile leaves an explicit noncommensurate boundary remainder", "[FormorixHybrid][BoundaryFill]")
+{
+    auto input = fixture(0);
+    input.regions[0].process.line_width = .7 + .2 * (1. - std::acos(-1.) / 4.);
+    const auto result = FH::generate(input);
+    INFO(result.error);
+    REQUIRE(result.ok());
+    CHECK_FALSE(result.regions[0].adaptive_boundary);
+    CHECK(result.regions[0].maximum_boundary_remainder > 0.);
+    CHECK_FALSE(result.regions[0].accuracy.verified());
+    CHECK(result.material.missing_volume > 0.);
+    CHECK_THAT(result.regions[0].minimum_local_width, WithinAbs(input.regions[0].process.line_width, 0.));
+    metrics("fixed_boundary_remainder", result);
+}
+TEST_CASE("Spatial contours cover a planar region with a hole without extruding across the hole", "[FormorixHybrid][SurfaceContours]")
+{
+    auto input = fixture(0);
+    auto& region = input.regions[0];
+    region.process.line_width = .75 + .2 * (1. - std::acos(-1.) / 4.);
+    auto& surface = region.surface;
+    surface.faces.erase(std::remove_if(surface.faces.begin(), surface.faces.end(), [&](const Vec3i32& face) {
+        const Vec3d center = (surface.vertices[face[0]] + surface.vertices[face[1]] + surface.vertices[face[2]]) / 3.;
+        return std::abs(center.x()) < .75 && std::abs(center.y()) < .75;
+    }), surface.faces.end());
+    surface = pack(surface);
+    const auto original = input.solid;
+    const auto result = FH::generate(input);
+    INFO(result.error);
+    INFO(result.material.error);
+    REQUIRE(result.ok());
+    REQUIRE(result.material.ok());
+    CHECK(result.regions[0].contour_runs > 2);
+    CHECK(result.regions[0].accuracy.verified());
+    CHECK_THAT(result.material.union_volume, WithinAbs((9. - 2.25) * .4, 1e-10));
+    CHECK_THAT(result.material.missing_volume, WithinAbs(0., 0.));
+    CHECK_THAT(result.material.outside_volume, WithinAbs(0., 0.));
+    bool has_travel = false;
+    for (const auto& motion : result.preview.timeline.heads[0]) {
+        if (!motion.extrusion) {
+            has_travel = true;
+            CHECK_THAT(motion.mm3_per_mm, WithinAbs(0., 0.));
+        } else {
+            const Vec3d midpoint = (motion.from.position + motion.to.position) / 2.;
+            const bool in_hole = std::abs(midpoint.x()) < .75 && std::abs(midpoint.y()) < .75;
+            CHECK_FALSE(in_hole);
+        }
+    }
+    CHECK(has_travel);
+    CHECK(input.solid.vertices == original.vertices);
+    CHECK(input.solid.faces == original.faces);
+    metrics("planar_hole", result);
+}
+TEST_CASE("A wrapped hybrid surface retains explicit cyclic extrusion without machine clearance", "[FormorixHybrid][SurfaceContours]")
+{
+    FH::Input input;
+    constexpr int count = 32;
+    constexpr double radius = 3.;
+    for (int i = 0; i < count; ++i) {
+        const double angle = 2. * std::acos(-1.) * i / count;
+        for (double y : {0., 3.})
+            input.solid.vertices.emplace_back(radius * std::cos(angle), y, radius * std::sin(angle) + radius);
+    }
+    for (int i = 0; i < count; ++i) {
+        const int next = (i + 1) % count;
+        input.solid.faces.emplace_back(2 * i, 2 * i + 1, 2 * next);
+        input.solid.faces.emplace_back(2 * next, 2 * i + 1, 2 * next + 1);
+    }
+    FH::RegionInput region;
+    region.id = 1;
+    region.surface = input.solid;
+    region.process = profile();
+    region.process.line_width = .75 + .2 * (1. - std::acos(-1.) / 4.);
+    region.settings.layers = 1;
+    region.settings.layer_height = .2;
+    region.settings.allow_vertical = true;
+    // Geometric-only reference. The real machine's 75-degree profile is tested
+    // separately and cannot inherit this explicitly enlarged analytical limit.
+    region.max_tilt = 180.;
+    input.regions.push_back(region);
+    input.solid.vertices.emplace_back(0., 0., radius);
+    input.solid.vertices.emplace_back(0., 3., radius);
+    for (int i = 0; i < count; ++i) {
+        const int next = (i + 1) % count;
+        input.solid.faces.emplace_back(2 * count, 2 * i, 2 * next);
+        input.solid.faces.emplace_back(2 * count + 1, 2 * next + 1, 2 * i + 1);
+    }
+    const auto result = FH::generate(input);
+    INFO(result.error);
+    REQUIRE(result.ok());
+    CHECK(result.regions[0].closed_contours > 0);
+    CHECK(std::any_of(result.material_runs.begin(), result.material_runs.end(), [](const auto& run) { return run.closed; }));
+    for (const auto& run : result.material_runs)
+        if (run.closed) CHECK(run.supplied_volumes.size() == run.stations.size());
+    CHECK_FALSE(result.regions[0].accuracy.verified()); // no CAD reference or machine clearance
+    metrics("wrapped_geometric_only", result);
+    input.regions[0].max_tilt = 75.;
+    const auto inaccessible = FH::generate(input);
+    CHECK_FALSE(inaccessible.ok());
+    CHECK(inaccessible.preview.layers.empty());
+    input.regions[0].max_tilt = 180.;
+    input.regions[0].settings.boundary_margin = .1;
+    const auto unsupported_margin = FH::generate(input);
+    CHECK_FALSE(unsupported_margin.ok()); // never silently ignore the requested margin
+    CHECK_FALSE(unsupported_margin.error.empty());
+}
+TEST_CASE("Every hybrid deposition run retains its actual layer head material and supplied volume", "[FormorixHybrid]")
+{
+    auto input = fixture(0, true);
+    const auto original = input.solid;
+    const auto result = FH::generate(input);
+    INFO(result.error);
+    REQUIRE(result.ok());
+    REQUIRE_FALSE(result.material_runs.empty());
+    std::array<double, 3> supply{};
+    for (const auto& run : result.material_runs) {
+        REQUIRE(run.head >= 0);
+        REQUIRE(run.head < 3);
+        REQUIRE(run.stations.size() > 1);
+        REQUIRE(run.supplied_volumes.size() + 1 == run.stations.size());
+        REQUIRE(run.layer >= 0);
+        REQUIRE(std::size_t(run.layer) < result.preview.layers.size());
+        CHECK(run.material == input.regions[run.head].process.material_id);
+        CHECK(run.region == input.regions[run.head].id);
+        for (double volume : run.supplied_volumes) {
+            CHECK(volume > 0.);
+            supply[run.head] += volume;
+        }
+    }
+    for (const auto& region : result.regions)
+        CHECK_THAT(supply[region.head], WithinAbs(region.deposited_volume, 1e-10));
+    CHECK(input.solid.vertices == original.vertices);
+    CHECK(input.solid.faces == original.faces);
+}
+TEST_CASE("An incomplete spatial audit cannot inherit a positive planar projection certificate", "[FormorixHybrid]")
+{
+    auto input = fixture(0);
+    input.regions[0].process.line_width = .75 + .2 * (1. - std::acos(-1.) / 4.);
+    input.material_options.max_stations = 2;
+    const auto result = FH::generate(input);
+    INFO(result.error);
+    REQUIRE(result.ok()); // Existing paths remain diagnostic; no material approval.
+    CHECK_FALSE(result.material.ok());
+    CHECK_FALSE(result.regions[0].accuracy.material_partition_verified);
+    CHECK_FALSE(result.regions[0].accuracy.verified());
+    CHECK_FALSE(std::isfinite(result.regions[0].accuracy.bounds[4]));
 }
 TEST_CASE("Different nozzle ribbons meet at an identical planar material boundary without geometric gaps",
           "[FormorixHybrid][RibbonBaseline]")
@@ -445,7 +867,7 @@ TEST_CASE("Hybrid evidence distinguishes missing underlay unknown CAD and lossy 
         return std::any_of(local.warnings.begin(), local.warnings.end(),
                            [&](const std::string& warning) { return warning.find(text) != std::string::npos; });
     };
-    CHECK(has_warning("dense transition underlay is not generated"));
+    CHECK(has_warning("dense transition underlay is a requested native operation"));
     CHECK(has_warning("additional 5D support is not generated"));
     CHECK(has_warning("soluble support material suitability"));
     FG::Mesh points;
@@ -521,9 +943,25 @@ TEST_CASE("Impossible hybrid partitions and canceled computations keep no accept
     input.regions[0].settings.shell_mode = FS::ShellMode::FullWall;
     CHECK_FALSE(FH::generate(input).ok());
 }
+TEST_CASE("Invalid head and region identities are rejected before constructing indexed tracks", "[FormorixHybrid]")
+{
+    auto input = fixture(0);
+    input.regions[0].head = GENERATE(-1, 3, 99);
+    CHECK_FALSE(FH::generate(input).ok());
+    input.regions[0].head = 0;
+    input.regions[0].id = 0;
+    CHECK_FALSE(FH::generate(input).ok());
+    input.regions[0].id = 1;
+    input.regions.push_back(input.regions[0]);
+    CHECK_FALSE(FH::generate(input).ok());
+}
 TEST_CASE("Hybrid expansion bounds the final movement count across all layers", "[FormorixHybrid]")
 {
     auto input = fixture(0);
+    // Exact planar rows no longer need artificial longitudinal subdivisions.
+    // Set the resource ceiling explicitly so this still tests accumulated work,
+    // rather than depending on the old representation's redundant points.
+    input.max_motions = 200;
     for (auto& p : input.solid.vertices) {
         p.x() *= 20.;
         p.y() *= 20.;
@@ -602,6 +1040,49 @@ TEST_CASE("The saved curved-wall project generates a hybrid preview from its rea
     CHECK(result.regions[0].volume_ratio > .9);
     CHECK_THAT(input.regions[0].process.flow_ratio, WithinAbs(.98, 1e-12));
     metrics("native_curved_wall_standard04", result);
+}
+
+TEST_CASE("Underlay contact records separate raw geometry unknown flow and explicitly requested dense regions", "[FormorixHybrid]")
+{
+    FH::Result result;
+    result.original = result.core = fixture(0).solid;
+    result.regions.resize(1);
+    auto& region = result.regions.front();
+    region.id = 1;
+    region.process = profile();
+    region.interface_samples = {{0., 0., 5.}};
+    region.interface_normals = {Vec3d::UnitZ()};
+    FH::UnderlaySegment path{{-1., 0., 5.}, {1., 0., 5.}, .8, .2, 0, "PETG"};
+    path.flow_geometry_unverified = true;
+    FH::audit_underlay(result, {path});
+    REQUIRE(region.underlay_contacts.size() == 1);
+    CHECK(region.underlay.missing == 1);
+    CHECK(region.underlay.raw_missing == 0);
+    CHECK(region.underlay_contacts.front().kind == FH::UnderlayKind::UnknownGeometry);
+    CHECK_THAT(region.underlay_contacts.front().raw_gap, WithinAbs(0., 1e-12));
+    CHECK(std::isinf(region.underlay_contacts.front().gap));
+    CHECK(region.underlay_contacts.front().path_index == 0);
+    CHECK_FALSE(region.underlay_contacts.front().raw_geometry_unknown);
+
+    path.flow_geometry_unverified = false;
+    path.infill = path.dense_transition = true;
+    region.settings.use_infill = false;
+    FH::audit_underlay(result, {path});
+    CHECK(region.underlay_contacts.front().kind == FH::UnderlayKind::ExcludedInfill);
+    region.settings.dense_underlay = true;
+    FH::audit_underlay(result, {path});
+    CHECK(region.underlay.missing == 0);
+    CHECK(region.underlay_contacts.front().kind == FH::UnderlayKind::Contact);
+    CHECK_FALSE(region.underlay.coverage_bounded);
+    const auto warnings = result.warnings.size();
+    FH::audit_underlay(result, {path});
+    CHECK(result.warnings.size() == warnings);
+
+    FH::audit_underlay(result, {});
+    CHECK(region.underlay.missing == 1);
+    CHECK(region.underlay.raw_missing == 1);
+    CHECK(region.underlay_contacts.front().kind == FH::UnderlayKind::PathGap);
+    CHECK(region.underlay_contacts.front().path_index == std::numeric_limits<std::size_t>::max());
 }
 
 TEST_CASE("A uniform full-wall slab has no conventional core and still requires prior underlay", "[FormorixHybrid][FormorixHybridFullWall]")

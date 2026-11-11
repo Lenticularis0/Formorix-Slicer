@@ -10,7 +10,9 @@ A shell request has an oriented surface, outward normal and positive depth per v
 
 Each cutter is intersected with the remaining solid while its complement is computed in the same corefinement operation. Nonzero cutter volume outside the remaining solid is rejected: this includes insufficient wall thickness and overlapping region assignments. It is never silently clipped or assigned to whichever material happened to come first. The final solids are mutually corefined and shared triangles become explicit interfaces. Region zero identifies the core. Different depths can meet at a step; no smoothing or blending of that step is implied. Exact volume conservation is required, and all materialized double solids are checked again. The exact-to-double coordinate displacement is recorded separately.
 
-Before materialization, the union preserves the supplied solid exactly and the partition has disjoint interiors. All output parts and interfaces use one binary grid of 2^-30 mm (about 9.31e-10 mm). This avoids inconsistent double rounding of near-coincident Boolean vertices. The largest exact-to-grid displacement is bounded using CGAL intervals. Zero-area faces are removed topologically, without smoothing or introducing new coordinates; invalid resulting topology is rejected. Converted solids are checked for closure, orientation, self-intersections and mutual positive-volume overlap. `volume_residual` reports their total volume minus the input volume, including grid rounding. Interfaces are oriented outwards from their first region. Output is therefore subject to the measured rounding bound, not a claim of bit-exact original dimensions.
+Before materialization, the union preserves the supplied solid exactly and the partition has disjoint interiors. Output first attempts full double precision, with identical conversion of shared vertices. If that representation is invalid, all parts and interfaces use one common binary grid of 2^-30 mm (about 9.31e-10 mm). This fallback avoids inconsistent double rounding of near-coincident Boolean vertices without unnecessarily quantizing representable planar interfaces. The largest exact-to-output vertex displacement is bounded using CGAL intervals. Only the fallback removes zero-area faces topologically, without smoothing or introducing new coordinates; invalid resulting topology is rejected. Converted solids are checked for closure, orientation, self-intersections and mutual positive-volume overlap. `volume_residual` reports their total volume minus the input volume, including conversion rounding. Interfaces are oriented outwards from their first region.
+
+`output_topology_preserved` is true only for the unrepaired full-double conversion. It is conservatively false for every grid fallback. A small vertex displacement does not bound the complete original boundary after topological repair: collapsing a thin gap can remove interior surfaces far from the remaining boundary. Consumers must therefore withhold a whole-surface accuracy certificate for fallback output unless a separate complete original-to-output boundary proof is available. A material audit against the already converted shell does not supply that missing proof. Neither conversion mode claims bit-exact original dimensions.
 
 CAD error and offset approximation error remain separate questions. Full-wall consumption is possible when a valid cutter exactly consumes a solid. General variable-thickness full-wall offsetting, automatic patch extraction from the GUI, arbitrary self-intersection repair and generation of load-bearing supports are not part of this module. A failed request returns no partial accepted parts. Patches must match the source surface: a slightly displaced coplanar patch is not silently projected back onto it.
 
@@ -22,9 +24,47 @@ At an outer seam vertex `p`, each incident region contributes its **own** outwar
 
 Both cutters use the same inner seam points and the same canonical diagonal for each seam quadrilateral. This matters on curved common edges: independent normals produce nonplanar quads, for which opposite diagonal choices would create a gap or overlap. The original outer vertices and triangles are retained. Existing exact CGAL clipping, disjointness and total-volume checks still apply; mitering is not permission to resolve residual overlaps by region priority. A shared material interface remains explicit even for incompatible materials. No blending, bond strength or continuous extrusion across different heads is inferred.
 
-This construction retains the existing inner-sheet triangulation. If moving a boundary point past a neighbouring inner row folds a cell, the request is rejected. In particular, very fine boundary tessellations can require local retriangulation or Boolean wedge clipping even when a continuous geometric miter would exist. Neither operation is silently approximated here.
+The ordinary construction retains the inner-sheet triangulation. A boundary point
+can move beyond a fine first inner row even though the continuous miter is valid.
+That specific folded-cell failure enables a conservative planar fallback; invalid
+original prisms, arbitrary Boolean errors and reversed initial normals do not.
 
-`mitered_edges`, `mitered_vertices` and `miter_constraint_residual` record construction diagnostics. The residual checks normal depth at seam vertices; it is not a bound on an arbitrary curved CAD offset or on deposited material. Miter points are computed in double precision and the resulting polyhedra are processed exactly from those binary values. The existing measured CGAL-to-double rounding bound still applies, and imported CAD, interpolation and nominal deposition errors remain separate.
+The fallback requires exactly planar outer and inner sheets, a constant perpendicular
+normal and a constant depth within every affected region. Both common inner seam
+points must lie on both exact inner planes. Each pair must share one complete,
+matching straight boundary chain; partial edges, unmatched subdivisions and unrelated
+contacts are rejected. The common seam plane must leave all original outer triangles
+on complementary retained sides. These are exact tests on the binary input values,
+not tolerance-based projection or snapping. A nearly planar imported region can
+therefore remain unsupported.
+
+The original valid prisms are converted to EPECK meshes once. CGAL's closed-volume
+plane clipping retains complementary halfspaces of the same canonical seam plane,
+triangulating the affected inner strip and side closures. It neither relocates the
+outer vertices nor copies folded interior connectivity. Every original outer triangle
+must remain present after all local cuts, and each affected region must retain a
+nonzero inner face. Several compatible planar neighbours may meet at a corner;
+clipping does not give an earlier region priority. For a 10 × 10 × 5 mm box with
+top/front depths 0.6/1 mm, the seam is `0.6*y + z - 5 = 0`, and the top/front/core
+volumes are 57/47/396 mm³ regardless of fine inner rows or request order.
+
+Clipped meshes stay exact through the common partition operation. There is no
+intermediate conversion to double between clipping and partitioning. Existing
+validation, mutual corefinement, disjointness, exact total volume conservation and
+final conversion checks still apply. The fallback does not repair arbitrary curved
+offsets, infer missing adjacency, average material depths or weaken an accuracy gate.
+The mesh budget is checked after each clipping operation. CGAL clipping itself has
+no intermediate cancellation or strict allocation cap; very large accepted inputs
+can still consume substantial time and memory inside one operation.
+
+`mitered_edges`, `mitered_vertices`, `planar_miter_regions` and
+`miter_constraint_residual` record construction diagnostics. The planar count is
+nonzero only after a successful fallback. The residual checks normal depth at seam
+vertices; it is not a bound on an arbitrary curved CAD offset or on deposited
+material. Miter points are computed in double precision and the resulting polyhedra
+are processed exactly from those binary values. The existing measured CGAL-to-double
+rounding bound still applies, and imported CAD, interpolation and nominal deposition
+errors remain separate.
 
 CGAL's existing LSCM unwrap targets disk-like patches; isotropic remeshing improves triangle distribution but cannot recover a lost CAD surface. Neither is a substitute for CAD error control. See the [CGAL Boolean documentation](https://doc.cgal.org/latest/Polygon_mesh_processing/group__PMP__corefinement__grp.html) and [parameterization documentation](https://doc.cgal.org/latest/Surface_mesh_parameterization/index.html).
 
@@ -40,13 +80,15 @@ This is not a symmetric Hausdorff/coverage certificate: missing CAD regions, ope
 
 ## Nominal deposition
 
-`FormorixProcess::Profile` owns a material ID and nozzle-profile ID, diameter, actual line width, layer height, temperature, volumetric ceiling, speed, flow ratio, three shrink-compensation ratios and width/height calibration factors. Every head and motion can carry a different profile. The Orca adapter resolves explicit nozzle and filament indices; it does not default to nozzle zero. Material preset names remain the existing `FormorixSurfaces::Head::material_preset` reference. Optional resolved process values and explicit nozzle bindings are persisted in surface schema 3. Schemas 1 and 2 migrate without inventing material data; unknown future schemas retain the existing opaque preservation behavior.
+The standalone elliptical contact helpers below remain a separate foundation model. Hybrid deposition uses `CoalescedOrcaStadiumRibbon/v1` and the [spatial material audit](FormorixMaterial.md); an accurate elliptical contact curve cannot certify a complete hybrid shell.
+
+`FormorixProcess::Profile` owns a material ID and nozzle-profile ID, diameter, actual line width, layer height, temperature, volumetric ceiling, speed, separate filament/process/surface flow factors, three shrink-compensation ratios and width/height calibration factors. Every head and motion can carry a different profile. The Orca adapter resolves explicit nozzle and filament indices; it does not default to nozzle zero. Material preset names remain the existing `FormorixSurfaces::Head::material_preset` reference. Surface schema 4 adds an optional existing Orca process binding and explicit local requested-width limits to the persisted nozzle binding. Schemas 1–3 migrate to no width-variation authorization and the current edited process; unknown future schemas retain the existing opaque preservation behavior. See [profile resolution](FormorixProfiles.md) for width and flow semantics.
 
 The nominal cross-section is an ellipse normal to the travel tangent. Its half-axes are a = corrected line width / 2 and b = corrected layer height / 2. The height axis is the nozzle axis projected into that plane, so cross-track tilt changes the deposited ellipse. Longitudinal tilt deformation, die swell, wetting and rheology are not simulated. Diameter constrains the allowed layer height but is not substituted for the actual line width.
 
 With unit cross-section axes u and v, Q = a² uuᵀ + b² vvᵀ. Its support vector in direction n is Qn / sqrt(nᵀQn). The bead center is CAD contact minus that vector. Thus the nominal outer contact, not the center or TCP, lies on the CAD contact. TCP is the contact plus the configured axial contact-to-TCP offset. `compensate_curve` applies this to a supplied contact curve and adaptively discretizes the compensated center; it is not a general surface-filling algorithm. Its derivative bound must apply to that compensated center.
 
-The planar scallop rule limits pitch s by b(1 − sqrt(1 − (s / (2a))²)) ≤ ε. It describes the upper envelope of equal adjacent nominal beads. Area is πab, and nominal speed is limited by Qmax / (area × flow ratio).
+The planar scallop rule limits pitch s by b(1 − sqrt(1 − (s / (2a))²)) ≤ ε. It describes the upper envelope of equal adjacent nominal beads. Area is πab, and nominal speed is limited by Qmax / (area × effective surface flow), the product of the three separately retained flow factors.
 
 `FormorixProcess::planar_coverage`, declared in `FormorixDeposition.hpp`, explicitly accounts for overlapping material. For an infinite aligned equal-bead row, one pitch cell has union area 2ab(asin(u) + u sqrt(1−u²)), where u = s/(2a). It compares this with supplied area πab × flow ratio, reports duplicate/deficient volume per unit path length, and the ratio that would balance nominal union volume. This is bookkeeping, not an automatically applied flow setting: reducing flow may change the deposited shape. The integral handles multiple overlapping neighbours, not just pairwise lenses. Pitch greater than the width is rejected as a lateral gap.
 
@@ -54,7 +96,7 @@ These cross-sections do not constitute a volume-conserving fluid simulation. Int
 
 Shrinkage compensation is metadata; it is not automatically applied as three conflicting global scales to one shared CAD model. Material-pair compatibility has its own Unknown/Compatible/Incompatible state. Geometrically coincident materials can still be incompatible.
 
-Resolved process data are snapshots. The [profile resolver](FormorixProfiles.md) invalidates them when current source contents change, including edits under the same preset name, and resolves them again before hybrid calculation. Persisted process snapshots are never authoritative inputs. Changing a head's material or nozzle binding also clears the snapshot immediately.
+Resolved process data are snapshots. The [profile resolver](FormorixProfiles.md) invalidates them when current source contents change, including edits under the same preset name, and resolves them again before hybrid calculation. Persisted process snapshots are never authoritative inputs. Changing a head's material, nozzle or process binding, or its declared width limits, also clears the snapshot immediately.
 
 ## Complex surfaces and continuity
 

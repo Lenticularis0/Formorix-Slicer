@@ -1,0 +1,21 @@
+{
+  "source_commit": "b066c16391dbee033abbd8a03f7379c6ff9394ac",
+  "path": "C:\\Formorix Slicer\\Formorix-Slicer-Auftrag05-Windows-b066c16391.zip",
+  "sha256": "62ecb91cd67bdc22381d24ea303dcd90e30cc6e680820d79ff1176b3041605b6",
+  "bytes": 221535321,
+  "root_directory": "Formorix-Auftrag05",
+  "file_count": 18799,
+  "directory_count": 540,
+  "uncompressed_file_bytes": 588273626,
+  "compression": "ZIP_DEFLATED level 6; ZIP64 permitted",
+  "all_install_files_included": true,
+  "exclusions": [],
+  "validation": "Every archive file read to EOF (ZIP CRC check) and SHA256/size compared against the installed source; complete file inventory equal.",
+  "all_file_hashes_verified": true,
+  "elapsed_seconds": 105.06200000000536,
+  "recorded_utc": "2026-11-11T16:37:49.952030+00:00",
+  "notes": [
+    "Unzip the complete root folder and launch orca-slicer.exe. No installation content was filtered.",
+    "No executable was rebuilt or launched by this packaging step. Runtime prerequisites are unchanged."
+  ]
+}

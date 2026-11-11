@@ -139,7 +139,12 @@ TEST_CASE("Smooth patches produce continuous nonplanar layers with a faithful ou
     CHECK(result.timeline.heads[2].empty());
     const auto& first = track[track.size() / 2];
     auto sampled      = result.timeline.sample(0, (first.start + first.end) * .5);
+    CHECK(sampled.pose_known);
     CHECK_THAT((sampled.pose.position - (first.from.position + first.to.position) * .5).norm(), WithinAbs(0., 1e-6));
+    for (int head : {1, 2}) {
+        CHECK_FALSE(result.timeline.sample(head, 0.).pose_known);
+        CHECK_FALSE(result.timeline.sample(head, result.timeline.duration()).pose_known);
+    }
 }
 
 TEST_CASE("Thickness and full wall modes control layer depth without expanding the model", "[FormorixPreview]")
@@ -295,6 +300,9 @@ TEST_CASE("Preview rejects holes, open solids, invalid limits and unsupported fu
     REQUIRE(result.ok());
     CHECK(result.timeline.heads[0].empty());
     CHECK_FALSE(result.timeline.heads[2].empty());
+    CHECK_FALSE(result.timeline.sample(0, 0.).pose_known);
+    CHECK_FALSE(result.timeline.sample(1, 0.).pose_known);
+    CHECK(result.timeline.sample(2, 0.).pose_known);
     CHECK_THAT(result.shell_depth, WithinAbs(.6, 1e-8));
     for (const auto& pose : result.layers.back().path) {
         CHECK(std::abs(pose.position.x()) <= 8. + 1e-5);
@@ -302,7 +310,47 @@ TEST_CASE("Preview rejects holes, open solids, invalid limits and unsupported fu
     }
 }
 
-TEST_CASE("Independent head tracks interpolate on a common clock including gaps and idle heads", "[FormorixPreview]")
+TEST_CASE("Empty preview tracks never provide nozzle positions at any seek time", "[FormorixPreview]")
+{
+    const FP::Timeline timeline;
+    REQUIRE(timeline.valid());
+    CHECK_THAT(timeline.duration(), WithinAbs(0., 0.));
+    for (int head = 0; head < 3; ++head)
+        for (double time : {-10., 0., 1., 100.}) {
+            const auto state = timeline.sample(head, time);
+            CHECK_FALSE(state.pose_known);
+            CHECK(state.kind == FP::MotionKind::Unassigned);
+            CHECK_FALSE(state.extrusion);
+            CHECK_FALSE(state.process.has_value());
+        }
+}
+
+TEST_CASE("Only the head with an actual motion has a known preview pose", "[FormorixPreview]")
+{
+    const int active = GENERATE(0, 1, 2);
+    FP::Timeline timeline;
+    const FP::Pose from{{21., 7., 3.}, Vec3d::UnitZ()}, to{{25., 7., 3.}, Vec3d::UnitZ()};
+    timeline.heads[active] = {{active, 2., 4., from, to, FP::MotionKind::Extrude, true, 0, 1}};
+    REQUIRE(timeline.valid());
+    for (int head = 0; head < 3; ++head)
+        for (double time : {0., 3., 5.}) {
+            const auto state = timeline.sample(head, time);
+            if (head != active) {
+                CHECK_FALSE(state.pose_known);
+                CHECK(state.kind == FP::MotionKind::Unassigned);
+                CHECK_FALSE(state.extrusion);
+                continue;
+            }
+            REQUIRE(state.pose_known);
+            CHECK_THAT(state.pose.position.x(), WithinAbs(time < 2. ? 21. : time > 4. ? 25. : 23., 1e-12));
+            CHECK_THAT(state.pose.position.y(), WithinAbs(7., 0.));
+            CHECK_THAT(state.pose.position.z(), WithinAbs(3., 0.));
+            CHECK(state.kind == (time == 3. ? FP::MotionKind::Extrude : FP::MotionKind::Wait));
+            CHECK(state.extrusion == (time == 3.));
+        }
+}
+
+TEST_CASE("Independent head tracks interpolate on a common clock including gaps and unassigned heads", "[FormorixPreview]")
 {
     FP::Timeline timeline;
     timeline.heads[0] = {{0, 0., 2., {{0, 0, 0}, {0, 0, 1}}, {{10, 0, 0}, {1, 0, 0}}, FP::MotionKind::Extrude, true, 0, 1},
@@ -311,18 +359,67 @@ TEST_CASE("Independent head tracks interpolate on a common clock including gaps 
     REQUIRE(timeline.valid());
     CHECK_THAT(timeline.duration(), WithinAbs(5., 1e-12));
     auto a = timeline.sample(0, 1.);
+    REQUIRE(a.pose_known);
     CHECK_THAT(a.pose.position.x(), WithinAbs(5., 1e-12));
     CHECK_THAT(a.pose.axis.x(), WithinAbs(std::sqrt(.5), 1e-9));
     auto b = timeline.sample(1, 2.);
+    REQUIRE(b.pose_known);
     CHECK_THAT(b.pose.position.y(), WithinAbs(4., 1e-12));
     CHECK(b.extrusion);
-    CHECK(timeline.sample(0, 3.).kind == FP::MotionKind::Wait);
-    CHECK(timeline.sample(2, 2.).kind == FP::MotionKind::Unassigned);
-    CHECK(timeline.sample(0, 6.).kind == FP::MotionKind::Wait);
+    const auto before_first = timeline.sample(1, 0.);
+    CHECK(before_first.pose_known);
+    CHECK(before_first.kind == FP::MotionKind::Wait);
+    CHECK_THAT((before_first.pose.position - timeline.heads[1].front().from.position).norm(), WithinAbs(0., 0.));
+    const auto gap = timeline.sample(0, 3.);
+    CHECK(gap.pose_known);
+    CHECK(gap.kind == FP::MotionKind::Wait);
+    CHECK_FALSE(gap.extrusion);
+    CHECK_THAT((gap.pose.position - timeline.heads[0].front().to.position).norm(), WithinAbs(0., 0.));
+    CHECK_THAT((gap.pose.axis - timeline.heads[0].front().to.axis).norm(), WithinAbs(0., 0.));
+    const auto unassigned = timeline.sample(2, 2.);
+    CHECK_FALSE(unassigned.pose_known);
+    CHECK(unassigned.kind == FP::MotionKind::Unassigned);
+    const auto after_end = timeline.sample(0, 6.);
+    CHECK(after_end.pose_known);
+    CHECK(after_end.kind == FP::MotionKind::Wait);
+    CHECK_FALSE(after_end.extrusion);
+    CHECK_THAT((after_end.pose.position - timeline.heads[0].back().to.position).norm(), WithinAbs(0., 0.));
+    CHECK_THAT((after_end.pose.axis - timeline.heads[0].back().to.axis).norm(), WithinAbs(0., 0.));
+    CHECK(timeline.sample(0, 4.5).pose_known);
     CHECK(timeline.sample(0, 4.5).kind == FP::MotionKind::Travel);
     CHECK_THAT(timeline.sample(0, 4.5).pose.position.y(), WithinAbs(2.5, 1e-12));
     CHECK_THROWS(timeline.sample(3, 0.));
     CHECK_THROWS(timeline.sample(0, std::numeric_limits<double>::quiet_NaN()));
     timeline.heads[1][0].head = 0;
     CHECK_FALSE(timeline.valid());
+}
+
+TEST_CASE("Three independently supplied tracks retain their own known poses and activity", "[FormorixPreview]")
+{
+    FP::Timeline timeline;
+    for (int head = 0; head < 3; ++head) {
+        const FP::Pose from{{10. * head, 5. * head, 2. + head}, Vec3d::UnitZ()};
+        const FP::Pose to{from.position + Vec3d(2. * (head + 1), 0., 0.), Vec3d::UnitZ()};
+        timeline.heads[head] = {{head, double(head), double(head + 2), from, to,
+                                 head == 1 ? FP::MotionKind::Travel : FP::MotionKind::Extrude, head != 1, 0, head + 1}};
+    }
+    REQUIRE(timeline.valid());
+    CHECK_THAT(timeline.duration(), WithinAbs(4., 0.));
+    const auto first = timeline.sample(0, 2.5), second = timeline.sample(1, 2.5), third = timeline.sample(2, 2.5);
+    CHECK(first.pose_known);
+    CHECK(second.pose_known);
+    CHECK(third.pose_known);
+    CHECK(first.kind == FP::MotionKind::Wait);
+    CHECK(second.kind == FP::MotionKind::Travel);
+    CHECK(third.kind == FP::MotionKind::Extrude);
+    CHECK_THAT(first.pose.position.x(), WithinAbs(2., 1e-12));
+    CHECK_THAT(second.pose.position.x(), WithinAbs(13., 1e-12));
+    CHECK_THAT(third.pose.position.x(), WithinAbs(21.5, 1e-12));
+    for (int head = 0; head < 3; ++head) {
+        const auto state = timeline.sample(head, 10.);
+        CHECK(state.pose_known);
+        CHECK(state.kind == FP::MotionKind::Wait);
+        CHECK_FALSE(state.extrusion);
+        CHECK_THAT((state.pose.position - timeline.heads[head].back().to.position).norm(), WithinAbs(0., 0.));
+    }
 }

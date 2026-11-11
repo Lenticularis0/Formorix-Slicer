@@ -6,6 +6,7 @@
 #include <array>
 #include <cstddef>
 #include <functional>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
@@ -14,6 +15,15 @@ namespace Slic3r {
 class ConfigOptionResolver;
 }
 namespace Slic3r::FormorixProcess {
+// Explicit requested-width limits in mm. Absence permits only the nominal width;
+// these are declared process inputs, not a physical calibration certificate.
+struct WidthLimits
+{
+    double minimum_mm = 0., maximum_mm = 0.;
+};
+bool valid(const WidthLimits&);
+void to_json(nlohmann::json&, const WidthLimits&);
+void from_json(const nlohmann::json&, WidthLimits&);
 struct Profile
 {
     std::string material_id, nozzle_profile;
@@ -23,10 +33,14 @@ struct Profile
     std::array<double, 3> shrink_compensation{{1., 1., 1.}};
     double width_correction = 1., height_correction = 1.;
     double contact_to_tcp = 0.; // mm along nozzle axis
+    std::optional<WidthLimits> local_width_limits;
+    // Keep filament flow_ratio separate from Orca's process and role factors.
+    double print_flow_ratio = 1., surface_flow_ratio = 1.;
 };
 void to_json(nlohmann::json&, const Profile&);
 void from_json(const nlohmann::json&, Profile&);
 bool valid(const Profile&);
+double effective_surface_flow(const Profile&);
 // Resolve explicit nozzle/material vector indices; never silently use nozzle zero.
 Profile from_orca(const ConfigOptionResolver&,
                   std::size_t nozzle_index,
@@ -93,6 +107,9 @@ struct Operation
     int id = 0, region = 0, head = 0;
     std::string material;
     OperationKind kind = OperationKind::Core;
+    // An external prerequisite may be required before any head/material can be
+    // assigned. It is a requirement, never a fictitious completed toolpath.
+    bool assigned = true; // false requires head=-1 and an empty material ID
 };
 struct Dependency
 {

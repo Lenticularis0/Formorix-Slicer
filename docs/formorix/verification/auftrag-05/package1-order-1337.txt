@@ -1,0 +1,16 @@
+Filters: [FormorixMaterial],[RibbonBaseline]
+Randomness seeded to: 1337
+MATERIAL3D mixed_nozzle_commensurate,status=0,supplied=4.5,union=4.5,missing=0,outside=0,duplicate=-0,core_overlap=0,supply_residual=6.8695049648681561e-16,maximum=0,mean=0,rms=0,upper=4.9406564584124654e-324,bounded=1,cells=59,queries=0,error=
+MATERIAL3D_REGION mixed_nozzle_commensurate,region=1,coverage=2,missing=0,outside=0,supply_residual=-1.3322676295501878e-15,boundary_bounded=1,outer_bounded=1,outer_upper=0,input_rounding=0/0,zero_checks=1/1/1
+MATERIAL3D_REGION mixed_nozzle_commensurate,region=2,coverage=2,missing=0,outside=0,supply_residual=2.0192181260370035e-15,boundary_bounded=1,outer_bounded=1,outer_upper=0,input_rounding=0/0,zero_checks=1/1/1
+ACCURACY mixed_nozzle_commensurate,region=1,topology=1,bounds=0/4.8109664400423407e-16/9.5367431285353632e-08/1.0000000000000001e-09/4.9406564584124654e-324,inadmissible=0,volume_plausible=1
+HYBRID mixed_nozzle_commensurate,1,0,9.5367431285353632e-08,0,0,0,0,0,0.99999999999999933,1
+ACCURACY mixed_nozzle_commensurate,region=2,topology=1,bounds=0/5.9211894646674973e-16/9.5367431285353632e-08/1.0000000000000001e-09/4.9406564584124654e-324,inadmissible=0,volume_plausible=1
+HYBRID mixed_nozzle_commensurate,2,0,9.5367431285353632e-08,0,0,0,0,0,1,1
+MATERIAL3D commensurate_plane,status=0,supplied=3.6000000000000005,union=3.6000000000000032,missing=0,outside=0,duplicate=-0,core_overlap=0,supply_residual=-2.6645352591003757e-15,maximum=0,mean=0,rms=0,upper=4.9406564584124654e-324,bounded=1,cells=14,queries=0,error=
+MATERIAL3D_REGION commensurate_plane,region=1,coverage=2,missing=0,outside=0,supply_residual=-2.6645352591003757e-15,boundary_bounded=1,outer_bounded=1,outer_upper=0,input_rounding=0/0,zero_checks=1/1/1
+ACCURACY commensurate_plane,region=1,topology=1,bounds=0/3.3306690738754696e-16/9.5367431285353632e-08/1.0000000000000001e-09/4.9406564584124654e-324,inadmissible=0,volume_plausible=1
+HYBRID commensurate_plane,1,-2.8421709430404007e-14,9.5367431285353632e-08,0,0,0,0,0,0.99999999999999878,1
+===============================================================================
+All tests passed (855 assertions in 22 test cases)
+

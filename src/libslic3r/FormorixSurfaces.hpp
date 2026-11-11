@@ -15,7 +15,7 @@ class ModelVolume;
 // Project annotations for the experimental preview; the normal print pipeline
 // never treats these manufacturing wishes as executable movements.
 namespace FormorixSurfaces {
-constexpr int schema_version = 3;
+constexpr int schema_version = 4;
 // Reuse Orca's subdivision-aware painting codec, independently of filament painting.
 constexpr int max_regions = 32;
 constexpr const char *archive_path = "Metadata/formorix_surfaces.json";
@@ -79,6 +79,11 @@ struct Head {
     std::string printer_preset;
     unsigned nozzle_index = 0;
     void assign_nozzle(const std::string& printer, unsigned index);
+    // Empty process name follows the current edited Orca process.
+    std::string process_preset;
+    std::optional<FormorixProcess::WidthLimits> local_width_limits;
+    void assign_process(const std::string& preset);
+    void assign_width_limits(std::optional<FormorixProcess::WidthLimits> limits);
 };
 
 struct Transition {

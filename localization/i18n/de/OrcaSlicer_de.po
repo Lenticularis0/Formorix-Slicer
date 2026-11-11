@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orca Slicer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-11 09:15+0100\n"
+"POT-Creation-Date: 2026-11-11 16:52+0100\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Heiko Liebscher <hliebschergmail.com>\n"
 "Language-Team: \n"
@@ -11203,8 +11203,28 @@ msgid "Nozzle slot"
 msgstr "Düse im Profil"
 
 # AI Translated
+msgid "Orca process profile"
+msgstr "Orca-Prozessprofil"
+
+# AI Translated
+msgid "Declare local line width limits"
+msgstr "Lokale Linienbreitengrenzen festlegen"
+
+# AI Translated
+msgid "Minimum local line width (mm)"
+msgstr "Minimale lokale Linienbreite (mm)"
+
+# AI Translated
+msgid "Maximum local line width (mm)"
+msgstr "Maximale lokale Linienbreite (mm)"
+
+# AI Translated
 msgid "Material suitability: not checked."
 msgstr "Materialeignung: nicht geprüft."
+
+# AI Translated
+msgid "Declared width limits are not material calibration."
+msgstr "Deklarierte Breitengrenzen sind keine Materialkalibrierung."
 
 # AI Translated
 #, boost-format
@@ -11262,6 +11282,10 @@ msgid "Current Orca printer"
 msgstr "Aktueller Orca-Drucker"
 
 # AI Translated
+msgid "Current Orca process"
+msgstr "Aktueller Orca-Prozess"
+
+# AI Translated
 msgid "Orca profile changed. Derived head values were invalidated and will be refreshed before calculation."
 msgstr "Orca-Profil geändert. Abgeleitete Kopfwerte wurden verworfen und werden vor der Berechnung aktualisiert."
 
@@ -11311,6 +11335,10 @@ msgid "Checking geometric underlay…"
 msgstr "Geometrische Auflage wird geprüft…"
 
 # AI Translated
+msgid "Calculating local Orca underlay…"
+msgstr "Lokaler Orca-Unterbau wird berechnet…"
+
+# AI Translated
 msgid "Hybrid preview calculation failed."
 msgstr "Berechnung der Hybrid-Vorschau fehlgeschlagen."
 
@@ -11328,6 +11356,10 @@ msgstr "Hybridgeometrie fehlgeschlagen: %1%"
 #, boost-format
 msgid "Orca core preview failed: %1%"
 msgstr "Orca-Kernvorschau fehlgeschlagen: %1%"
+
+# AI Translated
+msgid "Underlay verification is incomplete. See the geometry report."
+msgstr "Die Unterbauprüfung ist unvollständig. Siehe Geometriebericht."
 
 # AI Translated
 msgid "Hybrid preview ready. Review coverage, material volume and underlay; export remains blocked."
@@ -11462,12 +11494,40 @@ msgid "Unverified regions"
 msgstr "Ungeprüfte Bereiche"
 
 # AI Translated
+msgid "All calculated layers; independent of playback time."
+msgstr "Alle berechneten Schichten; unabhängig vom Wiedergabezeitpunkt."
+
+# AI Translated
+msgid "Nominal 3D material"
+msgstr "Nominales 3D-Material"
+
+# AI Translated
+msgid "Missing material"
+msgstr "Fehlendes Material"
+
+# AI Translated
+msgid "Excess material"
+msgstr "Überschüssiges Material"
+
+# AI Translated
+msgid "Material overlaps"
+msgstr "Materialüberlagerungen"
+
+# AI Translated
+msgid "Diagnostic cells (unverified)"
+msgstr "Diagnosezellen (ungeprüft)"
+
+# AI Translated
 msgid "Orca preview"
 msgstr "Orca-Vorschau"
 
 # AI Translated
 msgid "Geometry report"
 msgstr "Geometriebericht"
+
+# AI Translated
+msgid "Positions are shown only for heads with calculated movements."
+msgstr "Positionen werden nur für Köpfe mit berechneten Bewegungen angezeigt."
 
 # AI Translated
 msgid "Time: 5D part only. Orca core paths are not synchronized; supports and waiting times are excluded."
@@ -11485,6 +11545,46 @@ msgstr "Nur numerische Vorschau. Physikalische Genauigkeit, Haftung und Kollisio
 #, boost-format
 msgid "Original volume: %1% mm³; partition residual: %2% mm³."
 msgstr "Originalvolumen: %1% mm³; Restfehler der Aufteilung: %2% mm³."
+
+# AI Translated
+#, boost-format
+msgid "%1%: sampled maximum / mean / RMS = %2% / %3% / %4% mm; conservative upper bound = %5% mm; observed lower bound = %6% mm; samples: %7%."
+msgstr "%1%: Maximum / Mittelwert / RMS der Stichproben = %2% / %3% / %4% mm; konservative Obergrenze = %5% mm; beobachtete Untergrenze = %6% mm; Stichproben: %7%."
+
+# AI Translated
+msgid "Spatial material audit incomplete. Volumes, missing material and overlaps are unknown; raw diagnostic cells may be incomplete."
+msgstr "Räumliche Materialprüfung unvollständig. Volumen, fehlendes Material und Überlagerungen sind unbekannt; die rohen Diagnosezellen können unvollständig sein."
+
+# AI Translated
+#, boost-format
+msgid "All-layer 3D material (mm³), supplied / cells / union / missing / outside / duplicate / core overlap: %1% / %2% / %3% / %4% / %5% / %6% / %7%."
+msgstr "3D-Material aller Schichten (mm³), zugeführt / Zellen / Vereinigung / fehlend / außerhalb / mehrfach belegt / Kernüberlagerung: %1% / %2% / %3% / %4% / %5% / %6% / %7%."
+
+# AI Translated
+#, boost-format
+msgid "Supply minus cell volume: %1% mm³; spatial output rounding allowance: %2% mm; audit time: %3% s."
+msgstr "Zugeführtes Material minus Zellvolumen: %1% mm³; Rundungstoleranz der räumlichen Ausgabe: %2% mm; Prüfzeit: %3% s."
+
+# AI Translated
+msgid "Complete volume boundaries"
+msgstr "Vollständige Volumengrenzen"
+
+# AI Translated
+msgid "Nominal outer-layer sheets"
+msgstr "Nominale Außenschichtflächen"
+
+# AI Translated
+msgid "Outer-layer sheets alone do not prove the complete material envelope. Same-material duplicate volume is measured but has no separate display mesh."
+msgstr "Außenschichtflächen allein weisen nicht die vollständige Materialhülle nach. Mehrfach belegtes Volumen desselben Materials wird gemessen, besitzt aber kein separates Anzeigenetz."
+
+# AI Translated
+#, boost-format
+msgid "Overlap between materials %1% and %2%: %3% mm³."
+msgstr "Überlagerung zwischen den Materialien %1% und %2%: %3% mm³."
+
+# AI Translated
+msgid "The GPU display omits triangles below its numerical resolution. Numerical audit values remain authoritative."
+msgstr "Die GPU-Darstellung lässt Dreiecke unterhalb ihrer numerischen Auflösung aus. Die numerischen Prüfwerte bleiben maßgebend."
 
 # AI Translated
 #, boost-format
@@ -11508,6 +11608,28 @@ msgstr "Material %1%; Düse %2% mm; Linienbreite %3% mm; Schichtdicke %4% mm; Te
 
 # AI Translated
 #, boost-format
+msgid "Configured flow factors, filament / process / surface: %1% / %2% / %3%; local requested line width: %4%–%5% mm."
+msgstr "Konfigurierte Flussverhältnisse, Filament / Prozess / Oberfläche: %1% / %2% / %3%; lokal angeforderte Linienbreite: %4%–%5% mm."
+
+# AI Translated
+#, boost-format
+msgid "Regional 3D volumes (mm³), target / deposited / missing / outside / duplicate / core overlap: %1% / %2% / %3% / %4% / %5% / %6%."
+msgstr "Regionale 3D-Volumen (mm³), Ziel / abgelegt / fehlend / außerhalb / mehrfach belegt / Kernüberlagerung: %1% / %2% / %3% / %4% / %5% / %6%."
+
+# AI Translated
+msgid "Regional volume boundaries"
+msgstr "Regionale Volumengrenzen"
+
+# AI Translated
+msgid "Nominal regional CAD error budget ≤ 0.01 mm. Physical accuracy and conventional deposited surfaces remain unverified."
+msgstr "Nominales regionales CAD-Fehlerbudget ≤ 0,01 mm. Physische Genauigkeit und konventionell abgelegte Oberflächen bleiben ungeprüft."
+
+# AI Translated
+msgid "Regional CAD error budget ≤ 0.01 mm is not verified."
+msgstr "Ein regionales CAD-Fehlerbudget ≤ 0,01 mm ist nicht nachgewiesen."
+
+# AI Translated
+#, boost-format
 msgid "Coverage samples: %1%; uncovered fraction: %2%. Sample error max / mean / RMS: %3% / %4% / %5% mm."
 msgstr "Abdeckungsproben: %1%; unbedeckter Anteil: %2%. Stichprobenfehler max. / Mittel / RMS: %3% / %4% / %5% mm."
 
@@ -11528,8 +11650,13 @@ msgstr "Fehlergrenzen (mm), CAD / Schale / Konvertierung / Bahn / nominales Mate
 
 # AI Translated
 #, boost-format
-msgid "Underlay: %1% missing samples of %2%; maximum gap: %3% mm. Full footprint and material adhesion remain unverified."
-msgstr "Auflage: %1% fehlende Proben von %2%; maximaler Abstand: %3% mm. Vollständiger Kontakt und Materialhaftung sind ungeprüft."
+msgid "Conservative combined error bound: %1% mm. Unknown CAD input keeps the total unverified."
+msgstr "Konservative kombinierte Fehlerschranke: %1% mm. Bei unbekannter CAD-Eingabe bleibt die Gesamtaussage ungeprüft."
+
+# AI Translated
+#, boost-format
+msgid "Underlay: contact unconfirmed at %1% of %2% samples; maximum gap: %3% mm. Full footprint and material adhesion remain unverified."
+msgstr "Unterbau: Kontakt an %1% von %2% Stichproben unbestätigt; maximaler Abstand: %3% mm. Vollständige Auflagefläche und Materialhaftung bleiben ungeprüft."
 
 # AI Translated
 #, boost-format
@@ -11543,8 +11670,45 @@ msgstr "Größter beobachteter Kontaktabstand: %1% mm; Proben ohne geeigneten Ko
 
 # AI Translated
 #, boost-format
+msgid "Raw native contact not demonstrated: %1% samples; native-layer gaps: %2%. Unsupported cross-sections are included in the first count; material suitability remains unverified."
+msgstr "Kontakt anhand der nativen Rohgeometrie nicht nachgewiesen: %1% Stichproben; native Schichtlücken: %2%. Nicht unterstützte Querschnitte sind in der ersten Zahl enthalten; die Materialeignung bleibt ungeprüft."
+
+# AI Translated
+#, boost-format
+msgid "Region %1%: sampled interface area %2% mm²; raw missing / native-layer gaps / path gaps / unknown: %3% / %4% / %5% / %6% mm². Area-weighted samples, not a complete contact certificate."
+msgstr "Bereich %1%: Stichproben-Grenzfläche %2% mm²; fehlend laut Rohgeometrie / native Schichtlücken / Bahnlücken / unbekannt: %3% / %4% / %5% / %6% mm². Flächengewichtete Stichproben, kein vollständiger Kontaktnachweis."
+
+# AI Translated
+msgid "No core interface: an external underlay operation is required and remains unassigned."
+msgstr "Keine Kerngrenzfläche: Eine externe Unterbauoperation ist erforderlich und noch nicht zugewiesen."
+
+# AI Translated
+msgid "Underlay before local Orca refinement"
+msgstr "Unterbau vor lokaler Orca-Verfeinerung"
+
+# AI Translated
+msgid "Underlay after local Orca refinement"
+msgstr "Unterbau nach lokaler Orca-Verfeinerung"
+
+# AI Translated
+#, boost-format
 msgid "Orca conversion bound: %1% mm; coordinate quantization: %2% mm; volume residual: %3% mm³."
 msgstr "Orca-Konvertierungsgrenze: %1% mm; Koordinatenraster: %2% mm; Volumenrestfehler: %3% mm³."
+
+# AI Translated
+#, boost-format
+msgid "Native underlay requests applied: %1%; modifier volumes: %2%; modifier conversion bound: %3% mm. Manufacturing dependencies remain pending."
+msgstr "Angewandte native Unterbauanforderungen: %1%; Modifikatorvolumen: %2%; Modifikatorkonvertierungsgrenze: %3% mm. Fertigungsabhängigkeiten sind weiterhin offen."
+
+# AI Translated
+#, boost-format
+msgid "Native slice safety expansion bound: %1% mm. Original core geometry is unchanged."
+msgstr "Grenze der nativen Sicherheitserweiterung des Schichtschnitts: %1% mm. Die ursprüngliche Kerngeometrie bleibt unverändert."
+
+# AI Translated
+#, boost-format
+msgid "Requested / applied density area summed over native layers: %1% / %2% mm²; modifier offset allowance: %3% mm. This does not bound the distance across removed thin mask features."
+msgstr "Über native Schichten summierte angeforderte / angewandte Verdichtungsfläche: %1% / %2% mm²; Modifikatorversatztoleranz: %3% mm. Dies begrenzt nicht den Abstand über entfernte dünne Maskenbereiche hinweg."
 
 # AI Translated
 msgid "Hybrid geometry report"
@@ -11573,8 +11737,16 @@ msgid "Nominal material volume implausible; flow unchanged. CAD accuracy and ful
 msgstr "Nominales Materialvolumen unplausibel; Flow unverändert. CAD-Genauigkeit und vollständige Abdeckung sind ungeprüft."
 
 # AI Translated
-msgid "Geometric underlay is missing at sampled points."
-msgstr "An geprüften Punkten fehlt eine geometrische Auflage."
+msgid "Spatial material audit incomplete. Accepted 3D volumes are unavailable; diagnostic cells remain unverified."
+msgstr "Räumliche Materialprüfung unvollständig. Akzeptierte 3D-Volumen sind nicht verfügbar; Diagnosezellen bleiben ungeprüft."
+
+# AI Translated
+msgid "Underlay contact is missing or unverified at sampled points."
+msgstr "Unterbaukontakt fehlt an Stichproben oder ist ungeprüft."
+
+# AI Translated
+msgid "Local density creates unverified cross-sections. See the geometry report."
+msgstr "Lokale Verdichtung erzeugt ungeprüfte Querschnitte. Siehe Geometriebericht."
 
 # AI Translated
 msgid "All 5D layers"
@@ -14476,8 +14648,9 @@ msgstr "Pausen G-Code"
 msgid "Template Custom G-code"
 msgstr "Vorlage Benutzerdefinierter G-Code"
 
+# AI Translated
 msgid "Formorix 5D"
-msgstr ""
+msgstr "Formorix 5D"
 
 msgid "Experimental configuration only"
 msgstr ""
@@ -16748,116 +16921,154 @@ msgstr "Der Band-Reinigungsturm kann das gesamte Spülvolumen nicht aufnehmen: I
 msgid "Processing of the filename_format template failed."
 msgstr "Verarbeitung der Vorlage filename_format fehlgeschlagen."
 
+# AI Translated
 msgid "X position"
-msgstr ""
+msgstr "X-Position"
 
+# AI Translated
 msgid "X minimum"
-msgstr ""
+msgstr "X-Minimum"
 
+# AI Translated
 msgid "X maximum"
-msgstr ""
+msgstr "X-Maximum"
 
+# AI Translated
 msgid "Y position"
-msgstr ""
+msgstr "Y-Position"
 
+# AI Translated
 msgid "Y minimum"
-msgstr ""
+msgstr "Y-Minimum"
 
+# AI Translated
 msgid "Y maximum"
-msgstr ""
+msgstr "Y-Maximum"
 
+# AI Translated
 msgid "Local head Z position"
-msgstr ""
+msgstr "Lokale Z-Position des Kopfes"
 
+# AI Translated
 msgid "Local head Z minimum"
-msgstr ""
+msgstr "Lokales Z-Minimum des Kopfes"
 
+# AI Translated
 msgid "Local head Z maximum"
-msgstr ""
+msgstr "Lokales Z-Maximum des Kopfes"
 
+# AI Translated
+# Needs human review: A/B denotes a Formorix rotary axis; checked separately from the generic orientation commands.
 msgid "A orientation"
-msgstr ""
+msgstr "A-Ausrichtung"
 
+# AI Translated
 msgid "A minimum"
-msgstr ""
+msgstr "A-Minimum"
 
+# AI Translated
 msgid "A maximum"
-msgstr ""
+msgstr "A-Maximum"
 
+# AI Translated
+# Needs human review: A/B denotes a Formorix rotary axis; checked separately from the generic orientation commands.
 msgid "B orientation"
-msgstr ""
+msgstr "B-Ausrichtung"
 
+# AI Translated
 msgid "B minimum"
-msgstr ""
+msgstr "B-Minimum"
 
+# AI Translated
 msgid "B maximum"
-msgstr ""
+msgstr "B-Maximum"
 
+# AI Translated
 msgid "Experimental Formorix 5D mode"
-msgstr ""
+msgstr "Experimenteller Formorix-5D-Modus"
 
+# AI Translated
 msgid "Configuration only for three independent heads. Slicing, G-code export and sending print jobs are disabled in this mode. Disable it to use conventional OrcaSlicer slicing."
-msgstr ""
+msgstr "Nur Konfiguration für drei unabhängige Köpfe. Slicing, G-Code-Export und das Senden von Druckaufträgen sind in diesem Modus gesperrt. Deaktivieren Sie ihn für herkömmliches OrcaSlicer-Slicing."
 
+# AI Translated
 msgid "Formorix configuration version"
-msgstr ""
+msgstr "Formorix-Konfigurationsversion"
 
+# AI Translated
 msgid "Experimental configuration in millimeters; no movement is generated. Head Z is local travel, independent of the shared bed Z travel and printable height."
-msgstr ""
+msgstr "Experimentelle Konfiguration in Millimetern; es werden keine Bewegungen erzeugt. Kopf-Z bezeichnet den lokalen Hub, unabhängig vom gemeinsamen Druckbett-Z-Hub und der Druckhöhe."
 
+# AI Translated
 msgid "Experimental orientation in degrees. A and B are independent axis limits; rotation order, combined tilt and collision checks are not implemented."
-msgstr ""
+msgstr "Experimentelle Ausrichtung in Grad. A und B sind unabhängige Achsgrenzen; Rotationsreihenfolge, kombinierte Neigung und Kollisionsprüfungen sind nicht implementiert."
 
+# AI Translated
 msgid "Shared bed Z position"
-msgstr ""
+msgstr "Gemeinsame Druckbett-Z-Position"
 
+# AI Translated
 msgid "Shared bed Z minimum"
-msgstr ""
+msgstr "Gemeinsames Druckbett-Z-Minimum"
 
+# AI Translated
 msgid "Shared bed Z maximum"
-msgstr ""
+msgstr "Gemeinsames Druckbett-Z-Maximum"
 
+# AI Translated
 msgid "Maximum axis tilt"
-msgstr ""
+msgstr "Maximale Achsneigung"
 
 msgid "°"
 msgstr "°"
 
+# AI Translated
 msgid "Target speed"
-msgstr ""
+msgstr "Zielgeschwindigkeit"
 
+# AI Translated
 msgid "Provisional 5D target speed. This does not change conventional slicing speeds."
-msgstr ""
+msgstr "Vorläufige 5D-Zielgeschwindigkeit. Die Geschwindigkeiten beim herkömmlichen Slicing bleiben unverändert."
 
+# AI Translated
 msgid "Target acceleration"
-msgstr ""
+msgstr "Zielbeschleunigung"
 
+# AI Translated
 msgid "Provisional 5D target acceleration. This does not emit firmware commands."
-msgstr ""
+msgstr "Vorläufige 5D-Zielbeschleunigung. Es werden keine Firmwarebefehle ausgegeben."
 
+# AI Translated
 msgid "Extrusion channel"
-msgstr ""
+msgstr "Extrusionskanal"
 
+# AI Translated
 msgid "Unique zero-based logical extrusion channel for this head. This is not an OrcaSlicer extruder index or a firmware tool command."
-msgstr ""
+msgstr "Eindeutiger logischer Extrusionskanal dieses Kopfes, beginnend bei null. Dies ist weder ein OrcaSlicer-Extruderindex noch ein Firmware-Werkzeugbefehl."
 
+# AI Translated
 msgid "Formorix 5D: the shared bed Z position must be within valid non-negative travel limits."
-msgstr ""
+msgstr "Formorix 5D: Die gemeinsame Druckbett-Z-Position muss innerhalb gültiger, nichtnegativer Verfahrgrenzen liegen."
 
+# AI Translated
 msgid "Formorix 5D: tilt, target speed and target acceleration must be finite positive values; tilt cannot exceed 180 degrees."
-msgstr ""
+msgstr "Formorix 5D: Neigung, Zielgeschwindigkeit und Zielbeschleunigung müssen endliche positive Werte sein; die Neigung darf 180 Grad nicht überschreiten."
 
+# AI Translated
 msgid "Formorix 5D: every head position must be within finite limits, with minimum less than maximum."
-msgstr ""
+msgstr "Formorix 5D: Jede Kopfposition muss innerhalb endlicher Grenzen liegen, wobei das Minimum kleiner als das Maximum sein muss."
 
+# AI Translated
 msgid "Formorix 5D: head orientation limits exceed the maximum axis tilt."
-msgstr ""
+msgstr "Formorix 5D: Die Ausrichtungsgrenzen eines Kopfes überschreiten die maximale Achsneigung."
 
+# AI Translated
 msgid "Formorix 5D: each head needs a distinct extrusion channel between 0 and 255."
-msgstr ""
+msgstr "Formorix 5D: Jeder Kopf benötigt einen eigenen Extrusionskanal zwischen 0 und 255."
 
+# AI Translated
 msgid "Formorix 5D is experimental and configuration-only. Slicing, executable G-code export and sending print jobs are disabled. Save a project or printer preset instead, or disable Formorix 5D mode for conventional slicing."
-msgstr ""
+msgstr "Formorix 5D ist experimentell und dient nur zur Konfiguration. Slicing, ausführbarer G-Code-Export und das Senden von Druckaufträgen sind gesperrt. Speichern Sie stattdessen ein Projekt oder Druckerprofil, oder deaktivieren Sie den Formorix-5D-Modus für herkömmliches Slicing."
 
 msgid "Printer technology"
 msgstr "Druckertechnologie"
@@ -39359,6 +39570,1561 @@ msgid "Suspiciously low number of configuration values extracted from %1%: %2%"
 msgstr "Verdächtig geringe Anzahl an Konfigurationswerten aus %1% extrahiert: %2%"
 
 # AI Translated
+msgid "Planar boundary layout canceled"
+msgstr "Planare Randfüllung abgebrochen"
+
+# AI Translated
+msgid "A boundary layout requires a nonempty triangulated surface"
+msgstr "Die Randfüllung benötigt eine nichtleere triangulierte Oberfläche"
+
+# AI Translated
+msgid "Planar boundary input exceeds the triangle budget"
+msgstr "Die Eingabe für die planare Randfüllung überschreitet die Dreiecksgrenze"
+
+# AI Translated
+msgid "Invalid planar boundary coordinate"
+msgstr "Ungültige Koordinate der planaren Randfüllung"
+
+# AI Translated
+msgid "Invalid planar boundary triangle index"
+msgstr "Ungültiger Dreiecksindex der planaren Randfüllung"
+
+# AI Translated
+msgid "A degenerate or numerically unresolved projected triangle prevents boundary layout"
+msgstr "Ein entartetes oder numerisch nicht auflösbares projiziertes Dreieck verhindert die Randfüllung"
+
+# AI Translated
+msgid "Folded or inconsistently oriented surface projection is unsupported"
+msgstr "Gefaltete oder uneinheitlich ausgerichtete Oberflächenprojektionen werden nicht unterstützt"
+
+# AI Translated
+msgid "The projected surface has a duplicate or nonmanifold edge"
+msgstr "Die projizierte Oberfläche enthält eine doppelte oder nicht-manifolde Kante"
+
+# AI Translated
+msgid "Disconnected projected regions require separate boundary layouts"
+msgstr "Nicht zusammenhängende projizierte Bereiche benötigen getrennte Randfüllungen"
+
+# AI Translated
+msgid "The projected boundary has a branch or a point contact"
+msgstr "Der projizierte Rand enthält eine Verzweigung oder eine punktförmige Berührung"
+
+# AI Translated
+msgid "Holes or non-disk projected surfaces are not supported by rectangular boundary layout"
+msgstr "Die rechteckige Randfüllung unterstützt keine Löcher oder projizierten Flächen, die topologisch keine Scheibe bilden"
+
+# AI Translated
+msgid "The projected boundary is not a closed simple contour"
+msgstr "Der projizierte Rand ist keine geschlossene einfache Kontur"
+
+# AI Translated
+msgid "Holes or multiple boundary contours are unsupported"
+msgstr "Löcher oder mehrere Randkonturen werden nicht unterstützt"
+
+# AI Translated
+msgid "The projected rectangle has no positive area"
+msgstr "Das projizierte Rechteck hat keinen positiven Flächeninhalt"
+
+# AI Translated
+msgid "Sloping, curved or reentrant boundaries require a different finite-cap layout"
+msgstr "Schräge, gekrümmte oder einspringende Ränder benötigen eine andere Anordnung endlicher Bahnabschlüsse"
+
+# AI Translated
+msgid "The projected contour does not cover all four rectangle sides"
+msgstr "Die projizierte Kontur deckt nicht alle vier Rechteckseiten ab"
+
+# AI Translated
+msgid "Invalid planar boundary resource limits or rectangle tolerance"
+msgstr "Ungültige Berechnungsgrenzen oder Rechtecktoleranz für die planare Randfüllung"
+
+# AI Translated
+msgid "Local width limits do not allow a valid rounded-rectangle cross-section"
+msgstr "Die lokalen Breitengrenzen erlauben keinen gültigen abgerundeten Rechteckquerschnitt"
+
+# AI Translated
+msgid "No complete ribbon count fits the rectangle within the explicit local width limits"
+msgstr "Innerhalb der ausdrücklich angegebenen lokalen Breitengrenzen passt keine vollständige Anzahl von Extrusionsbändern in das Rechteck"
+
+# AI Translated
+msgid "Planar boundary row budget exceeded"
+msgstr "Die planare Randfüllung überschreitet die Zeilengrenze"
+
+# AI Translated
+msgid "The computed local width lies outside its explicit bounds"
+msgstr "Die berechnete lokale Breite liegt außerhalb ihrer ausdrücklich angegebenen Grenzen"
+
+# AI Translated
+msgid "The requested local width cannot reproduce the selected ribbon spacing"
+msgstr "Die angeforderte lokale Breite kann den gewählten Bandabstand nicht erzeugen"
+
+# AI Translated
+msgid "The region is narrower than one fixed-width ribbon; explicit local width limits are required"
+msgstr "Der Bereich ist schmaler als ein Extrusionsband mit fester Breite; ausdrücklich angegebene lokale Breitengrenzen sind erforderlich"
+
+# AI Translated
+msgid "No finite ribbon layout fits this rectangle"
+msgstr "In dieses Rechteck passt keine endliche Bandanordnung"
+
+# AI Translated
+msgid "Planar boundary station budget exceeded"
+msgstr "Die planare Randfüllung überschreitet die Grenze für Bahnstützpunkte"
+
+# AI Translated
+msgid "The rectangle is too short for finite mitered turns in the requested raster direction"
+msgstr "Das Rechteck ist für endliche Gehrungsumkehrstellen in der angeforderten Rasterrichtung zu kurz"
+
+# AI Translated
+msgid "Canonical boundary rails exceed the nominal profile's numerical construction allowance"
+msgstr "Die kanonischen Randlinien überschreiten die numerische Konstruktionstoleranz des nominalen Profils"
+
+# AI Translated
+msgid "Rectangular candidate requires the full spatial material audit"
+msgstr "Der rechteckige Entwurf benötigt die vollständige räumliche Materialprüfung"
+
+# AI Translated
+msgid "Fixed profile width leaves explicit unfilled boundary strips; Flow remains unchanged"
+msgstr "Die feste Profilbreite lässt ausdrücklich ausgewiesene Randstreifen ungefüllt; das Flussverhältnis bleibt unverändert"
+
+# AI Translated
+msgid "Surface contour generation canceled"
+msgstr "Erzeugung der Oberflächenkonturen abgebrochen"
+
+# AI Translated
+msgid "Surface contours require a nonempty mesh and a normal at every source vertex"
+msgstr "Oberflächenkonturen benötigen ein nichtleeres Netz und eine Normale an jedem ursprünglichen Eckpunkt"
+
+# AI Translated
+msgid "Invalid surface contour planes, interpolation tolerance or resource limits"
+msgstr "Ungültige Oberflächenkonturebenen, Interpolationstoleranz oder Berechnungsgrenzen"
+
+# AI Translated
+msgid "Surface contour input exceeds its mesh or plane budget"
+msgstr "Die Eingabe für Oberflächenkonturen überschreitet die Netz- oder Ebenengrenze"
+
+# AI Translated
+msgid "Invalid surface normal field"
+msgstr "Ungültiges Oberflächennormalenfeld"
+
+# AI Translated
+msgid "Invalid surface contour plane offset"
+msgstr "Ungültiger Ebenenversatz der Oberflächenkontur"
+
+# AI Translated
+msgid "Repeated contour plane offsets would duplicate the same material path"
+msgstr "Wiederholte Konturebenenversätze würden dieselbe Materialbahn duplizieren"
+
+# AI Translated
+msgid "The interpolated surface normal vanishes"
+msgstr "Die interpolierte Oberflächennormale verschwindet"
+
+# AI Translated
+msgid "The surface normal cannot be normalized with a finite bound"
+msgstr "Die Oberflächennormale lässt sich nicht mit einer endlichen Schranke normieren"
+
+# AI Translated
+msgid "Surface contour output cannot be represented in double precision"
+msgstr "Die Ausgabe der Oberflächenkontur ist nicht mit doppelter Genauigkeit darstellbar"
+
+# AI Translated
+msgid "Opposing surface normals make the offset interpolation undefined"
+msgstr "Entgegengesetzte Oberflächennormalen machen die Versatzinterpolation undefiniert"
+
+# AI Translated
+msgid "Invalid surface contour mesh coordinate"
+msgstr "Ungültige Netzkoordinate der Oberflächenkontur"
+
+# AI Translated
+msgid "Coincident source vertices have inconsistent surface normal fields"
+msgstr "Zusammenfallende ursprüngliche Eckpunkte besitzen widersprüchliche Oberflächennormalenfelder"
+
+# AI Translated
+msgid "Invalid surface contour triangle index"
+msgstr "Ungültiger Dreiecksindex der Oberflächenkontur"
+
+# AI Translated
+msgid "A degenerate source triangle prevents exact surface contours"
+msgstr "Ein entartetes ursprüngliches Dreieck verhindert exakte Oberflächenkonturen"
+
+# AI Translated
+msgid "The surface contour mesh is nonmanifold or inconsistently oriented"
+msgstr "Das Oberflächenkonturnetz ist nicht-manifold oder uneinheitlich ausgerichtet"
+
+# AI Translated
+msgid "Invalid triangulated surface graph"
+msgstr "Ungültiger triangulierter Oberflächengraph"
+
+# AI Translated
+msgid "The source surface contains a nonmanifold vertex or a self-intersection"
+msgstr "Die ursprüngliche Oberfläche enthält einen nicht-manifolden Eckpunkt oder eine Selbstüberschneidung"
+
+# AI Translated
+msgid "An exact contour point leaves its source triangle carrier"
+msgstr "Ein exakter Konturpunkt verlässt sein ursprüngliches Trägerdreieck"
+
+# AI Translated
+msgid "A closed contour has fewer than three distinct points"
+msgstr "Eine geschlossene Kontur besitzt weniger als drei unterschiedliche Punkte"
+
+# AI Translated
+msgid "Surface contour knot budget exceeded"
+msgstr "Die Oberflächenkontur überschreitet die Knotengrenze"
+
+# AI Translated
+msgid "A surface contour has an unresolved self-contact"
+msgstr "Eine Oberflächenkontur besitzt eine nicht aufgelöste Selbstberührung"
+
+# AI Translated
+msgid "A surface contour contains a collapsed segment"
+msgstr "Eine Oberflächenkontur enthält einen zusammengefallenen Abschnitt"
+
+# AI Translated
+msgid "Surface contour carrier-query budget exceeded"
+msgstr "Die Oberflächenkontur überschreitet die Grenze für Trägerabfragen"
+
+# AI Translated
+msgid "A contour segment has no exact single-triangle carrier; no nearest-surface fallback is used"
+msgstr "Für einen Konturabschnitt fehlt ein exaktes einzelnes Trägerdreieck; die nächstgelegene Oberfläche wird nicht ersatzweise verwendet"
+
+# AI Translated
+msgid "The normal field is discontinuous across a shared triangle boundary"
+msgstr "Das Normalenfeld ist an einer gemeinsamen Dreiecksgrenze unstetig"
+
+# AI Translated
+msgid "The normal field is discontinuous at the closed contour seam"
+msgstr "Das Normalenfeld ist an der Naht der geschlossenen Kontur unstetig"
+
+# AI Translated
+msgid "Surface normal interpolation cannot reach the requested bound within its refinement limit"
+msgstr "Die Oberflächennormaleninterpolation kann die angeforderte Schranke innerhalb ihrer Verfeinerungsgrenze nicht erreichen"
+
+# AI Translated
+msgid "Double conversion collapses a nonzero surface contour segment"
+msgstr "Die Double-Konvertierung lässt einen Oberflächenkonturabschnitt mit positiver Länge zusammenfallen"
+
+# AI Translated
+msgid "Adaptive surface contour knot budget exceeded"
+msgstr "Die adaptive Oberflächenkontur überschreitet die Knotengrenze"
+
+# AI Translated
+msgid "Surface contour carriers do not match their motion segments"
+msgstr "Die Träger der Oberflächenkontur passen nicht zu ihren Bewegungsabschnitten"
+
+# AI Translated
+msgid "Coplanar surface faces contribute boundary curves only; these curves do not certify area coverage"
+msgstr "Koplanare Oberflächen tragen nur Randkurven bei; diese Kurven weisen keine Flächenabdeckung nach"
+
+# AI Translated
+msgid "Isolated plane contacts have no extrusion length and are not planned"
+msgstr "Isolierte Ebenenkontakte besitzen keine Extrusionslänge und werden nicht geplant"
+
+# AI Translated
+msgid "No nondegenerate contour intersects the selected surface"
+msgstr "Keine nichtentartete Kontur schneidet die ausgewählte Oberfläche"
+
+# AI Translated
+msgid "The selected surface is empty."
+msgstr "Die ausgewählte Oberfläche ist leer."
+
+# AI Translated
+msgid "The selected surface contains disconnected islands."
+msgstr "Die ausgewählte Oberfläche enthält nicht verbundene Inseln."
+
+# AI Translated
+msgid "The selected surface has holes or a branching boundary unsupported by the continuous planner."
+msgstr "Die ausgewählte Oberfläche enthält Löcher oder einen verzweigten Rand, die der Planer für durchgehende Bahnen nicht unterstützt."
+
+# AI Translated
+msgid "The surface folds over its local projection or has multiple intervals in a raster row."
+msgstr "Die Oberfläche faltet sich über ihre lokale Projektion oder besitzt mehrere Intervalle in einer Rasterzeile."
+
+# AI Translated
+msgid "The available wall is too thin for the requested layer."
+msgstr "Die verfügbare Wand ist für die angeforderte Schicht zu dünn."
+
+# AI Translated
+msgid "The requested normal offset folds or self-intersects."
+msgstr "Der angeforderte Normalenversatz faltet sich oder schneidet sich selbst."
+
+# AI Translated
+msgid "Full-wall mode requires a local termination strategy for variable wall thickness."
+msgstr "Der Vollwandmodus benötigt bei variabler Wandstärke eine Strategie zur lokalen Beendigung der Lagen."
+
+# AI Translated
+msgid "Vertical surfaces require explicit permission."
+msgstr "Senkrechte Flächen müssen ausdrücklich zugelassen werden."
+
+# AI Translated
+msgid "The desired nozzle direction exceeds the configured tilt and deviation."
+msgstr "Die gewünschte Düsenrichtung überschreitet die konfigurierte Neigung und Abweichung."
+
+# AI Translated
+msgid "The preview exceeds the current mesh or path resource limit."
+msgstr "Die Vorschau überschreitet die aktuelle Netz- oder Bahngrenze."
+
+# AI Translated
+msgid "Calculation was canceled."
+msgstr "Die Berechnung wurde abgebrochen."
+
+# AI Translated
+msgid "Surface markings no longer match the mesh topology."
+msgstr "Die Oberflächenmarkierungen passen nicht mehr zur Netztopologie."
+
+# AI Translated
+msgid "A single surface requires one explicitly assigned head."
+msgstr "Eine einzelne Oberfläche benötigt einen ausdrücklich zugewiesenen Kopf."
+
+# AI Translated
+msgid "A required nozzle or material profile is unavailable."
+msgstr "Ein erforderliches Düsen- oder Materialprofil ist nicht verfügbar."
+
+# AI Translated
+msgid "The selected reference edge is no longer valid."
+msgstr "Die ausgewählte Bezugskante ist nicht mehr gültig."
+
+# AI Translated
+msgid "The selected mesh is invalid for continuous surface planning."
+msgstr "Das ausgewählte Netz ist für die Planung durchgehender Oberflächenbahnen ungültig."
+
+# AI Translated
+msgid "Hybrid calculation canceled"
+msgstr "Hybridberechnung abgebrochen"
+
+# AI Translated
+msgid "Non-finite hybrid vertex"
+msgstr "Nichtendlicher Hybrid-Eckpunkt"
+
+# AI Translated
+msgid "Cannot locate selected surface"
+msgstr "Die ausgewählte Oberfläche kann nicht gefunden werden"
+
+# AI Translated
+msgid "Degenerate selected surface"
+msgstr "Entartete ausgewählte Oberfläche"
+
+# AI Translated
+msgid "Ambiguous selected normal"
+msgstr "Mehrdeutige ausgewählte Normale"
+
+# AI Translated
+msgid "Invalid machine tilt limit"
+msgstr "Ungültige Maschinenneigungsgrenze"
+
+# AI Translated
+msgid "Vertical 5D surface requires explicit permission"
+msgstr "Senkrechte 5D-Flächen müssen ausdrücklich zugelassen werden"
+
+# AI Translated
+msgid "Requested surface exceeds nominal nozzle tilt"
+msgstr "Die angeforderte Oberfläche überschreitet die nominale Düsenneigung"
+
+# AI Translated
+msgid "Hybrid shell exceeds 200 layers"
+msgstr "Die Hybridschale überschreitet 200 Schichten"
+
+# AI Translated
+msgid "Invalid hybrid layer height"
+msgstr "Ungültige Hybrid-Schichthöhe"
+
+# AI Translated
+msgid "Empty 5D shell"
+msgstr "Leere 5D-Schale"
+
+# AI Translated
+msgid "Hybrid surface audit resource limit"
+msgstr "Berechnungsgrenze der Hybrid-Oberflächenprüfung"
+
+# AI Translated
+msgid "Unusable surface projection"
+msgstr "Unbrauchbare Oberflächenprojektion"
+
+# AI Translated
+msgid "Invalid double to Orca conversion"
+msgstr "Ungültige Konvertierung von Double in das Orca-Format"
+
+# AI Translated
+msgid "Invalid hybrid instance"
+msgstr "Ungültige Hybridinstanz"
+
+# AI Translated
+#, boost-format
+msgid "Hybrid preview does not yet preserve object or part override: %1%"
+msgstr "Die Hybrid-Vorschau erhält diese Objekt- oder Teilüberschreibung noch nicht: %1%"
+
+# AI Translated
+msgid "Hybrid preview does not yet preserve layer-range overrides or variable layer-height profiles"
+msgstr "Die Hybrid-Vorschau erhält noch keine Überschreibungen für Schichtbereiche oder Profile mit variabler Schichthöhe"
+
+# AI Translated
+msgid "Hybrid preview does not yet support negative volumes, modifiers or support modifiers"
+msgstr "Die Hybrid-Vorschau unterstützt noch keine negativen Volumen, Modifikatoren oder Stützmodifikatoren"
+
+# AI Translated
+msgid "Hybrid preview does not yet remap conventional support, seam, material or fuzzy-skin painting onto the computed core"
+msgstr "Die Hybrid-Vorschau überträgt konventionelle Stütz-, Naht-, Material- oder Fuzzy-Skin-Bemalung noch nicht auf den berechneten Kern"
+
+# AI Translated
+msgid "Surface markings no longer match model topology"
+msgstr "Die Oberflächenmarkierungen passen nicht mehr zur Modelltopologie"
+
+# AI Translated
+msgid "A hybrid region requires one assigned head"
+msgstr "Ein Hybridbereich benötigt einen zugewiesenen Kopf"
+
+# AI Translated
+msgid "A painted region has no enabled resolved head profile"
+msgstr "Ein markierter Bereich besitzt kein aktiviertes und aufgelöstes Kopfprofil"
+
+# AI Translated
+msgid "The selected reference edge no longer belongs to this model instance"
+msgstr "Die ausgewählte Bezugskante gehört nicht mehr zu dieser Modellinstanz"
+
+# AI Translated
+msgid "Hybrid calculation requires marked surfaces on a valid closed solid"
+msgstr "Die Hybridberechnung benötigt markierte Oberflächen auf einem gültigen geschlossenen Volumenkörper"
+
+# AI Translated
+msgid "Hybrid regions require unique positive IDs and one of three valid heads"
+msgstr "Hybridbereiche benötigen eindeutige positive IDs und einen der drei gültigen Köpfe"
+
+# AI Translated
+msgid "Invalid per-head hybrid process profile"
+msgstr "Ungültiges Hybrid-Prozessprofil eines Kopfes"
+
+# AI Translated
+msgid "Invalid hybrid surface quality selection"
+msgstr "Ungültige Auswahl der Hybrid-Oberflächenqualität"
+
+# AI Translated
+msgid "Hybrid ribbon requires neutral height correction until calibrated normal thickness is available"
+msgstr "Das Hybrid-Extrusionsband benötigt eine neutrale Höhenkorrektur, bis eine kalibrierte Dicke entlang der Normalen verfügbar ist"
+
+# AI Translated
+msgid "Hybrid preview requires neutral material shrink compensation until the core and skin share a common compensated geometry"
+msgstr "Die Hybrid-Vorschau benötigt neutrale Materialschrumpfkompensation, bis Kern und Außenhaut eine gemeinsame kompensierte Geometrie besitzen"
+
+# AI Translated
+msgid "Ambiguous normal in selected region"
+msgstr "Mehrdeutige Normale im ausgewählten Bereich"
+
+# AI Translated
+msgid "No inward wall intersection below selected surface"
+msgstr "Unter der ausgewählten Oberfläche wurde nach innen kein Wandschnittpunkt gefunden"
+
+# AI Translated
+msgid "Full-wall thickness is undefined at the selected boundary"
+msgstr "Die volle Wandstärke ist am ausgewählten Rand nicht definiert"
+
+# AI Translated
+#, boost-format
+msgid "Region %1%: offset is clipped at the original boundary; wall thickness there is not verified"
+msgstr "Bereich %1%: Der Versatz wird am ursprünglichen Rand beschnitten; die dortige Wandstärke ist nicht nachgewiesen"
+
+# AI Translated
+msgid "Variable full-wall thickness needs a local layer termination strategy"
+msgstr "Eine variable volle Wandstärke benötigt eine Strategie zur lokalen Beendigung der Schichten"
+
+# AI Translated
+msgid "Hybrid layer mesh budget exceeded; reduce the marked area, mesh detail or layer count"
+msgstr "Die Netzgrenze für Hybridschichten wurde überschritten; reduzieren Sie den markierten Bereich, die Netzauflösung oder die Schichtenanzahl"
+
+# AI Translated
+msgid "Requested 5D shell exceeds the entire sampled wall thickness"
+msgstr "Die angeforderte 5D-Schale überschreitet die gesamte stichprobenartig erfasste Wandstärke"
+
+# AI Translated
+#, boost-format
+msgid "Region %1%: local thin walls require clipped layer termination"
+msgstr "Bereich %1%: Lokal dünne Wände benötigen beschnittene Schichtenabschlüsse"
+
+# AI Translated
+msgid "Missing allocated 5D skin"
+msgstr "Die zugewiesene 5D-Außenhaut fehlt"
+
+# AI Translated
+msgid "The requested raster direction is perpendicular to the surface"
+msgstr "Die angeforderte Rasterrichtung steht senkrecht zur Oberfläche"
+
+# AI Translated
+msgid "Cannot determine a stable surface contour direction"
+msgstr "Es lässt sich keine stabile Richtung der Oberflächenkonturen bestimmen"
+
+# AI Translated
+msgid "This wrapped surface requires automatic contour direction"
+msgstr "Diese umlaufende Oberfläche benötigt eine automatische Konturrichtung"
+
+# AI Translated
+msgid "The selected span cannot fit this fixed-width ribbon; use a smaller nozzle or another direction"
+msgstr "Das Extrusionsband mit fester Breite passt nicht in die ausgewählte Spanne; verwenden Sie eine kleinere Düse oder eine andere Richtung"
+
+# AI Translated
+msgid "Surface contour row budget exceeded"
+msgstr "Die Oberflächenkonturen überschreiten die Zeilengrenze"
+
+# AI Translated
+msgid "The selected surface has no usable spatial contour"
+msgstr "Die ausgewählte Oberfläche besitzt keine brauchbare räumliche Kontur"
+
+# AI Translated
+msgid "The rigid tilted nozzle-section does not fit the requested normal layer thickness; the compacted ribbon requires a perpendicular nozzle"
+msgstr "Der starre geneigte Düsenquerschnitt passt nicht in die angeforderte Schichtdicke entlang der Normalen; das verdichtete Extrusionsband benötigt eine senkrechte Düse"
+
+# AI Translated
+msgid "Hybrid adaptive path limit"
+msgstr "Grenze für adaptive Hybridbahnen"
+
+# AI Translated
+msgid "Hybrid movement budget exceeded; reduce the marked area or layer count"
+msgstr "Die Bewegungsgrenze der Hybridberechnung wurde überschritten; reduzieren Sie den markierten Bereich oder die Schichtenanzahl"
+
+# AI Translated
+msgid "Collapsed compensated ribbon segment"
+msgstr "Zusammengefallener kompensierter Bandabschnitt"
+
+# AI Translated
+msgid "Collapsed material-center segment cannot carry ribbon extrusion"
+msgstr "Ein zusammengefallener Abschnitt der Materialmittellinie kann keine Bandextrusion tragen"
+
+# AI Translated
+msgid "No ribbon extrusion fits inside the allocated shell"
+msgstr "Keine Bandextrusion passt in die zugewiesene Schale"
+
+# AI Translated
+#, boost-format
+msgid "Region %1%: local boundary termination inserted non-extruding movements; their collision safety is unverified"
+msgstr "Bereich %1%: Die lokale Randbeendigung hat Bewegungen ohne Extrusion eingefügt; deren Kollisionsfreiheit ist ungeprüft"
+
+# AI Translated
+#, boost-format
+msgid "Region %1%: nominal material supply exceeds 110%% of the allocated skin volume; the ribbon plan is rejected without changing flow"
+msgstr "Bereich %1%: Die nominale Materialmenge überschreitet 110%% des zugewiesenen Außenhautvolumens; die Bandplanung wird ohne Änderung des Flussverhältnisses abgewiesen"
+
+# AI Translated
+#, boost-format
+msgid "Region %1%: nominal supply exceeds the allocated skin by %2% mm3; this material region is inadmissible"
+msgstr "Bereich %1%: Die nominale Materialmenge überschreitet die zugewiesene Außenhaut um %2% mm3; dieser Materialbereich ist unzulässig"
+
+# AI Translated
+#, boost-format
+msgid "Region %1%: nominal material volume is inconsistent; flow was not corrected"
+msgstr "Bereich %1%: Das nominale Materialvolumen ist nicht konsistent; das Flussverhältnis wurde nicht korrigiert"
+
+# AI Translated
+#, boost-format
+msgid "Region %1%: nominal bead crosses the local core interface by %2% mm; this material overlap is not resolved"
+msgstr "Bereich %1%: Die nominale Extrusionsraupe überschreitet die lokale Kerngrenzfläche um %2% mm; diese Materialüberlagerung ist nicht aufgelöst"
+
+# AI Translated
+msgid "Missing process identity for material target"
+msgstr "Die Prozesszuordnung des Materialziels fehlt"
+
+# AI Translated
+#, boost-format
+msgid "Three-dimensional nominal material audit is incomplete: %1%"
+msgstr "Die dreidimensionale nominale Materialprüfung ist unvollständig: %1%"
+
+# AI Translated
+#, boost-format
+msgid "Region %1%: 0.01 mm whole-surface accuracy is not verified"
+msgstr "Bereich %1%: Eine Genauigkeit von 0,01 mm über die gesamte Oberfläche ist nicht nachgewiesen"
+
+# AI Translated
+msgid "Invalid 5D-only preview timing"
+msgstr "Ungültige Zeitberechnung der reinen 5D-Vorschau"
+
+# AI Translated
+msgid "Inconsistent interface audit data"
+msgstr "Widersprüchliche Daten der Grenzflächenprüfung"
+
+# AI Translated
+msgid "Invalid interface audit position or normal"
+msgstr "Ungültige Position oder Normale der Grenzflächenprüfung"
+
+# AI Translated
+#, boost-format
+msgid "Region %1%: underlay is sampled, not a full contact or material-adhesion certificate"
+msgstr "Bereich %1%: Der Unterbau wird stichprobenartig geprüft; dies ist kein Nachweis vollständigen Kontakts oder ausreichender Materialhaftung"
+
+# AI Translated
+#, boost-format
+msgid "Region %1%: dense transition underlay is a requested native operation; completion and material suitability remain unverified"
+msgstr "Bereich %1%: Verdichteter Übergangsunterbau ist eine angeforderte native Operation; Fertigstellung und Materialeignung bleiben ungeprüft"
+
+# AI Translated
+#, boost-format
+msgid "Region %1%: additional 5D support is not generated; only existing conventional Orca support paths can contribute contact"
+msgstr "Bereich %1%: Zusätzliche 5D-Stützen werden nicht erzeugt; nur bestehende konventionelle Orca-Stützbahnen können Kontakt bereitstellen"
+
+# AI Translated
+#, boost-format
+msgid "Region %1%: full-wall 5D requires a prior supporting structure; completion and strength remain unverified"
+msgstr "Bereich %1%: Vollwand-5D benötigt eine zuvor hergestellte Tragstruktur; Fertigstellung und Festigkeit bleiben ungeprüft"
+
+# AI Translated
+#, boost-format
+msgid "Region %1%: hybrid sequencing is not implemented; the core retains the Orca process infill-first setting"
+msgstr "Bereich %1%: Die Hybrid-Fertigungsreihenfolge ist nicht implementiert; der Kern behält Orcas Prozesseinstellung „Füllung zuerst“ bei"
+
+# AI Translated
+#, boost-format
+msgid "Region %1%: breakaway support suitability and interface adhesion are unverified"
+msgstr "Bereich %1%: Die Eignung wegbrechbarer Stützen und die Grenzflächenhaftung sind ungeprüft"
+
+# AI Translated
+#, boost-format
+msgid "Region %1%: soluble support material suitability and interface adhesion are unverified"
+msgstr "Bereich %1%: Die Eignung löslichen Stützmaterials und die Grenzflächenhaftung sind ungeprüft"
+
+# AI Translated
+#, boost-format
+msgid "Region %1%: automatic support-material selection and interface compatibility are unverified"
+msgstr "Bereich %1%: Die automatische Stützmaterialauswahl und die Grenzflächenverträglichkeit sind ungeprüft"
+
+# AI Translated
+msgid "Too many local dense-underlay requests"
+msgstr "Zu viele Anforderungen für lokal verdichteten Unterbau"
+
+# AI Translated
+msgid "Invalid local dense-underlay density, slice interval or area"
+msgstr "Ungültige Dichte, Schichtspanne oder Fläche für lokal verdichteten Unterbau"
+
+# AI Translated
+msgid "Local dense-underlay polygon budget exceeded"
+msgstr "Die lokale Unterbauverdichtung überschreitet die Polygongrenze"
+
+# AI Translated
+msgid "Local dense-underlay contours must have valid outer and hole orientations"
+msgstr "Die Konturen der lokalen Unterbauverdichtung benötigen gültige Außen- und Lochausrichtungen"
+
+# AI Translated
+msgid "A local dense-underlay hole lies outside its contour"
+msgstr "Ein Loch der lokalen Unterbauverdichtung liegt außerhalb seiner Kontur"
+
+# AI Translated
+msgid "Invalid or repeated local dense-underlay polygon vertex"
+msgstr "Ungültiger oder wiederholter Polygoneckpunkt der lokalen Unterbauverdichtung"
+
+# AI Translated
+msgid "Local dense-underlay area exceeds the supported geometric span"
+msgstr "Die lokale Unterbauverdichtung überschreitet die unterstützte geometrische Ausdehnung"
+
+# AI Translated
+msgid "Local dense-underlay intersection budget exceeded"
+msgstr "Die lokale Unterbauverdichtung überschreitet die Grenze für Schnittprüfungen"
+
+# AI Translated
+msgid "Local dense-underlay boundaries intersect or touch themselves"
+msgstr "Ränder der lokalen Unterbauverdichtung schneiden oder berühren sich selbst"
+
+# AI Translated
+msgid "Local dense-underlay components or holes overlap"
+msgstr "Komponenten oder Löcher der lokalen Unterbauverdichtung überlagern sich"
+
+# AI Translated
+msgid "Local dense-underlay modifier boundaries touch after clipping"
+msgstr "Die Modifikatorränder der lokalen Unterbauverdichtung berühren sich nach dem Beschneiden"
+
+# AI Translated
+msgid "Local dense-underlay modifier mesh budget exceeded"
+msgstr "Der Modifikator für lokal verdichteten Unterbau überschreitet die Netzgrenze"
+
+# AI Translated
+msgid "Local dense-underlay modifier cannot be represented as a valid native solid"
+msgstr "Der Modifikator für lokal verdichteten Unterbau lässt sich nicht als gültiger nativer Volumenkörper darstellen"
+
+# AI Translated
+msgid "Native modifier conversion changes a local dense-underlay component or hole"
+msgstr "Die native Modifikatorkonvertierung verändert eine Komponente oder ein Loch der lokalen Unterbauverdichtung"
+
+# AI Translated
+msgid "Native modifier conversion does not preserve the requested dense-underlay volume"
+msgstr "Die native Modifikatorkonvertierung erhält das angeforderte Volumen der lokalen Unterbauverdichtung nicht"
+
+# AI Translated
+msgid "Local dense-underlay request no longer matches the current native slice"
+msgstr "Die Anforderung für lokal verdichteten Unterbau passt nicht mehr zum aktuellen nativen Schichtschnitt"
+
+# AI Translated
+msgid "Local dense-underlay request extends outside the native slice"
+msgstr "Die Anforderung für lokal verdichteten Unterbau reicht über den nativen Schichtschnitt hinaus"
+
+# AI Translated
+msgid "Local dense-underlay area disappears within its native conversion uncertainty"
+msgstr "Die lokale Unterbauverdichtungsfläche verschwindet innerhalb ihrer nativen Konvertierungsunsicherheit"
+
+# AI Translated
+msgid "Combined local dense-underlay modifier mesh budget exceeded"
+msgstr "Die kombinierten Modifikatoren für lokal verdichteten Unterbau überschreiten die Netzgrenze"
+
+# AI Translated
+msgid "Formorix dense underlay"
+msgstr "Verdichteter Formorix-Unterbau"
+
+# AI Translated
+#, boost-format
+msgid "Missing explicit per-head Orca option: %1%"
+msgstr "Explizite Orca-Option je Kopf fehlt: %1%"
+
+# AI Translated
+msgid "Invalid resolved head profile"
+msgstr "Ungültiges aufgelöstes Kopfprofil"
+
+# AI Translated
+msgid "Hybrid core preview does not support belt or spiral mode"
+msgstr "Die Hybrid-Kernvorschau unterstützt keinen Band- oder Spiralmodus"
+
+# AI Translated
+#, boost-format
+msgid "Missing paired machine limit: %1%"
+msgstr "Gepaarte Maschinengrenze fehlt: %1%"
+
+# AI Translated
+msgid "Hybrid core preview requires one concrete nozzle volume type per head"
+msgstr "Die Hybrid-Kernvorschau benötigt einen konkreten Düsenvolumentyp je Kopf"
+
+# AI Translated
+msgid "Hybrid core preview requires neutral XY/Z shrink compensation until core and shell share a compensation transform."
+msgstr "Die Hybrid-Kernvorschau benötigt neutrale XY-/Z-Schrumpfkompensation, bis Kern und Schale eine gemeinsame Kompensationstransformation besitzen."
+
+# AI Translated
+#, boost-format
+msgid "Hybrid core preview requires 100%% %1%; automatic shrink neutralization is not applied."
+msgstr "Die Hybrid-Kernvorschau benötigt 100%% für %1%; die Schrumpfkompensation wird nicht automatisch neutralisiert."
+
+# AI Translated
+msgid "Sloped or contoured conventional extrusions are not supported by hybrid preview"
+msgstr "Geneigte oder konturierte konventionelle Extrusionen werden von der Hybrid-Vorschau nicht unterstützt"
+
+# AI Translated
+msgid "Hybrid core preview requires nonnegative finite native flow factors"
+msgstr "Die Hybrid-Kernvorschau benötigt nichtnegative, endliche native Flussfaktoren"
+
+# AI Translated
+msgid "Invalid nominal conventional material supply"
+msgstr "Ungültige nominale konventionelle Materialmenge"
+
+# AI Translated
+msgid "Unknown Orca extrusion entity"
+msgstr "Unbekanntes Orca-Extrusionselement"
+
+# AI Translated
+msgid "Hybrid core preview path limit exceeded"
+msgstr "Die Hybrid-Kernvorschau überschreitet die Bahngrenze"
+
+# AI Translated
+msgid "Invalid native sparse-infill density for local underlay"
+msgstr "Ungültige native Fülldichte für den lokalen Unterbau"
+
+# AI Translated
+msgid "Local dense-underlay modifiers changed the native layer intervals"
+msgstr "Modifikatoren für lokal verdichteten Unterbau haben die nativen Schichtspannen verändert"
+
+# AI Translated
+msgid "Local dense-underlay modifiers changed the native slice geometry"
+msgstr "Modifikatoren für lokal verdichteten Unterbau haben die native Schichtgeometrie verändert"
+
+# AI Translated
+msgid "Local dense-underlay modifiers changed the native slice beyond its safety offset"
+msgstr "Modifikatoren für lokal verdichteten Unterbau haben den nativen Schichtschnitt über seinen Sicherheitsversatz hinaus verändert"
+
+# AI Translated
+msgid "Local dense-underlay masks leave a boundary strip within native conversion uncertainty; the core is unchanged."
+msgstr "Masken für lokal verdichteten Unterbau lassen innerhalb der nativen Konvertierungsunsicherheit einen Randstreifen frei; der Kern bleibt unverändert."
+
+# AI Translated
+msgid "Native merged slice outlines include Orca's safety expansion; their raw region union remains unchanged."
+msgstr "Native zusammengeführte Schichtkonturen enthalten Orcas Sicherheitserweiterung; die Vereinigung ihrer ursprünglichen Bereiche bleibt unverändert."
+
+# AI Translated
+msgid "Nominal conventional supply excludes Orca's small-area G-code flow compensation."
+msgstr "Die nominale konventionelle Materialmenge enthält nicht Orcas G-Code-Flusskompensation für kleine Flächen."
+
+# AI Translated
+msgid "Invalid conventional core or head assignment"
+msgstr "Ungültiger konventioneller Kern oder ungültige Kopfzuordnung"
+
+# AI Translated
+msgid "Assign a support head before calculating enabled supports or a raft."
+msgstr "Weisen Sie einen Stützkopf zu, bevor aktivierte Stützen oder ein Raft berechnet werden."
+
+# AI Translated
+msgid "Float conversion invalidates the conventional core"
+msgstr "Die Float-Konvertierung macht den konventionellen Kern ungültig"
+
+# AI Translated
+msgid "Support paths use a separate Orca pass with the support head profile; no shared time schedule is implied."
+msgstr "Stützbahnen verwenden einen separaten Orca-Durchlauf mit dem Profil des Stützkopfes; daraus ergibt sich keine gemeinsame Zeitplanung."
+
+# AI Translated
+msgid "Orca produced no conventional core or support extrusions for this volume."
+msgstr "Orca hat für diesen Körper keine konventionellen Kern- oder Stützextrusionen erzeugt."
+
+# AI Translated
+msgid "Conventional speeds are nominal role values; acceleration, cooling slowdown and common scheduling are not simulated."
+msgstr "Konventionelle Geschwindigkeiten sind nominale Werte der Extrusionsart; Beschleunigung, kühlungsbedingte Verlangsamung und gemeinsame Zeitplanung werden nicht simuliert."
+
+# AI Translated
+msgid "Underlay analysis canceled"
+msgstr "Unterbauprüfung abgebrochen"
+
+# AI Translated
+msgid "Invalid underlay sampling or resource limits"
+msgstr "Ungültige Unterbau-Stichprobenparameter oder Berechnungsgrenzen"
+
+# AI Translated
+msgid "Underlay polygon query budget exceeded"
+msgstr "Die Unterbauprüfung überschreitet die Grenze für Polygonabfragen"
+
+# AI Translated
+msgid "Invalid native layer coordinates for underlay analysis"
+msgstr "Ungültige native Schichtkoordinaten für die Unterbauprüfung"
+
+# AI Translated
+msgid "Invalid native layer polygon"
+msgstr "Ungültiges natives Schichtpolygon"
+
+# AI Translated
+msgid "Underlay native polygon budget exceeded"
+msgstr "Die Unterbauprüfung überschreitet die Grenze für native Polygone"
+
+# AI Translated
+msgid "Invalid native layer polygon coordinate"
+msgstr "Ungültige Koordinate eines nativen Schichtpolygons"
+
+# AI Translated
+msgid "Interleaved native layer intervals require a separate underlay model"
+msgstr "Ineinandergreifende native Schichtspannen benötigen ein separates Unterbaumodell"
+
+# AI Translated
+msgid "Underlay preparation requires a surface region"
+msgstr "Die Unterbauvorbereitung benötigt einen Oberflächenbereich"
+
+# AI Translated
+msgid "Invalid or duplicate underlay region"
+msgstr "Ungültiger oder doppelter Unterbaubereich"
+
+# AI Translated
+msgid "A core interface exists without a conventional core"
+msgstr "Eine Kerngrenzfläche ist ohne konventionellen Kern vorhanden"
+
+# AI Translated
+msgid "Underlay interface face budget exceeded"
+msgstr "Die Unterbauprüfung überschreitet die Grenze für Grenzflächendreiecke"
+
+# AI Translated
+msgid "Invalid underlay interface triangle"
+msgstr "Ungültiges Dreieck der Unterbaugrenzfläche"
+
+# AI Translated
+msgid "Invalid underlay interface coordinate"
+msgstr "Ungültige Koordinate der Unterbaugrenzfläche"
+
+# AI Translated
+msgid "Degenerate underlay interface triangle"
+msgstr "Entartetes Dreieck der Unterbaugrenzfläche"
+
+# AI Translated
+msgid "Underlay subdivision budget exceeded"
+msgstr "Die Unterbauprüfung überschreitet die Unterteilungsgrenze"
+
+# AI Translated
+msgid "Underlay sample budget exceeded"
+msgstr "Die Unterbauprüfung überschreitet die Stichprobengrenze"
+
+# AI Translated
+msgid "Underlay footprint is not numerically representable"
+msgstr "Die Unterbau-Auflagefläche ist numerisch nicht darstellbar"
+
+# AI Translated
+msgid "A 5D region has no core interface: an unplanned external supporting structure is required"
+msgstr "Ein 5D-Bereich besitzt keine Kerngrenzfläche: Eine noch nicht geplante externe Tragstruktur ist erforderlich"
+
+# AI Translated
+msgid "Underlay analysis requires matching interface samples and native layer data"
+msgstr "Die Unterbauprüfung benötigt zueinander passende Grenzflächenproben und native Schichtdaten"
+
+# AI Translated
+msgid "Underlay contacts or local process settings do not match their prepared region"
+msgstr "Unterbaukontakte oder lokale Prozesseinstellungen passen nicht zum vorbereiteten Bereich"
+
+# AI Translated
+msgid "Stale or invalid underlay contact metadata"
+msgstr "Veraltete oder ungültige Metadaten der Unterbaukontakte"
+
+# AI Translated
+msgid "Underlay native layer query budget exceeded"
+msgstr "Die Unterbauprüfung überschreitet die Grenze für native Schichtabfragen"
+
+# AI Translated
+msgid "Underlay footprint budget exceeded"
+msgstr "Die Unterbauprüfung überschreitet die Grenze für Auflageflächen"
+
+# AI Translated
+msgid "Underlay local modifier request budget exceeded"
+msgstr "Die Unterbauprüfung überschreitet die Grenze für lokale Modifikatoranforderungen"
+
+# AI Translated
+msgid "Underlay polygon exceeds the per-request native modifier budget"
+msgstr "Das Unterbaupolygon überschreitet die native Modifikatorgrenze je Anforderung"
+
+# AI Translated
+msgid "Underlay polygons exceed the combined native modifier budget"
+msgstr "Die Unterbaupolygone überschreiten die gemeinsame native Modifikatorgrenze"
+
+# AI Translated
+msgid "Invalid underlay manufacturing dependency identities"
+msgstr "Ungültige Kennungen der Unterbau-Fertigungsabhängigkeiten"
+
+# AI Translated
+msgid "Underlay evidence is finite area-weighted sampling, not complete footprint, adhesion or strength verification"
+msgstr "Der Unterbaunachweis verwendet endlich viele flächengewichtete Stichproben; er weist weder vollständige Auflage noch Haftung oder Festigkeit nach"
+
+# AI Translated
+msgid "Local dense underlay requests are unplanned; only regenerated native paths can establish new contact evidence"
+msgstr "Anforderungen für lokal verdichteten Unterbau sind noch nicht geplant; nur neu erzeugte native Bahnen können neue Kontaktbelege liefern"
+
+# AI Translated
+msgid "Empty mesh or geometry resource limit"
+msgstr "Leeres Netz oder geometrische Berechnungsgrenze"
+
+# AI Translated
+msgid "Invalid mesh coordinate"
+msgstr "Ungültige Netzkoordinate"
+
+# AI Translated
+msgid "Invalid vertex index"
+msgstr "Ungültiger Eckpunktindex"
+
+# AI Translated
+msgid "Degenerate face"
+msgstr "Entartetes Dreieck"
+
+# AI Translated
+msgid "Non-manifold or inconsistently oriented patch"
+msgstr "Nicht-manifolder oder uneinheitlich ausgerichteter Flächenbereich"
+
+# AI Translated
+msgid "Folded offset or reversed normal"
+msgstr "Gefalteter Versatz oder umgekehrte Normale"
+
+# AI Translated
+msgid "Invalid shell request"
+msgstr "Ungültige Schalenanforderung"
+
+# AI Translated
+msgid "Invalid shell depth/normal"
+msgstr "Ungültige Schalentiefe oder Normale"
+
+# AI Translated
+msgid "Shared shell edge is not a two-region boundary"
+msgstr "Die gemeinsame Schalenkante begrenzt nicht genau zwei Bereiche"
+
+# AI Translated
+msgid "Shared shell boundary has inconsistent surface orientation"
+msgstr "Die gemeinsame Schalengrenze hat eine uneinheitliche Oberflächenausrichtung"
+
+# AI Translated
+msgid "Incompatible offset planes at shared shell junction"
+msgstr "Unvereinbare Versatzebenen am gemeinsamen Schalenübergang"
+
+# AI Translated
+msgid "Shared shell junction exceeds the geometric miter limit"
+msgstr "Der gemeinsame Schalenübergang überschreitet die geometrische Gehrungsgrenze"
+
+# AI Translated
+msgid "Shared shell offset constraint could not be resolved"
+msgstr "Die Versatzbedingung am gemeinsamen Schalenübergang konnte nicht aufgelöst werden"
+
+# AI Translated
+msgid "Invalid region count"
+msgstr "Ungültige Anzahl von Bereichen"
+
+# AI Translated
+msgid "Boolean resource limit"
+msgstr "Berechnungsgrenze für boolesche Operationen"
+
+# AI Translated
+msgid "Invalid coordinate"
+msgstr "Ungültige Koordinate"
+
+# AI Translated
+msgid "Invalid face index"
+msgstr "Ungültiger Flächenindex"
+
+# AI Translated
+msgid "Non-manifold mesh"
+msgstr "Nicht-manifoldes Netz"
+
+# AI Translated
+msgid "Unrepresentable degenerate output"
+msgstr "Nicht darstellbare entartete Ausgabe"
+
+# AI Translated
+msgid "Repair changed vertex coordinates"
+msgstr "Die Reparatur hat Eckpunktkoordinaten verändert"
+
+# AI Translated
+msgid "Invalid solid"
+msgstr "Ungültiger Volumenkörper"
+
+# AI Translated
+msgid "Source is not a valid oriented solid"
+msgstr "Die Quelle ist kein gültiger ausgerichteter Volumenkörper"
+
+# AI Translated
+msgid "Duplicate shell region"
+msgstr "Doppelter Schalenbereich"
+
+# AI Translated
+msgid "Offset is self-intersecting or not a valid volume"
+msgstr "Der Versatz schneidet sich selbst oder bildet kein gültiges Volumen"
+
+# AI Translated
+msgid "Clipped shell is not a valid volume"
+msgstr "Die beschnittene Schale bildet kein gültiges Volumen"
+
+# AI Translated
+msgid "Non-manifold Boolean result"
+msgstr "Nicht-manifoldes Ergebnis der booleschen Operation"
+
+# AI Translated
+msgid "Shell exceeds available wall or overlaps another region"
+msgstr "Die Schale überschreitet die verfügbare Wand oder überlagert einen anderen Bereich"
+
+# AI Translated
+msgid "Invalid shell/core partition"
+msgstr "Ungültige Aufteilung von Schale und Kern"
+
+# AI Translated
+msgid "Invalid refined part"
+msgstr "Ungültiges verfeinertes Teil"
+
+# AI Translated
+msgid "Exact volume conservation failed"
+msgstr "Die exakte Volumenerhaltung ist fehlgeschlagen"
+
+# AI Translated
+msgid "Double conversion opens solid"
+msgstr "Die Double-Konvertierung öffnet den Volumenkörper"
+
+# AI Translated
+msgid "Double conversion creates self-intersections"
+msgstr "Die Double-Konvertierung erzeugt Selbstüberschneidungen"
+
+# AI Translated
+msgid "Double conversion invalidates volume orientation"
+msgstr "Die Double-Konvertierung macht die Volumenausrichtung ungültig"
+
+# AI Translated
+msgid "Double conversion overlaps material volumes"
+msgstr "Die Double-Konvertierung erzeugt Überlagerungen zwischen Materialvolumen"
+
+# AI Translated
+msgid "Shared interface was not recovered"
+msgstr "Die gemeinsame Grenzfläche konnte nicht wiederhergestellt werden"
+
+# AI Translated
+msgid "Invalid planar miter source"
+msgstr "Ungültige Quelle für die planare Gehrung"
+
+# AI Translated
+msgid "Planar miter retriangulation requires parallel planar sheets and a perpendicular normal"
+msgstr "Die planare Gehrungsneuvernetzung benötigt parallele ebene Flächen und eine senkrechte Normale"
+
+# AI Translated
+msgid "Planar miter retriangulation requires an exactly planar region with constant normal and depth"
+msgstr "Die planare Gehrungsneuvernetzung benötigt einen exakt ebenen Bereich mit konstanter Normale und Tiefe"
+
+# AI Translated
+msgid "Planar miter clipping requires a complete matching shared boundary, not a partial edge"
+msgstr "Das Beschneiden der planaren Gehrung benötigt eine vollständig übereinstimmende gemeinsame Grenze, keine Teilkante"
+
+# AI Translated
+msgid "Planar miter boundary branches"
+msgstr "Die planare Gehrungsgrenze verzweigt sich"
+
+# AI Translated
+msgid "Planar miter requires one straight shared boundary chain"
+msgstr "Die planare Gehrung benötigt eine gerade gemeinsame Randkette"
+
+# AI Translated
+msgid "Planar miter touches an unrelated source vertex"
+msgstr "Die planare Gehrung berührt einen unbeteiligten ursprünglichen Eckpunkt"
+
+# AI Translated
+msgid "A folded miter has no validated planar shared boundary"
+msgstr "Eine gefaltete Gehrung besitzt keine validierte planare gemeinsame Grenze"
+
+# AI Translated
+msgid "The original shell prism is invalid before planar miter clipping"
+msgstr "Das ursprüngliche Schalenprisma ist bereits vor dem Beschneiden der planaren Gehrung ungültig"
+
+# AI Translated
+msgid "Invalid planar miter region index"
+msgstr "Ungültiger Bereichsindex der planaren Gehrung"
+
+# AI Translated
+msgid "Invalid planar miter boundary index"
+msgstr "Ungültiger Randindex der planaren Gehrung"
+
+# AI Translated
+msgid "The planar miter plane is degenerate"
+msgstr "Die planare Gehrungsebene ist entartet"
+
+# AI Translated
+msgid "The common miter seam does not lie on both exact planar inner sheets"
+msgstr "Die gemeinsame Gehrungsnaht liegt nicht auf beiden exakten ebenen Innenflächen"
+
+# AI Translated
+msgid "The planar miter would cut the original outer contour"
+msgstr "Die planare Gehrung würde die ursprüngliche Außenkontur beschneiden"
+
+# AI Translated
+msgid "Adjacent planar regions are not on complementary sides of their miter"
+msgstr "Benachbarte ebene Bereiche liegen nicht auf komplementären Seiten ihrer Gehrung"
+
+# AI Translated
+msgid "The planar miter does not separate adjacent outer regions"
+msgstr "Die planare Gehrung trennt benachbarte Außenbereiche nicht"
+
+# AI Translated
+msgid "The shared planar boundary does not define one exact miter plane"
+msgstr "Die gemeinsame ebene Grenze definiert keine eindeutige exakte Gehrungsebene"
+
+# AI Translated
+msgid "Planar miter clipping did not produce a closed valid shell"
+msgstr "Das Beschneiden der planaren Gehrung hat keine geschlossene gültige Schale erzeugt"
+
+# AI Translated
+msgid "Planar miter retriangulation exceeds the geometry budget"
+msgstr "Die planare Gehrungsneuvernetzung überschreitet die geometrische Berechnungsgrenze"
+
+# AI Translated
+msgid "The planar miter consumes the entire inner face; a different wall strategy is required"
+msgstr "Die planare Gehrung verbraucht die gesamte Innenfläche; eine andere Wandstrategie ist erforderlich"
+
+# AI Translated
+msgid "Planar miter clipping changed an original outer triangle"
+msgstr "Das Beschneiden der planaren Gehrung hat ein ursprüngliches Außendreieck verändert"
+
+# AI Translated
+msgid "Material volume audit canceled"
+msgstr "Materialvolumenprüfung abgebrochen"
+
+# AI Translated
+msgid "Invalid material station or cross-section"
+msgstr "Ungültiger Materialstützpunkt oder Querschnitt"
+
+# AI Translated
+msgid "Nonfinite shared material endpoints"
+msgstr "Nichtendliche gemeinsame Materialendpunkte"
+
+# AI Translated
+msgid "Shared material height endpoints disagree with the station definition"
+msgstr "Die gemeinsamen Höhenendpunkte des Materials widersprechen der Stützpunktdefinition"
+
+# AI Translated
+msgid "Collapsed material segment"
+msgstr "Zusammengefallener Materialabschnitt"
+
+# AI Translated
+msgid "Material axis is parallel to its path"
+msgstr "Die Materialachse verläuft parallel zur Bahn"
+
+# AI Translated
+msgid "Reversing material turn has no finite miter"
+msgstr "Eine rückläufige Materialumkehrstelle besitzt keine endliche Gehrung"
+
+# AI Translated
+msgid "Material turn exceeds the miter limit"
+msgstr "Die Materialumkehrstelle überschreitet die Gehrungsgrenze"
+
+# AI Translated
+msgid "Nonfinite shared material lateral endpoints"
+msgstr "Nichtendliche gemeinsame seitliche Materialendpunkte"
+
+# AI Translated
+msgid "Shared material lateral endpoints disagree with the nominal miter"
+msgstr "Die gemeinsamen seitlichen Materialendpunkte widersprechen der nominalen Gehrung"
+
+# AI Translated
+msgid "Material audit elapsed time budget exceeded at a cooperative checkpoint; individual CGAL operations are not immediately interruptible"
+msgstr "Die Materialprüfung hat an einem kooperativen Prüfpunkt ihre Zeitgrenze überschritten; einzelne CGAL-Operationen lassen sich nicht sofort unterbrechen"
+
+# AI Translated
+msgid "Invalid material audit targets or resource limits"
+msgstr "Ungültige Ziele oder Berechnungsgrenzen der Materialprüfung"
+
+# AI Translated
+msgid "Material targets require distinct regions and nonempty solids"
+msgstr "Materialziele benötigen getrennte Bereiche und nichtleere Volumenkörper"
+
+# AI Translated
+msgid "Aggregate material input geometry exceeds the budget"
+msgstr "Die gesamte Material-Eingabegeometrie überschreitet die Berechnungsgrenze"
+
+# AI Translated
+msgid "Material run has invalid ownership or segment supply"
+msgstr "Die Materialbahn besitzt eine ungültige Zuordnung oder Abschnittsmenge"
+
+# AI Translated
+msgid "Material station budget exceeded"
+msgstr "Die Materialprüfung überschreitet die Grenze für Bahnstützpunkte"
+
+# AI Translated
+msgid "Closed material runs require distinct station centers, without a repeated endpoint"
+msgstr "Geschlossene Materialbahnen benötigen unterschiedliche Stützpunktzentren ohne wiederholten Endpunkt"
+
+# AI Translated
+msgid "Extruding material segment requires positive finite supply"
+msgstr "Ein extrudierender Materialabschnitt benötigt eine positive endliche Materialmenge"
+
+# AI Translated
+msgid "Material sweep face budget exceeded"
+msgstr "Das Austragen des Materialquerschnitts überschreitet die Flächengrenze"
+
+# AI Translated
+msgid "Material Boolean face budget exceeded"
+msgstr "Die boolesche Materialprüfung überschreitet die Flächengrenze"
+
+# AI Translated
+msgid "Nonfinite material volume"
+msgstr "Nichtendliches Materialvolumen"
+
+# AI Translated
+msgid "Material Boolean input exceeds face budget"
+msgstr "Die Eingabe der booleschen Materialprüfung überschreitet die Flächengrenze"
+
+# AI Translated
+msgid "Invalid material mesh coordinate"
+msgstr "Ungültige Koordinate des Materialnetzes"
+
+# AI Translated
+msgid "Invalid material mesh index"
+msgstr "Ungültiger Index des Materialnetzes"
+
+# AI Translated
+msgid "Degenerate or nonmanifold material mesh"
+msgstr "Entartetes oder nicht-manifoldes Materialnetz"
+
+# AI Translated
+msgid "Material mesh is folded, self-intersecting or does not bound a volume"
+msgstr "Das Materialnetz ist gefaltet, schneidet sich selbst oder umschließt kein Volumen"
+
+# AI Translated
+msgid "Double material output collapses topology"
+msgstr "Die Materialausgabe in Double lässt die Topologie zusammenfallen"
+
+# AI Translated
+msgid "Exact planar material output retriangulation is invalid"
+msgstr "Die exakte planare Neuvernetzung der Materialausgabe ist ungültig"
+
+# AI Translated
+msgid "Planar material output retriangulation introduced a new coordinate"
+msgstr "Die planare Neuvernetzung der Materialausgabe hat eine neue Koordinate eingeführt"
+
+# AI Translated
+msgid "planar output removed volume"
+msgstr "Von der planaren Ausgabe entferntes Volumen"
+
+# AI Translated
+msgid "planar output added volume"
+msgstr "Von der planaren Ausgabe hinzugefügtes Volumen"
+
+# AI Translated
+msgid "Planar material output retriangulation changed the exact volume set"
+msgstr "Die planare Neuvernetzung der Materialausgabe hat die exakte Volumenmenge verändert"
+
+# AI Translated
+#, boost-format
+msgid "Material output conversion failed (%1%): %2%"
+msgstr "Konvertierung der Materialausgabe fehlgeschlagen (%1%): %2%"
+
+# AI Translated
+msgid "material audit"
+msgstr "Materialprüfung"
+
+# AI Translated
+msgid "Material Boolean operation budget exceeded"
+msgstr "Die Materialprüfung überschreitet die Grenze für boolesche Operationen"
+
+# AI Translated
+#, boost-format
+msgid "%1%: Boolean operation %2% failed (work %3%, input faces %4%/%5%): nonmanifold or invalid result"
+msgstr "%1%: Boolesche Operation %2% fehlgeschlagen (Schritt %3%, Eingabeflächen %4%/%5%): nicht-manifoldes oder ungültiges Ergebnis"
+
+# AI Translated
+msgid "Material outer sheet exceeds face budget"
+msgstr "Die äußere Materialfläche überschreitet die Flächengrenze"
+
+# AI Translated
+msgid "Invalid nominal outer sheet"
+msgstr "Ungültige nominale Außenfläche"
+
+# AI Translated
+msgid "Material station simplification canceled"
+msgstr "Vereinfachung der Materialstützpunkte abgebrochen"
+
+# AI Translated
+msgid "target overlap"
+msgstr "Zielüberlagerung"
+
+# AI Translated
+msgid "Material target regions have overlapping interiors"
+msgstr "Die Innenräume der Materialzielbereiche überlagern sich"
+
+# AI Translated
+#, boost-format
+msgid "Material run %1%, cell %2%: %3%"
+msgstr "Materialbahn %1%, Zelle %2%: %3%"
+
+# AI Translated
+#, boost-format
+msgid "run %1%"
+msgstr "Bahn %1%"
+
+# AI Translated
+msgid "target union"
+msgstr "Vereinigung der Ziele"
+
+# AI Translated
+#, boost-format
+msgid "region %1%"
+msgstr "Bereich %1%"
+
+# AI Translated
+msgid "regional missing"
+msgstr "Regional fehlendes Material"
+
+# AI Translated
+msgid "regional outside"
+msgstr "Regional außerhalb liegendes Material"
+
+# AI Translated
+msgid "regional core overlap"
+msgstr "Regionale Kernüberlagerung"
+
+# AI Translated
+msgid "Material union exceeds the sum of its cells"
+msgstr "Die Materialvereinigung überschreitet die Summe ihrer Zellen"
+
+# AI Translated
+#, boost-format
+msgid "region %1%, missing material"
+msgstr "Bereich %1%, fehlendes Material"
+
+# AI Translated
+#, boost-format
+msgid "region %1%, excess material"
+msgstr "Bereich %1%, überschüssiges Material"
+
+# AI Translated
+#, boost-format
+msgid "material %1%"
+msgstr "Material %1%"
+
+# AI Translated
+msgid "cross-material overlap"
+msgstr "Überlagerung unterschiedlicher Materialien"
+
+# AI Translated
+#, boost-format
+msgid "overlap between materials %1% and %2%"
+msgstr "Überlagerung zwischen den Materialien %1% und %2%"
+
+# AI Translated
+msgid "complete deposited union"
+msgstr "Gesamte Vereinigung des abgelegten Materials"
+
+# AI Translated
+msgid "complete missing"
+msgstr "Gesamtes fehlendes Material"
+
+# AI Translated
+msgid "complete outside"
+msgstr "Gesamtes außerhalb liegendes Material"
+
+# AI Translated
+msgid "complete core overlap"
+msgstr "Gesamte Kernüberlagerung"
+
+# AI Translated
+msgid "Combined material union exceeds supplied cell geometry"
+msgstr "Die kombinierte Materialvereinigung überschreitet die zugeführte Zellgeometrie"
+
+# AI Translated
+msgid "complete missing material"
+msgstr "Gesamtes fehlendes Material"
+
+# AI Translated
+msgid "complete excess material"
+msgstr "Gesamtes überschüssiges Material"
+
+# AI Translated
+msgid "core overlap"
+msgstr "Kernüberlagerung"
+
+# AI Translated
+msgid "Invalid per-head deposition profile"
+msgstr "Ungültiges Materialablagemodell eines Kopfes"
+
+# AI Translated
+msgid "Invalid declared local line width limits"
+msgstr "Ungültige deklarierte lokale Linienbreitengrenzen"
+
+# AI Translated
+msgid "The configured surface flow is not numerically representable"
+msgstr "Das konfigurierte Flussverhältnis der Oberfläche ist numerisch nicht darstellbar"
+
+# AI Translated
+msgid "Missing indexed Orca nozzle/material profile values"
+msgstr "Indizierte Orca-Düsen- oder Materialprofilwerte fehlen"
+
+# AI Translated
+msgid "Missing Orca outer-wall flow ratio"
+msgstr "Das Orca-Flussverhältnis der Außenwand fehlt"
+
+# AI Translated
+msgid "Local line width is outside the explicitly declared limits"
+msgstr "Die lokale Linienbreite liegt außerhalb der ausdrücklich deklarierten Grenzen"
+
+# AI Translated
+msgid "Nominal compacted ribbon requires width at least equal to height"
+msgstr "Das nominale verdichtete Extrusionsband benötigt eine Breite mindestens gleich seiner Höhe"
+
+# AI Translated
+msgid "The configured ribbon supply is not numerically representable"
+msgstr "Die konfigurierte Materialmenge des Extrusionsbands ist numerisch nicht darstellbar"
+
+# AI Translated
+msgid "Invalid nominal ribbon volume ledger"
+msgstr "Ungültige nominale Bandvolumenbilanz"
+
+# AI Translated
+msgid "Unrepresentable ribbon volume tolerance"
+msgstr "Nicht darstellbare Bandvolumentoleranz"
+
+# AI Translated
+msgid "An assigned Formorix material, nozzle or process preset is missing"
+msgstr "Ein zugewiesenes Formorix-Material-, Düsen- oder Prozessprofil fehlt"
+
+# AI Translated
+msgid "Invalid Formorix profile source"
+msgstr "Ungültige Formorix-Profilquelle"
+
+# AI Translated
+msgid "The assigned Formorix nozzle slot does not exist"
+msgstr "Der zugewiesene Formorix-Düsenplatz existiert nicht"
+
+# AI Translated
+msgid "Missing nozzle volume or extruder type in Formorix source"
+msgstr "Düsenvolumen oder Extrudertyp fehlen in der Formorix-Quelle"
+
+# AI Translated
+msgid "Formorix requires one concrete nozzle per assigned extruder; mixed nozzle inventories are not supported"
+msgstr "Formorix benötigt eine konkrete Düse je zugewiesenem Extruder; gemischte Düsenbestände werden nicht unterstützt"
+
+# AI Translated
+msgid "The assigned material has no matching variant for this nozzle type"
+msgstr "Das zugewiesene Material besitzt keine passende Variante für diesen Düsentyp"
+
+# AI Translated
+msgid "The nozzle preset layout could not be resolved without changing its slot"
+msgstr "Das Düsenprofil ließ sich nicht ohne Änderung seines Düsenplatzes auflösen"
+
+# AI Translated
+msgid "Missing Orca surface line width"
+msgstr "Die Orca-Linienbreite der Oberfläche fehlt"
+
+# AI Translated
+msgid "Missing Formorix surface speed"
+msgstr "Die Formorix-Oberflächengeschwindigkeit fehlt"
+
+# AI Translated
+msgid "The Orca surface width is outside the declared local line width limits"
+msgstr "Die Orca-Oberflächenbreite liegt außerhalb der deklarierten lokalen Linienbreitengrenzen"
+
+# AI Translated
+msgid "Save the edited default Formorix source as a named preset before saving the project"
+msgstr "Speichern Sie das bearbeitete Formorix-Standardprofil unter einem Namen, bevor Sie das Projekt speichern"
+
+# AI Translated
+#, boost-format
+msgid "The Formorix project source \"%1%\" has conflicting definitions. Import or rename the source explicitly before loading this project."
+msgstr "Für die Formorix-Projektquelle „%1%“ liegen widersprüchliche Definitionen vor. Importieren Sie die Quelle ausdrücklich oder benennen Sie sie um, bevor Sie dieses Projekt laden."
+
+# AI Translated
+msgid "Invalid Formorix nozzle slot"
+msgstr "Ungültiger Formorix-Düsenplatz"
+
+# AI Translated
+msgid "Unsupported Formorix surface schema"
+msgstr "Nicht unterstütztes Formorix-Oberflächenschema"
+
+# AI Translated
+msgid "Invalid Formorix project settings"
+msgstr "Ungültige Formorix-Projekteinstellungen"
+
+# AI Translated
+msgid "Invalid Formorix selection settings"
+msgstr "Ungültige Formorix-Auswahleinstellungen"
+
+# AI Translated
+msgid "Invalid or duplicate Formorix region"
+msgstr "Ungültiger oder doppelter Formorix-Bereich"
+
+# AI Translated
+msgid "Invalid Formorix region settings"
+msgstr "Ungültige Einstellungen eines Formorix-Bereichs"
+
+# AI Translated
+msgid "Invalid surface direction"
+msgstr "Ungültige Oberflächenrichtung"
+
+# AI Translated
+msgid "Surface direction must be nonzero"
+msgstr "Die Oberflächenrichtung darf nicht null sein"
+
+# AI Translated
+msgid "Invalid reference edge"
+msgstr "Ungültige Bezugskante"
+
+# AI Translated
+msgid "Invalid Formorix head assignment"
+msgstr "Ungültige Formorix-Kopfzuordnung"
+
+# AI Translated
+msgid "Invalid Formorix transition"
+msgstr "Ungültiger Formorix-Übergang"
+
+# AI Translated
+msgid "Formorix settings exceed size limit"
+msgstr "Die Formorix-Einstellungen überschreiten die Größengrenze"
+
+# AI Translated
+msgid "Invalid Formorix surface object"
+msgstr "Ungültiges Formorix-Oberflächenobjekt"
+
+# AI Translated
+msgid "Formorix requires three head assignments"
+msgstr "Formorix benötigt drei Kopfzuordnungen"
+
+# AI Translated
+msgid "Invalid region destination"
+msgstr "Ungültiger Zielbereich"
+
+# AI Translated
+msgid "Invalid region source"
+msgstr "Ungültiger Quellbereich"
+
+# AI Translated
+msgid "Select at least two regions including the destination"
+msgstr "Wählen Sie mindestens zwei Bereiche einschließlich des Zielbereichs aus"
+
+# AI Translated
+msgid "Unknown region"
+msgstr "Unbekannter Bereich"
+
+# AI Translated
 msgid ""
 "Load STEP file failed.\n"
 "Cannot open file for reading.\n"
@@ -39831,287 +41597,3 @@ msgid ""
 msgstr ""
 "Verwerfungen vermeiden\n"
 "Wussten Sie, dass beim Drucken von Materialien, die zu Verwerfungen neigen, wie z.B. ABS, durch eine entsprechende Erhöhung der Heizbetttemperatur die Wahrscheinlichkeit von Verwerfungen verringert werden kann?"
-
-# AI Translated
-#~ msgid "Not assigned"
-#~ msgstr "Nicht zugewiesen"
-
-# AI Translated
-#~ msgid "5D part only: excludes normal construction, supports and waiting times."
-#~ msgstr "Nur 5D-Teil: ohne normalen Bauteilaufbau, Supports und Wartezeiten."
-
-# AI Translated
-#~ msgid "Traveling"
-#~ msgstr "Fährt"
-
-# AI Translated
-#, c-format, boost-format
-#~ msgid "%1$.1f / %2$.1f s (estimate)"
-#~ msgstr "%1$.1f / %2$.1f s (geschätzt)"
-
-# AI Translated
-#~ msgid "Merge selected regions"
-#~ msgstr "Ausgewählte Bereiche zusammenfassen"
-
-# AI Translated
-#~ msgid "Regions merged. The active region's settings and head assignment were retained. Continuous paths are requested, not calculated."
-#~ msgstr "Bereiche zusammengefasst. Einstellungen und Kopfzuordnung des aktiven Bereichs wurden übernommen. Durchgehende Bahnen sind vorgemerkt, noch nicht berechnet."
-
-# AI Translated
-#~ msgid "Copy settings to selected regions"
-#~ msgstr "Einstellungen auf ausgewählte Bereiche übertragen"
-
-# AI Translated
-#~ msgid "Show / hide selected regions"
-#~ msgstr "Ausgewählte Bereiche ein-/ausblenden"
-
-# AI Translated
-#~ msgid "Remove selected regions"
-#~ msgstr "Ausgewählte Bereiche entfernen"
-
-# AI Translated
-#~ msgid "The last clicked region supplies settings when merging or copying. Ctrl-click selects multiple regions."
-#~ msgstr "Beim Zusammenfassen oder Übertragen gelten die Einstellungen des zuletzt angeklickten Bereichs. Strg-Klick wählt mehrere Bereiche aus."
-
-# AI Translated
-#~ msgid "Slope is measured between the outward surface normal and global +Z. Left-click paints; Shift-click or right-click erases. Ctrl-drag rotates the view; the wheel zooms."
-#~ msgstr "Die Neigung wird zwischen der äusseren Oberflächennormalen und global +Z gemessen. Linksklick markiert; Umschalt-Klick oder Rechtsklick entfernt. Strg-Ziehen dreht die Ansicht; das Mausrad zoomt."
-
-# AI Translated
-#~ msgid "Section view shows the original model. Shell depth is specified along the local normal; offset geometry is not calculated."
-#~ msgstr "Die Schnittansicht zeigt das Originalmodell. Die Schalentiefe gilt entlang der lokalen Normalen; eine versetzte Geometrie wird noch nicht berechnet."
-
-# AI Translated
-#~ msgid "Add a region and select a surface on the model. Experimental: no 5D paths or executable 5D output."
-#~ msgstr "Fügen Sie einen Bereich hinzu und wählen Sie eine Fläche am Modell. Experimentell: keine 5D-Bahnen und keine ausführbaren 5D-Druckdateien."
-
-# AI Translated
-#~ msgid "Manufacturing intent — not calculated"
-#~ msgstr "Fertigungsvorgaben – noch nicht berechnet"
-
-# AI Translated
-#~ msgid "The requested shell lies inside the nominal geometry. Depth follows the local surface normal, not global Z. No offset geometry has been generated."
-#~ msgstr "Die vorgesehene Schale liegt innerhalb der Sollgeometrie. Ihre Tiefe folgt der lokalen Oberflächennormalen, nicht global Z. Es wurde noch keine versetzte Geometrie erzeugt."
-
-# AI Translated
-#~ msgid "A wall printed entirely in 5D requires a suitable load-bearing structure before 5D printing. Conventional planar supports may be required first."
-#~ msgstr "Für die Herstellung einer vollständig in 5D gedruckten Wand muss vor dem 5D-Druck eine geeignete Tragstruktur vorhanden sein. Gegebenenfalls sind zunächst normale planare Stützstrukturen erforderlich."
-
-# AI Translated
-#~ msgid "A physically continuous extrusion path requires the same head. Different heads use the transition settings. Connectivity and paths are not yet checked."
-#~ msgstr "Eine physisch durchgehende Extrusionsbahn erfordert denselben Druckkopf. Bei unterschiedlichen Köpfen gelten die Übergangseinstellungen. Zusammenhang und Bahnen sind noch nicht geprüft."
-
-# AI Translated
-#~ msgid "Reachability: not checked. A vertical wall normally requires 90° nozzle tilt; the provisional mechanism allows 75°. Up to 15° deviation may help, but only future kinematic checks can confirm this."
-#~ msgstr "Erreichbarkeit: noch nicht geprüft. Eine senkrechte Wand erfordert normalerweise 90° Düsenneigung; die vorläufige Mechanik erlaubt 75°. Bis zu 15° Abweichung können helfen. Die spätere Kinematikprüfung muss dies bestätigen."
-
-# AI Translated
-#~ msgid "5D support structures are not calculated. The following settings are the existing Orca process settings and also affect normal planar printing."
-#~ msgstr "5D-Stützstrukturen werden noch nicht berechnet. Die folgenden Einstellungen sind die bestehenden Orca-Prozesseinstellungen und gelten auch für den normalen planaren Druck."
-
-# AI Translated
-#~ msgid "Speed, line width, flow, temperature and cooling are inherited from the assigned Orca material and process profiles. Surface paths and ironing are not calculated."
-#~ msgstr "Geschwindigkeit, Linienbreite, Flow, Temperatur und Kühlung werden aus den zugeordneten Orca-Material- und Prozessprofilen übernommen. Oberflächenbahnen und Ironing sind noch nicht berechnet."
-
-# AI Translated
-#~ msgid "Fixed: each head stays in its assigned region. Interwoven: the regions interlock in the requested zone. Parallel: two heads travel close together over the complete region. These are intentions only; no paths, spacing or collision safety have been calculated."
-#~ msgstr "Fest: Jeder Kopf bleibt in seinem Bereich. Verwoben: Die Bereiche greifen in der gewünschten Zone ineinander. Parallel: Zwei Köpfe fahren dicht beieinander den gesamten Bereich ab. Dies sind nur Vorgaben; Bahnen, Abstände und Kollisionssicherheit wurden nicht berechnet."
-
-# AI Translated
-#~ msgid "Adjacency and material compatibility: not checked. Some materials do not bond reliably. A later technical check is required before any manufacturing strategy can be released."
-#~ msgstr "Nachbarschaft und Materialverträglichkeit: noch nicht geprüft. Manche Materialien verbinden sich nicht zuverlässig. Jede Fertigungsstrategie erfordert eine spätere technische Freigabe."
-
-# AI Translated
-#~ msgid "Head assignments describe future 5D work. They do not change Orca's normal extruder or support-material assignments."
-#~ msgstr "Die Kopfzuordnungen beschreiben zukünftige 5D-Aufgaben. Orcas normale Extruder- und Stützmaterialzuordnungen bleiben davon unabhängig."
-
-# AI Translated
-#~ msgid "Automatic parallel operation requests simultaneous work when possible; unavailable heads wait. Allocation, timing and collisions are not calculated."
-#~ msgstr "Der automatische Parallelbetrieb sieht möglichst gleichzeitiges Arbeiten vor; nicht einsetzbare Köpfe warten. Aufteilung, Zeitplanung und Kollisionen sind noch nicht berechnet."
-
-# AI Translated
-#~ msgid "Example: head 1 PETG for the part, head 2 PVA for supports, head 3 PETG-CF for reinforcement. Material suitability and bonding remain unverified."
-#~ msgstr "Beispiel: Kopf 1 PETG für das Bauteil, Kopf 2 PVA für Stützen, Kopf 3 PETG-CF für Verstärkungen. Materialeignung und Haftung sind noch nicht geprüft."
-
-# AI Translated
-#~ msgid "Reference edge stored. Path direction not calculated."
-#~ msgstr "Referenzkante gespeichert. Bahnausrichtung noch nicht berechnet."
-
-# AI Translated
-#~ msgid "High-speed prerequisite: three enabled heads with the same PETG profile. Technical approval, collisions and scheduling: not checked."
-#~ msgstr "High-Speed-Voraussetzung: drei aktivierte Köpfe mit demselben PETG-Profil. Technische Freigabe, Kollisionen und Zeitplanung: noch nicht geprüft."
-
-# AI Translated
-#~ msgid "Three compatible PETG profiles with overlapping temperature ranges selected. Calibration, collisions and scheduling are not checked; high-speed remains a requested strategy without technical approval."
-#~ msgstr "Drei kompatible PETG-Profile mit überlappenden Temperaturbereichen gewählt. Abstimmung, Kollisionen und Zeitplanung sind noch nicht geprüft; High-Speed bleibt eine gewünschte Strategie ohne technische Freigabe."
-
-# AI Translated
-#~ msgid "High-speed prerequisite not met: assign compatible PETG profiles to all three enabled heads. The selected strategy is only a request."
-#~ msgstr "High-Speed-Voraussetzung nicht erfüllt: Weisen Sie allen drei aktivierten Köpfen kompatible PETG-Profile zu. Die ausgewählte Strategie ist lediglich eine Vorgabe."
-
-# AI Translated
-#~ msgid "Reference edge stored for this region. No path direction has been calculated."
-#~ msgstr "Referenzkante für diesen Bereich gespeichert. Es wurde noch keine Bahnausrichtung berechnet."
-
-#~ msgid "OrcaSlicer will terminate because of running out of memory. It may be a bug. It will be appreciated if you report the issue to our team."
-#~ msgstr "OrcaSlicer wird wegen Arbeitsspeichermangels beendet, was ein Bug sein kann. Bitte melden Sie diesen Fehler dem technischen Support."
-
-#~ msgid "OrcaSlicer will terminate because of a localization error. It will be appreciated if you report the specific scenario this issue happened."
-#~ msgstr "OrcaSlicer wird aufgrund eines Lokalisierungsfehlers beendet.Bitte melden Sie diesen Fehler dem technischen Support."
-
-#, boost-format
-#~ msgid "OrcaSlicer got an unhandled exception: %1%"
-#~ msgstr "OrcaSlicer hat eine unbehandelte Ausnahme erzeugt: %1%"
-
-#~ msgid ""
-#~ "The OrcaSlicer configuration file may be corrupted and cannot be parsed.\n"
-#~ "OrcaSlicer has attempted to recreate the configuration file.\n"
-#~ "Please note, application settings will be lost, but printer profiles will not be affected."
-#~ msgstr ""
-#~ "Die OrcaSlicer-Konfigurationsdatei ist möglicherweise beschädigt und kann nicht analysiert werden.\n"
-#~ "OrcaSlicer hat versucht, die Konfigurationsdatei neu zu erstellen.\n"
-#~ "Bitte beachten Sie, dass die Anwendungseinstellungen verloren gehen, die Druckerprofile jedoch nicht betroffen sind."
-
-# AI Translated
-#, c-format, boost-format
-#~ msgid "Associate %s:// with OrcaSlicer so that Orca can open models from %s"
-#~ msgstr "%s:// mit OrcaSlicer verknüpfen, damit Orca Modelle von %s öffnen kann"
-
-#~ msgid "Allow only one OrcaSlicer instance"
-#~ msgstr "Nur eine OrcaSlicer-Instanz zulassen"
-
-#~ msgid "If this is enabled, when starting OrcaSlicer and another instance of the same OrcaSlicer is already running, that instance will be reactivated instead."
-#~ msgstr "Wenn dies aktiviert ist und OrcaSlicer gestartet wird, während bereits eine andere Instanz von OrcaSlicer läuft, wird diese Instanz stattdessen reaktiviert."
-
-# AI Translated
-#~ msgid "On a computer with two GPUs, run OrcaSlicer on the discrete GPU instead of the one that drives the display. Some Wayland systems cannot show frames rendered on the other GPU, or fail to open the window at all. Turn this off if the 3D view stays empty; if OrcaSlicer no longer starts, start it once with DRI_PRIME=0 in the environment to get back here."
-#~ msgstr "Führt OrcaSlicer auf einem Computer mit zwei GPUs auf der dedizierten GPU aus statt auf der GPU, die den Bildschirm ansteuert. Manche Wayland-Systeme können auf der anderen GPU gerenderte Bilder nicht anzeigen oder öffnen das Fenster gar nicht. Deaktivieren Sie diese Option, wenn die 3D-Ansicht leer bleibt; startet OrcaSlicer nicht mehr, starten Sie es einmal mit DRI_PRIME=0 in der Umgebung, um hierher zurückzukehren."
-
-#~ msgid "Associate files to OrcaSlicer"
-#~ msgstr "Dateien mit OrcaSlicer verknüpfen"
-
-#~ msgid "Associate 3MF files to OrcaSlicer"
-#~ msgstr "Dateiendung .3mf mit OrcaSlicer verknüpfen"
-
-#~ msgid "If enabled, this sets OrcaSlicer as the default application to open 3MF files."
-#~ msgstr "Wenn aktiviert, wird OrcaSlicer als Standardanwendung zum Öffnen von .3mf-Dateien festgelegt"
-
-#~ msgid "Associate DRC files to OrcaSlicer"
-#~ msgstr "Dateiendung .drc mit OrcaSlicer verknüpfen"
-
-# AI Translated
-#~ msgid "If enabled, sets OrcaSlicer as default application to open DRC files."
-#~ msgstr "Wenn aktiviert, wird OrcaSlicer als Standardanwendung zum Öffnen von DRC-Dateien festgelegt."
-
-#~ msgid "Associate STL files to OrcaSlicer"
-#~ msgstr "Dateiendung .stl mit OrcaSlicer verknüpfen"
-
-#~ msgid "If enabled, this sets OrcaSlicer as the default application to open STL files."
-#~ msgstr "Wenn aktiviert, wird OrcaSlicer als Standardanwendung zum Öffnen von .stl-Dateien festgelegt"
-
-#~ msgid "Associate STEP files to OrcaSlicer"
-#~ msgstr "Dateiendung .step/.stp mit OrcaSlicer verknüpfen"
-
-#~ msgid "If enabled, this sets OrcaSlicer as the default application to open STEP files."
-#~ msgstr "Wenn aktiviert, wird OrcaSlicer als Standardanwendung zum Öffnen von .step-Dateien festgelegt"
-
-#~ msgid "Associate web links to OrcaSlicer"
-#~ msgstr "Web-Links mit OrcaSlicer verknüpfen"
-
-#~ msgid "If enabled, OrcaSlicer will re-slice automatically whenever slicing-related settings change."
-#~ msgstr "Wenn aktiviert, wird OrcaSlicer automatisch neu geschnitten, sobald sich einstellungen zum Schneiden ändern."
-
-# AI Translated
-#~ msgid "If enabled, OrcaSlicer will remember the last selected option in the print button's dropdown (e.g. Print, Export plate sliced file, Export G-code file) and use it as the default on next startup."
-#~ msgstr "Wenn aktiviert, merkt sich OrcaSlicer die zuletzt gewählte Option im Dropdown-Menü der Druckschaltfläche (z. B. Drucken, Geslicte Datei der Druckplatte exportieren, G-Code-Datei exportieren) und verwendet sie beim nächsten Start als Standard."
-
-# AI Translated
-#~ msgid ""
-#~ "Route print jobs for non-Bambu printers through printer plug-in agents instead of the classic print-host upload flow.\n"
-#~ "When disabled, OrcaSlicer uses the legacy print-host behavior."
-#~ msgstr ""
-#~ "Leitet Druckaufträge für Nicht-Bambu-Drucker über Drucker-Plugin-Agenten statt über den klassischen Druck-Host-Upload.\n"
-#~ "Wenn deaktiviert, verwendet OrcaSlicer das bisherige Druck-Host-Verhalten."
-
-#~ msgid "Welcome to Orca Slicer"
-#~ msgstr "Willkommen im Orca Slicer"
-
-#~ msgid "Orca Slicer will be set up in several steps. Let's start!"
-#~ msgstr "Das Orca Slicer wird in mehreren Schritten eingerichtet. Lass uns anfangen!"
-
-#~ msgid "Show options when importing STEP file"
-#~ msgstr "Optionen beim Importieren von STEP-Dateien anzeigen"
-
-# AI Translated
-#~ msgid "STEP importing: linear deflection"
-#~ msgstr "STEP-Import: lineare Abweichung"
-
-# AI Translated
-#~ msgid "STEP importing: angle deflection"
-#~ msgstr "STEP-Import: Winkelabweichung"
-
-# AI Translated
-#~ msgid "STEP importing: Split into multiple objects"
-#~ msgstr "STEP-Import: In mehrere Objekte aufteilen"
-
-# AI Translated
-#~ msgid ""
-#~ "If enabled, compound and compsolid shapes in imported STEP files are split into multiple objects.\n"
-#~ "Used as the default in the import dialog, or directly when the import dialog is disabled.\n"
-#~ "Default: disabled."
-#~ msgstr ""
-#~ "Wenn aktiviert, werden Compound- und Compsolid-Formen in importierten STEP-Dateien in mehrere Objekte aufgeteilt.\n"
-#~ "Wird als Standard im Importdialog verwendet oder direkt, wenn der Importdialog deaktiviert ist.\n"
-#~ "Standard: deaktiviert."
-
-#~ msgid "Behavior"
-#~ msgstr "Verhalten"
-
-# AI Translated
-#~ msgid "G-code Preview"
-#~ msgstr "G-code-Vorschau"
-
-#~ msgid "Associate"
-#~ msgstr "Zuordnen"
-
-# AI Translated
-#~ msgid "Remove from favorites"
-#~ msgstr "Aus Favoriten entfernen"
-
-# AI Translated
-#, c-format, boost-format
-#~ msgid ""
-#~ "Plugin \"%s\" is requesting to create the following file:\n"
-#~ "%s"
-#~ msgid_plural ""
-#~ "Plugin \"%s\" is requesting to create the following files:\n"
-#~ "%s"
-#~ msgstr[0] ""
-#~ "Plugin „%s“ möchte die folgende Datei erstellen:\n"
-#~ "%s"
-#~ msgstr[1] ""
-#~ "Plugin „%s“ möchte die folgenden Dateien erstellen:\n"
-#~ "%s"
-
-# AI Translated
-#, c-format, boost-format
-#~ msgid ""
-#~ "Plugin \"%s\" is requesting to delete the following file:\n"
-#~ "%s"
-#~ msgid_plural ""
-#~ "Plugin \"%s\" is requesting to delete the following files:\n"
-#~ "%s"
-#~ msgstr[0] ""
-#~ "Plugin „%s“ möchte die folgende Datei löschen:\n"
-#~ "%s"
-#~ msgstr[1] ""
-#~ "Plugin „%s“ möchte die folgenden Dateien löschen:\n"
-#~ "%s"
-
-# AI Translated
-#~ msgid "import SVG failed: could not open svg."
-#~ msgstr "SVG-Import fehlgeschlagen: SVG konnte nicht geöffnet werden."
-
-# AI Translated
-#~ msgid "import SVG failed: could not parse imported svg data."
-#~ msgstr "SVG-Import fehlgeschlagen: Die importierten SVG-Daten konnten nicht analysiert werden."

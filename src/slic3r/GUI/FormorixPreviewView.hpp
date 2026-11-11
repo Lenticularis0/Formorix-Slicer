@@ -10,6 +10,7 @@
 
 namespace Slic3r::FormorixHybrid { struct Result; }
 namespace Slic3r::FormorixCorePreview { struct Result; }
+namespace Slic3r::FormorixUnderlay { struct Preparation; struct Analysis; }
 namespace Slic3r::GUI {
 struct Camera;
 struct FormorixPreviewState
@@ -17,11 +18,15 @@ struct FormorixPreviewState
     std::shared_ptr<const FormorixPreview::Result> result;
     std::shared_ptr<const FormorixHybrid::Result> hybrid;
     std::shared_ptr<const FormorixCorePreview::Result> conventional;
+    std::shared_ptr<const FormorixUnderlay::Preparation> underlay_preparation;
+    std::shared_ptr<const FormorixUnderlay::Analysis> underlay_before, underlay_after;
     double seconds = 0.;
     int layer      = -1;
     bool shell = false, core = false;
     bool original = false, core_paths = true, surface_paths = true;
     bool interfaces = false, missing_underlay = true, unverified = true;
+    bool material = false, missing_material = false, excess_material = false, material_overlap = false;
+    bool diagnostic_cells = false;
 };
 wxString formorix_preview_error(FormorixPreview::Issue issue);
 class FormorixPreviewPanel : public wxScrolledWindow
@@ -31,7 +36,10 @@ public:
     ~FormorixPreviewPanel() override;
     std::shared_ptr<FormorixPreviewState> state() const;
     void set_result(std::shared_ptr<const FormorixPreview::Result>);
-    void set_hybrid(std::shared_ptr<const FormorixHybrid::Result>, std::shared_ptr<const FormorixCorePreview::Result>);
+    void set_hybrid(std::shared_ptr<const FormorixHybrid::Result>, std::shared_ptr<const FormorixCorePreview::Result>,
+                    std::shared_ptr<const FormorixUnderlay::Preparation> = {},
+                    std::shared_ptr<const FormorixUnderlay::Analysis> before = {},
+                    std::shared_ptr<const FormorixUnderlay::Analysis> after = {});
     void pause();
     void rescale();
     void theme();
@@ -62,6 +70,9 @@ private:
     GLModel m_core, m_invalid, m_marker, m_active, m_axis;
     GLModel m_original, m_interfaces, m_missing_underlay, m_unverified;
     GLModel m_unsuitable_infill, m_underlay_gaps, m_unknown_underlay;
+    GLModel m_native_layer_gaps;
+    GLModel m_material, m_material_missing, m_material_outside, m_material_core_overlap, m_diagnostic_cells;
+    std::vector<std::unique_ptr<GLModel>> m_material_overlaps;
     std::vector<std::unique_ptr<GLModel>> m_core_paths;
     void rebuild(const FormorixPreview::Result&);
     void rebuild_hybrid(const FormorixPreviewState&);

@@ -1,0 +1,24 @@
+{
+  "source_head": "7738793e82dd2af679b70ddd9bda82d9dcee321e",
+  "filled_entries": 460,
+  "batch_entries": 460,
+  "batch_errors": [],
+  "batch_warnings": [],
+  "review_notes_added": 2,
+  "human_translations_changed": [],
+  "unexpected_translation_changes": [],
+  "preexisting_ai_warning_entries": 66,
+  "final_ai_warning_entries": 66,
+  "new_ai_warning_entries": [],
+  "active_formorix_msgids": 685,
+  "untranslated_formorix_occurrences": [],
+  "missing_extraction_files": [],
+  "obsolete_removed": 66,
+  "final_obsolete_entries": 0,
+  "changed_catalog_paths": [
+    "localization/i18n/OrcaSlicer.pot",
+    "localization/i18n/de/OrcaSlicer_de.po"
+  ],
+  "german_mo_sha256": "eac39ddb019d86c0f6db3f1ac17f3d75892376d7e0977ed99aae873455384e2e",
+  "source_build_performed_by_localization_agent": false
+}

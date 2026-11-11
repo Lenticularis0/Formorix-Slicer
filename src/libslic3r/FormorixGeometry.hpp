@@ -39,8 +39,12 @@ struct Partition
     std::vector<VolumePart> parts;
     std::vector<Interface> interfaces; // one shared triangulation, opposite orientations in the solids
     double input_volume = 0., volume_residual = 0.;
-    double rounding_bound     = 0.; // includes shared 2^-30 mm output grid; largest vertex displacement bound
+    double rounding_bound     = 0.; // largest vertex displacement; may include the shared 2^-30 mm fallback grid
+    // False for the grid fallback: topological repair can invalidate a whole-
+    // boundary displacement proof even when every retained vertex moved little.
+    bool output_topology_preserved = false;
     std::size_t mitered_edges = 0, mitered_vertices = 0;
+    std::size_t planar_miter_regions = 0; // exact clipping retriangulates inner/side faces only
     double miter_constraint_residual = 0.; // normal-distance residual in mm
     std::string error;
     bool ok() const { return error.empty() && !parts.empty(); }

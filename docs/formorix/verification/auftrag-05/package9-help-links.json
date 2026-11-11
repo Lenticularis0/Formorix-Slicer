@@ -1,0 +1,707 @@
+{
+  "audit_version": 1,
+  "utc": "2026-11-11T15:26:14.974677+00:00",
+  "documentation_commit": "2c182dc885a158886cc8282b3b70164bd658ec48",
+  "mapping_source": "src/slic3r/GUI/FormorixHelp.cpp",
+  "mapping_source_revision": "working_tree",
+  "mapping_sha256": "2ad6531c438ce79f51f393c24f2ace2a3db4ad270102b58e95960f4f0aa59cea",
+  "mapping_base_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/",
+  "scope": "All 13 GUI topics; transitive direct Markdown help pages under docs/formorix; every relative outgoing target including images, 3MF and reports verified in the same commit. Report contents are not recursively traversed.",
+  "anchor_method": "Explicit HTML id/name plus GitHub-style heading slugs checked in committed Markdown; not a browser-rendering test.",
+  "summary": {
+    "mapping_matches_commit": true,
+    "gui_topics": 13,
+    "gui_targets_valid": 13,
+    "explicit_gui_fragments": 5,
+    "help_pages_checked": 13,
+    "relative_link_occurrences": 32,
+    "static_errors": 0,
+    "static_pass": true,
+    "http_requested": true,
+    "http_unique_targets": 22,
+    "http_ok": 22,
+    "http_failures": 0,
+    "http_note": "Remote failures can reflect a not-yet-published commit; they do not override local commit/anchor validity."
+  },
+  "central_targets": [
+    {
+      "topic": "Surfaces",
+      "target": "index.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/index.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/index.md"
+    },
+    {
+      "topic": "Selection",
+      "target": "selection.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/selection.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/selection.md"
+    },
+    {
+      "topic": "SurfaceLayerHeight",
+      "target": "layers.md#schichtdicke",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/layers.md",
+      "anchor": "schichtdicke",
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/layers.md#schichtdicke"
+    },
+    {
+      "topic": "ShellDepth",
+      "target": "layers.md#schalendicke",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/layers.md",
+      "anchor": "schalendicke",
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/layers.md#schalendicke"
+    },
+    {
+      "topic": "Normal",
+      "target": "orientation.md#oberflachennormale",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/orientation.md",
+      "anchor": "oberflachennormale",
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/orientation.md#oberflachennormale"
+    },
+    {
+      "topic": "NozzleDeviation",
+      "target": "orientation.md#abweichung-und-kippwinkel",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/orientation.md",
+      "anchor": "abweichung-und-kippwinkel",
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/orientation.md#abweichung-und-kippwinkel"
+    },
+    {
+      "topic": "Supports",
+      "target": "supports.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/supports.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/supports.md"
+    },
+    {
+      "topic": "ContinuousPaths",
+      "target": "continuous-paths.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/continuous-paths.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/continuous-paths.md"
+    },
+    {
+      "topic": "Transitions",
+      "target": "transitions.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/transitions.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/transitions.md"
+    },
+    {
+      "topic": "MultiHead",
+      "target": "multi-head.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/multi-head.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/multi-head.md"
+    },
+    {
+      "topic": "HighSpeed",
+      "target": "high-speed.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/high-speed.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/high-speed.md"
+    },
+    {
+      "topic": "Preview",
+      "target": "preview.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/preview.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/preview.md"
+    },
+    {
+      "topic": "MaterialVolume",
+      "target": "material.md#nominales-materialvolumen",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/material.md",
+      "anchor": "nominales-materialvolumen",
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/material.md#nominales-materialvolumen"
+    }
+  ],
+  "help_pages": [
+    "docs/formorix/continuous-paths.md",
+    "docs/formorix/demo.md",
+    "docs/formorix/high-speed.md",
+    "docs/formorix/hybrid.md",
+    "docs/formorix/index.md",
+    "docs/formorix/layers.md",
+    "docs/formorix/material.md",
+    "docs/formorix/multi-head.md",
+    "docs/formorix/orientation.md",
+    "docs/formorix/preview.md",
+    "docs/formorix/selection.md",
+    "docs/formorix/supports.md",
+    "docs/formorix/transitions.md"
+  ],
+  "relative_links": [
+    {
+      "source": "docs/formorix/material.md",
+      "line": 35,
+      "target": "preview.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/preview.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/preview.md"
+    },
+    {
+      "source": "docs/formorix/material.md",
+      "line": 35,
+      "target": "hybrid.md#was-die-prüfwerte-bedeuten",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/hybrid.md",
+      "anchor": "was-die-prüfwerte-bedeuten",
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/hybrid.md#was-die-prüfwerte-bedeuten"
+    },
+    {
+      "source": "docs/formorix/material.md",
+      "line": 35,
+      "target": "supports.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/supports.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/supports.md"
+    },
+    {
+      "source": "docs/formorix/material.md",
+      "line": 35,
+      "target": "multi-head.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/multi-head.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/multi-head.md"
+    },
+    {
+      "source": "docs/formorix/multi-head.md",
+      "line": 13,
+      "target": "high-speed.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/high-speed.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/high-speed.md"
+    },
+    {
+      "source": "docs/formorix/preview.md",
+      "line": 5,
+      "target": "hybrid.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/hybrid.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/hybrid.md"
+    },
+    {
+      "source": "docs/formorix/preview.md",
+      "line": 22,
+      "target": "material.md#nominales-materialvolumen",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/material.md",
+      "anchor": "nominales-materialvolumen",
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/material.md#nominales-materialvolumen"
+    },
+    {
+      "source": "docs/formorix/layers.md",
+      "line": 15,
+      "target": "supports.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/supports.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/supports.md"
+    },
+    {
+      "source": "docs/formorix/selection.md",
+      "line": 7,
+      "target": "continuous-paths.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/continuous-paths.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/continuous-paths.md"
+    },
+    {
+      "source": "docs/formorix/index.md",
+      "line": 5,
+      "target": "selection.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/selection.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/selection.md"
+    },
+    {
+      "source": "docs/formorix/index.md",
+      "line": 6,
+      "target": "layers.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/layers.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/layers.md"
+    },
+    {
+      "source": "docs/formorix/index.md",
+      "line": 6,
+      "target": "orientation.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/orientation.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/orientation.md"
+    },
+    {
+      "source": "docs/formorix/index.md",
+      "line": 6,
+      "target": "multi-head.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/multi-head.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/multi-head.md"
+    },
+    {
+      "source": "docs/formorix/index.md",
+      "line": 8,
+      "target": "preview.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/preview.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/preview.md"
+    },
+    {
+      "source": "docs/formorix/index.md",
+      "line": 10,
+      "target": "hybrid.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/hybrid.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/hybrid.md"
+    },
+    {
+      "source": "docs/formorix/index.md",
+      "line": 10,
+      "target": "material.md#nominales-materialvolumen",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/material.md",
+      "anchor": "nominales-materialvolumen",
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/material.md#nominales-materialvolumen"
+    },
+    {
+      "source": "docs/formorix/index.md",
+      "line": 10,
+      "target": "supports.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/supports.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/supports.md"
+    },
+    {
+      "source": "docs/formorix/index.md",
+      "line": 10,
+      "target": "continuous-paths.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/continuous-paths.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/continuous-paths.md"
+    },
+    {
+      "source": "docs/formorix/index.md",
+      "line": 10,
+      "target": "transitions.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/transitions.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/transitions.md"
+    },
+    {
+      "source": "docs/formorix/index.md",
+      "line": 10,
+      "target": "high-speed.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/high-speed.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/high-speed.md"
+    },
+    {
+      "source": "docs/formorix/index.md",
+      "line": 14,
+      "target": "demo.md",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/demo.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/demo.md"
+    },
+    {
+      "source": "docs/formorix/index.md",
+      "line": 14,
+      "target": "../Formorix-Auftrag-03.md",
+      "kind": "repository",
+      "resolved_path": "docs/Formorix-Auftrag-03.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/Formorix-Auftrag-03.md"
+    },
+    {
+      "source": "docs/formorix/demo.md",
+      "line": 3,
+      "target": "examples/curved-wall.3mf",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/examples/curved-wall.3mf",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/examples/curved-wall.3mf"
+    },
+    {
+      "source": "docs/formorix/demo.md",
+      "line": 16,
+      "target": "images/editor-reloaded.jpg",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/images/editor-reloaded.jpg",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/images/editor-reloaded.jpg"
+    },
+    {
+      "source": "docs/formorix/demo.md",
+      "line": 20,
+      "target": "images/preview-start.jpg",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/images/preview-start.jpg",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/images/preview-start.jpg"
+    },
+    {
+      "source": "docs/formorix/demo.md",
+      "line": 24,
+      "target": "images/preview-half.jpg",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/images/preview-half.jpg",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/images/preview-half.jpg"
+    },
+    {
+      "source": "docs/formorix/demo.md",
+      "line": 26,
+      "target": "../Formorix-Auftrag-03.md",
+      "kind": "repository",
+      "resolved_path": "docs/Formorix-Auftrag-03.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/Formorix-Auftrag-03.md"
+    },
+    {
+      "source": "docs/formorix/demo.md",
+      "line": 36,
+      "target": "images/vertical-rejected.jpg",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/images/vertical-rejected.jpg",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/images/vertical-rejected.jpg"
+    },
+    {
+      "source": "docs/formorix/demo.md",
+      "line": 40,
+      "target": "images/vertical-preview.jpg",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/images/vertical-preview.jpg",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/images/vertical-preview.jpg"
+    },
+    {
+      "source": "docs/formorix/demo.md",
+      "line": 44,
+      "target": "images/selection-before.jpg",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/images/selection-before.jpg",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/images/selection-before.jpg"
+    },
+    {
+      "source": "docs/formorix/demo.md",
+      "line": 55,
+      "target": "verification/summary.json",
+      "kind": "repository",
+      "resolved_path": "docs/formorix/verification/summary.json",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/verification/summary.json"
+    },
+    {
+      "source": "docs/formorix/demo.md",
+      "line": 55,
+      "target": "../Formorix-Auftrag-03.md",
+      "kind": "repository",
+      "resolved_path": "docs/Formorix-Auftrag-03.md",
+      "anchor": null,
+      "exists_at_commit": true,
+      "anchor_valid": true,
+      "ok": true,
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/Formorix-Auftrag-03.md"
+    }
+  ],
+  "static_errors": [],
+  "http": [
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/Formorix-Auftrag-03.md",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/Formorix-Auftrag-03.md",
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/continuous-paths.md",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/continuous-paths.md",
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/demo.md",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/demo.md",
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/examples/curved-wall.3mf",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/examples/curved-wall.3mf",
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/high-speed.md",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/high-speed.md",
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/hybrid.md",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/hybrid.md",
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/images/editor-reloaded.jpg",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/images/editor-reloaded.jpg",
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/images/preview-half.jpg",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/images/preview-half.jpg",
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/images/preview-start.jpg",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/images/preview-start.jpg",
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/images/selection-before.jpg",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/images/selection-before.jpg",
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/images/vertical-preview.jpg",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/images/vertical-preview.jpg",
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/images/vertical-rejected.jpg",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/images/vertical-rejected.jpg",
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/index.md",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/index.md",
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/layers.md",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/layers.md",
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/material.md",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/material.md",
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/multi-head.md",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/multi-head.md",
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/orientation.md",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/orientation.md",
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/preview.md",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/preview.md",
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/selection.md",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/selection.md",
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/supports.md",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/supports.md",
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/transitions.md",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/transitions.md",
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/verification/summary.json",
+      "status": 200,
+      "effective_url": "https://github.com/Lenticularis0/Formorix-Slicer/blob/2c182dc885a158886cc8282b3b70164bd658ec48/docs/formorix/verification/summary.json",
+      "ok": true
+    }
+  ]
+}

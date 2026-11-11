@@ -1,0 +1,27 @@
+Filters: [FormorixAcceptance]
+Randomness seeded to: 42
+ACCEPTANCE_GEOMETRY,inclined_plane,ok=1,error=,material_status=3,material_error=region 1: Boolean operation 0 failed (work 25, input faces 70/66): nonmanifold or invalid result,material_seconds=0.055775900000000003,missing_mm3=nan,outside_mm3=nan,duplicate_mm3=nan,core_overlap_mm3=nan,maximum_mm=nan,mean_mm=nan,rms_mm=nan,upper_mm=nan
+ACCEPTANCE_REGION,inclined_plane,region=1,verified=0,whole_surface=0,material_partition=0,material_plausible=1,bounds=0/8.7791789910361268e-16/2.3216846951220805e-07/1.0001222147172985e-09/inf/,total_bound=inf
+ACCEPTANCE_IMPORT,inclined_plane,maximum=3.0531133177191805e-16,mean=2.8622937353617386e-16,rms=2.8647633367383291e-16,upper=0
+0.347 s: Integrated curved and inclined previews retain explicit reasons for withholding whole body accuracy
+ACCEPTANCE_GEOMETRY,convex_cylinder,ok=1,error=,material_status=2,material_error=Material run 0, cell 21: Material mesh is folded, self-intersecting or does not bound a volume,material_seconds=0.0069997999999999996,missing_mm3=nan,outside_mm3=nan,duplicate_mm3=nan,core_overlap_mm3=nan,maximum_mm=nan,mean_mm=nan,rms_mm=nan,upper_mm=nan
+ACCEPTANCE_REGION,convex_cylinder,region=1,verified=0,whole_surface=0,material_partition=0,material_plausible=1,bounds=0.0019707750614211886/0.0019686351571572176/2.4110186672825436e-07/inf/inf/,total_bound=inf
+ACCEPTANCE_IMPORT,convex_cylinder,maximum=0.0015746190868988208,mean=0.0010669153444741279,rms=0.0011459791233734613,upper=0.0019707750614211886
+0.205 s: Integrated curved and inclined previews retain explicit reasons for withholding whole body accuracy
+ACCEPTANCE_GEOMETRY,concave_cylinder,ok=1,error=,material_status=3,material_error=region 1: Boolean operation 0 failed (work 308, input faces 220/204): nonmanifold or invalid result,material_seconds=0.22695270000000001,missing_mm3=nan,outside_mm3=nan,duplicate_mm3=nan,core_overlap_mm3=nan,maximum_mm=nan,mean_mm=nan,rms_mm=nan,upper_mm=nan
+ACCEPTANCE_REGION,concave_cylinder,region=1,verified=0,whole_surface=0,material_partition=0,material_plausible=0,bounds=0.0019707750614211886/0.0019859670721965135/2.3804505389080077e-07/inf/inf/,total_bound=inf
+ACCEPTANCE_IMPORT,concave_cylinder,maximum=0.0015746190868988208,mean=0.0010669153444741279,rms=0.0011459791233734613,upper=0.0019707750614211886
+0.532 s: Integrated curved and inclined previews retain explicit reasons for withholding whole body accuracy
+ACCEPTANCE_GEOMETRY,doubly_curved_sphere,ok=1,error=,material_status=2,material_error=Material run 0, cell 21: Material mesh is folded, self-intersecting or does not bound a volume,material_seconds=0.0050442000000000004,missing_mm3=nan,outside_mm3=nan,duplicate_mm3=nan,core_overlap_mm3=nan,maximum_mm=nan,mean_mm=nan,rms_mm=nan,upper_mm=nan
+ACCEPTANCE_REGION,doubly_curved_sphere,region=1,verified=0,whole_surface=0,material_partition=0,material_plausible=1,bounds=0.0039745248301920463/0.003958758484393035/2.37439620268282e-07/inf/inf/,total_bound=inf
+ACCEPTANCE_IMPORT,doubly_curved_sphere,maximum=0.0031738631863582611,mean=0.0021339121381016217,rms=0.0022143993642908164,upper=0.0039745248301920463
+0.073 s: Integrated curved and inclined previews retain explicit reasons for withholding whole body accuracy
+ACCEPTANCE_NACA_CURVE,samples=6048,sampled_maximum_mm=0.0015279827732768015,chord_weighted_mean_mm=0.00016448277555823111,chord_weighted_rms_mm=0.00026409592770421304,whole_curve_bound_mm=0.0019898318177079179,endpoint_displacement_mm=1.7763568394002505e-15,arithmetic_allowance_mm=2.8421709430404007e-12
+ACCEPTANCE_GEOMETRY,complete_naca0012_negative_real75,ok=0,error=The desired nozzle direction exceeds the configured tilt and deviation.,material_status=1,material_error=,material_seconds=0,missing_mm3=nan,outside_mm3=nan,duplicate_mm3=nan,core_overlap_mm3=nan,maximum_mm=nan,mean_mm=nan,rms_mm=nan,upper_mm=nan
+ACCEPTANCE_NACA,chord_mm=100,span_mm=2,selected_faces=756,nozzle_mm=0.40000000000000002,maximum_facet_tilt_deg=87.48050380211113,curve_chord_bound_mm=0.0019898318148639702,cad_signed_distance_available=0
+3.848 s: The complete NACA negative mould keeps its nose and tail under the real tilt limit
+ACCEPTANCE_GEOMETRY,wrapped_cylinder_real75,ok=0,error=Requested surface exceeds nominal nozzle tilt,material_status=1,material_error=,material_seconds=0,missing_mm3=nan,outside_mm3=nan,duplicate_mm3=nan,core_overlap_mm3=nan,maximum_mm=nan,mean_mm=nan,rms_mm=nan,upper_mm=nan
+0.518 s: A complete wrapped cylinder is refused at seventy five degrees without a partial motion track
+===============================================================================
+All tests passed (111 assertions in 3 test cases)
+

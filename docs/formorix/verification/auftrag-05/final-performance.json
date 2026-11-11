@@ -1,0 +1,26 @@
+[
+  {
+    "case": "saved-curved",
+    "source": "b066c16391dbee033abbd8a03f7379c6ff9394ac",
+    "elapsed_seconds": 8.9043811,
+    "sampled_peak_working_set_bytes": 128503808,
+    "exit_code": 0,
+    "method": "Process elapsed wall time and sampled PeakWorkingSet64 at 50 ms, including startup and assertions; no concurrent build/test."
+  },
+  {
+    "case": "curved-hydrofoil",
+    "source": "b066c16391dbee033abbd8a03f7379c6ff9394ac",
+    "elapsed_seconds": 0.2418938,
+    "sampled_peak_working_set_bytes": 26341376,
+    "exit_code": 0,
+    "method": "Process elapsed wall time and sampled PeakWorkingSet64 at 50 ms, including startup and assertions; no concurrent build/test."
+  },
+  {
+    "case": "commensurate",
+    "source": "b066c16391dbee033abbd8a03f7379c6ff9394ac",
+    "elapsed_seconds": 0.2317757,
+    "sampled_peak_working_set_bytes": 26574848,
+    "exit_code": 0,
+    "method": "Process elapsed wall time and sampled PeakWorkingSet64 at 50 ms, including startup and assertions; no concurrent build/test."
+  }
+]

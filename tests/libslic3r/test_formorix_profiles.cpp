@@ -4,6 +4,8 @@
 #include "libslic3r/FormorixProfiles.hpp"
 #include "libslic3r/FormorixSurfaces.hpp"
 #include "libslic3r/FormorixProcess.hpp"
+#include "libslic3r/FormorixDeposition.hpp"
+#include "libslic3r/Flow.hpp"
 #include "libslic3r/Config.hpp"
 #include "libslic3r/Preset.hpp"
 #include "libslic3r/PresetBundle.hpp"
@@ -11,6 +13,7 @@
 #include <nlohmann/json.hpp>
 #include <array>
 #include <cmath>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -188,18 +191,26 @@ TEST_CASE("Legacy surface schemas migrate explicit nozzle bindings without trust
     for (auto& head : project.heads)
         F::refresh(bundle, head);
     auto data = nlohmann::json::parse(project.encode());
-    for (int version : {1, 2}) {
-        data["version"] = version;
-        for (auto& head : data["heads"]) {
-            head.erase("printer_preset");
-            head.erase("nozzle_index");
+    for (int version : {1, 2, 3}) {
+        auto legacy = data;
+        legacy["version"] = version;
+        for (auto& head : legacy["heads"]) {
+            if (version < 3) {
+                head.erase("printer_preset");
+                head.erase("nozzle_index");
+            }
+            // An older schema cannot authorize a future adaptive width range.
+            head["local_width_limits"] = {{"minimum_mm", .1}, {"maximum_mm", 2.}};
+            head["process_preset"] = "untrusted future binding";
         }
         std::string error;
-        auto loaded = S::Project::decode(data.dump(), error);
+        auto loaded = S::Project::decode(legacy.dump(), error);
         REQUIRE(loaded);
         CHECK(loaded->version == S::schema_version);
-        CHECK(loaded->heads[0].printer_preset.empty());
+        CHECK(loaded->heads[0].printer_preset == (version < 3 ? "" : "Nozzle 0"));
         CHECK(loaded->heads[0].nozzle_index == 0);
+        CHECK(loaded->heads[0].process_preset.empty());
+        CHECK_FALSE(loaded->heads[0].local_width_limits);
         REQUIRE(loaded->heads[0].process);
         std::array<std::string, 3> fresh_signatures;
         CHECK(F::invalidate_changed(*loaded, bundle, fresh_signatures));
@@ -213,4 +224,106 @@ TEST_CASE("Legacy surface schemas migrate explicit nozzle bindings without trust
         std::string error;
         CHECK_FALSE(S::Project::decode(data.dump(), error));
     }
+}
+
+TEST_CASE("Surface width resolution follows Orca automatic percent and inherited width semantics", "[FormorixProfiles]")
+{
+    PresetBundle bundle;
+    configure(bundle);
+    auto project = assignments();
+    auto& config = bundle.prints.get_edited_preset().config;
+    config.set_key_value("outer_wall_line_width", new ConfigOptionFloatOrPercent(0., false));
+    config.set_key_value("line_width", new ConfigOptionFloatOrPercent(0., false));
+    for (auto& head : project.heads) {
+        const auto automatic = F::refresh(bundle, head);
+        const auto native = Flow::new_from_config_width(frExternalPerimeter, ConfigOptionFloatOrPercent(0., false),
+                                                       float(automatic.process.nozzle_diameter), float(automatic.process.layer_height));
+        CHECK_THAT(automatic.process.line_width, WithinAbs(native.width(), 1e-12));
+        CHECK_FALSE(automatic.process.local_width_limits);
+    }
+    config.set_key_value("line_width", new ConfigOptionFloatOrPercent(135., true));
+    CHECK_THAT(F::refresh(bundle, project.heads[2]).process.line_width, WithinAbs(.6 * 1.35, 1e-12));
+    config.set_key_value("outer_wall_line_width", new ConfigOptionFloatOrPercent(.63, false));
+    CHECK_THAT(F::refresh(bundle, project.heads[2]).process.line_width, WithinAbs(.63, 1e-12));
+    config.set_key_value("outer_wall_line_width", new ConfigOptionFloatOrPercent(120., true));
+    CHECK_THAT(F::refresh(bundle, project.heads[2]).process.line_width, WithinAbs(.72, 1e-12));
+    CHECK(config.option<ConfigOptionFloatOrPercent>("outer_wall_line_width")->percent);
+}
+
+TEST_CASE("Three assigned Orca processes retain independent dimensions speeds and unchanged flow factors", "[FormorixProfiles]")
+{
+    PresetBundle bundle;
+    configure(bundle);
+    auto project = assignments();
+    const std::array<double, 3> widths{.9, .42, .66}, heights{.3, .12, .2}, speeds{100., 22., 45.};
+    const std::array<double, 3> print_flow{1.04, .97, 1.02}, surface_flow{.96, 1.03, .98};
+    for (int h = 0; h < 3; ++h) {
+        auto config = bundle.prints.get_edited_preset().config;
+        config.set_key_value("outer_wall_line_width", new ConfigOptionFloatOrPercent(widths[h], false));
+        config.set_key_value("layer_height", new ConfigOptionFloat(heights[h]));
+        config.set_key_value("outer_wall_speed", new ConfigOptionFloatsNullable{speeds[h]});
+        config.set_key_value("print_flow_ratio", new ConfigOptionFloat(print_flow[h]));
+        config.set_key_value("set_other_flow_ratios", new ConfigOptionBool(true));
+        config.set_key_value("outer_wall_flow_ratio", new ConfigOptionFloat(surface_flow[h]));
+        // These are not the machine's bed-first or top-fill paths.
+        config.set_key_value("first_layer_flow_ratio", new ConfigOptionFloat(1.7));
+        config.set_key_value("top_solid_infill_flow_ratio", new ConfigOptionFloatsNullable{1.6});
+        const std::string name = "Independent process " + std::to_string(h);
+        bundle.prints.load_preset("", name, config, false);
+        auto& head = project.heads[h];
+        head.assign_process(name);
+        head.assign_width_limits(FormorixProcess::WidthLimits{widths[h] - .05, widths[h] + .05});
+        const auto resolved = F::refresh(bundle, head);
+        const auto& p = resolved.process;
+        CHECK_THAT(p.line_width, WithinAbs(widths[h], 1e-12));
+        CHECK_THAT(p.layer_height, WithinAbs(heights[h], 1e-12));
+        CHECK_THAT(p.speed, WithinAbs(speeds[h], 1e-12));
+        CHECK_THAT(p.flow_ratio, WithinAbs(1. + .01 * h, 1e-12));
+        CHECK_THAT(p.print_flow_ratio, WithinAbs(print_flow[h], 1e-12));
+        CHECK_THAT(p.surface_flow_ratio, WithinAbs(surface_flow[h], 1e-12));
+        CHECK_THAT(FormorixProcess::effective_surface_flow(p), WithinAbs((1. + .01 * h) * print_flow[h] * surface_flow[h], 1e-12));
+        CHECK_THAT(resolved.config.option<ConfigOptionFloats>("filament_flow_ratio")->get_at(0), WithinAbs(p.flow_ratio, 1e-12));
+        CHECK_THAT(resolved.config.opt_float("print_flow_ratio"), WithinAbs(print_flow[h], 1e-12));
+        REQUIRE(p.local_width_limits);
+        CHECK_THAT(p.local_width_limits->minimum_mm, WithinAbs(widths[h] - .05, 1e-12));
+        const auto layer_override = F::resolve(F::source(bundle, head, .1));
+        CHECK_THAT(layer_override.process.layer_height, WithinAbs(.1, 1e-12));
+    }
+    std::array<std::string, 3> signatures;
+    F::invalidate_changed(project, bundle, signatures);
+    for (auto& head : project.heads) F::refresh(bundle, head);
+    auto& saved = bundle.prints.find_preset("Independent process 1", false)->config;
+    saved.set_key_value("set_other_flow_ratios", new ConfigOptionBool(false));
+    CHECK(F::invalidate_changed(project, bundle, signatures));
+    CHECK(project.heads[0].process.has_value());
+    CHECK_FALSE(project.heads[1].process);
+    CHECK(project.heads[2].process.has_value());
+    CHECK_THAT(F::refresh(bundle, project.heads[1]).process.surface_flow_ratio, WithinAbs(1., 1e-12));
+    saved.set_key_value("outer_wall_line_width", new ConfigOptionFloatOrPercent(.8, false));
+    CHECK_THROWS(F::refresh(bundle, project.heads[1]));
+    CHECK_FALSE(project.heads[1].process);
+    project.heads[1].assign_process("missing process");
+    CHECK_THROWS(F::refresh(bundle, project.heads[1]));
+}
+
+TEST_CASE("Declared local width changes invalidate snapshots and never come from cached process data", "[FormorixProfiles]")
+{
+    PresetBundle bundle;
+    configure(bundle);
+    auto project = assignments();
+    auto& head = project.heads[0];
+    const auto original_signature = F::signature(F::source(bundle, head));
+    F::refresh(bundle, head);
+    head.assign_width_limits(FormorixProcess::WidthLimits{.8, 1.});
+    CHECK_FALSE(head.process);
+    CHECK(F::signature(F::source(bundle, head)) != original_signature);
+    auto resolved = F::refresh(bundle, head);
+    REQUIRE(resolved.process.local_width_limits);
+    head.process->local_width_limits = FormorixProcess::WidthLimits{.01, 10.};
+    resolved = F::refresh(bundle, head);
+    CHECK_THAT(resolved.process.local_width_limits->minimum_mm, WithinAbs(.8, 1e-12));
+    head.assign_width_limits(std::nullopt);
+    CHECK_FALSE(head.process);
+    CHECK_FALSE(F::refresh(bundle, head).process.local_width_limits);
+    CHECK(F::signature(F::source(bundle, head)) == original_signature);
 }

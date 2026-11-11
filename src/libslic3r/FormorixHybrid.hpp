@@ -1,5 +1,6 @@
 #pragma once
 #include "FormorixGeometry.hpp"
+#include "FormorixMaterial.hpp"
 #include "FormorixPreview.hpp"
 #include "FormorixProcess.hpp"
 #include "FormorixSurfaces.hpp"
@@ -30,6 +31,8 @@ struct Input
 {
     FormorixGeometry::Mesh solid;
     std::vector<RegionInput> regions;
+    FormorixMaterial::Options material_options;
+    std::size_t max_motions = 500000; // caller may lower the fixed preview resource ceiling
 };
 struct FloatMesh
 {
@@ -37,14 +40,23 @@ struct FloatMesh
     double displacement_bound = 0.;
 };
 FloatMesh to_float(const FormorixGeometry::Mesh&);
+// Add nonnegative finite upper bounds with outward rounding. Invalid/unknown
+// operands and overflow return infinity; adding zero preserves an exact term.
+double add_error_bounds(double, double);
 struct Accuracy
 {
     // CAD import, shell construction, float/Orca conversion, path interpolation, nominal deposition.
     std::array<double, 5> bounds{{INFINITY, INFINITY, INFINITY, INFINITY, INFINITY}};
     bool whole_surface_covered       = false;
     bool material_volume_plausible   = false;
-    bool material_partition_verified = false; // strict per-layer finite-cell identity, separate from a coarse volume ratio
+    bool material_partition_verified = false; // completed all-layer spatial identity, separate from a coarse volume ratio
+    // Conservatively rounded sum; infinity also denotes an invalid individual bound.
+    double total_bound() const;
     bool verified(double tolerance = .01) const;
+    // Replace audit-dependent evidence, invalidating the previous material budget
+    // and flags first. The caller supplies the current region/material identity;
+    // CAD, shell, conversion, interpolation and coarse plausibility stay separate.
+    void update_material_evidence(const FormorixMaterial::Result&, int region, const std::string& material, bool inadmissible);
 };
 struct Coverage
 {
@@ -58,10 +70,22 @@ struct Underlay
 {
     std::size_t samples = 0, missing = 0;
     std::size_t missing_core = 0, unsuitable_infill = 0, path_gaps = 0, unknown_geometry = 0;
+    std::size_t native_layer_gaps = 0; // even a fully filled actual Orca layer cannot reach this sample
+    std::size_t raw_missing = 0; // raw native geometry only, disregarding uncalibrated nonunit supply
     std::size_t no_nearby_contact = 0;
     double maximum_gap            = 0.;
     double maximum_finite_gap     = 0.;    // observed contact within the finite search range, not a global nearest-distance bound
     bool coverage_bounded         = false; // sample success alone never proves a complete footprint
+};
+enum class UnderlayKind { Contact, MissingCore, ExcludedInfill, PathGap, UnknownGeometry, NativeLayerGap };
+struct UnderlayContact
+{
+    Vec3d position = Vec3d::Zero(), inward = Vec3d::Zero();
+    UnderlayKind kind = UnderlayKind::UnknownGeometry;
+    double gap = INFINITY, raw_gap = INFINITY;
+    // Index into the actually supplied UnderlaySegment vector; no synthetic contact.
+    std::size_t path_index = std::numeric_limits<std::size_t>::max();
+    bool raw_geometry_unknown = false;
 };
 struct RegionResult
 {
@@ -73,6 +97,11 @@ struct RegionResult
     double nominal_core_overlap  = 0.; // sampled projection past the local core interface, not a global collision certificate
     std::string deposition_model = "CoalescedOrcaStadiumRibbon/v1";
     double compacted_width = 0., supplied_area = 0.;
+    double minimum_local_width = INFINITY, maximum_local_width = 0.;
+    double maximum_boundary_remainder = 0.;
+    bool adaptive_boundary = false;
+    std::string boundary_diagnostic;
+    std::size_t contour_runs = 0, closed_contours = 0;
     bool inadmissible_material        = false;
     double excess_material_volume_mm3 = 0.;
     // Projected diagnostics, not certified 3D volumes on curved surfaces.
@@ -82,15 +111,20 @@ struct RegionResult
     Underlay underlay;
     std::vector<Vec3d> interface_samples;
     std::vector<Vec3d> interface_normals;
+    std::vector<UnderlayContact> underlay_contacts;
 };
 struct Result
 {
     FormorixGeometry::Mesh original, core;
     FormorixGeometry::Partition partition;
+    FormorixMaterial::Result material; // actual nominal 3D cells; diagnostic failures never confer accuracy
+    std::vector<FormorixMaterial::SweepRun> material_runs;
     FormorixPreview::Result preview; // material centers in layers; actual TCPs in the 5D-only timeline
     std::vector<RegionResult> regions;
     std::vector<Vec3d> missing_underlay, unverified;
     std::vector<Vec3d> missing_core, unsuitable_infill, path_gaps, unknown_underlay;
+    std::vector<Vec3d> native_layer_gaps;
+    FormorixProcess::Dependencies manufacturing_dependencies; // geometric requests, never a completed schedule
     std::vector<std::string> warnings;
     std::string error;
     bool ok() const { return error.empty() && partition.ok() && preview.ok(); }
@@ -110,6 +144,8 @@ struct UnderlaySegment
     bool support = false;
     bool infill  = false; // sparse conventional infill, excluded when region.use_infill is false
     bool bridge  = false; // hanging bead placement is not certified by the supported rounded-rectangle audit
+    bool flow_geometry_unverified = false; // changed supply has no calibrated native cross-section
+    bool dense_transition = false; // actual native modifier region, not an inferred/fictitious path
 };
 // Geometric contact against actual Orca extrusion sweeps. No strength/adhesion/schedule claim.
 void audit_underlay(Result&, const std::vector<UnderlaySegment>&, const std::function<bool()>& canceled = {});

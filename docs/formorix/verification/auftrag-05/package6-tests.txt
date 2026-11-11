@@ -1,0 +1,77 @@
+Filters: [FormorixPreview],[FormorixMaterial],[FormorixMultiMaterial]
+Randomness seeded to: 42
+0.000 s: Material time budgets expire without waiting and retain no accepted evidence
+0.283 s: Repeated audits initialize every regional ledger including empty material input
+0.005 s: Narrow concave offsets and disconnected selections fail without partial paths
+0.350 s: A material target can retain an internal cavity instead of treating only its outer hull
+0.003 s: Duplicate material is counted spatially without hiding it in a target clip
+0.398 s: A thin internal material gap survives exact union and cannot receive a zero boundary error
+0.067 s: Exact output retriangulation preserves the deficits and excess of a tilted material cell
+0.000 s: A nonmanifold intermediate union returns diagnostics without traversing failed CGAL output
+0.000 s: An isolated input vertex is rejected before invoking volume orientation predicates
+0.008 s: An exhausted distance budget never promotes samples to a complete surface bound
+0.006 s: Explicit adjacent layer endpoints retain their shared interface without audit snapping
+0.000 s: Invalid height endpoints are rejected before a collinear station can be removed
+0.071 s: Material below its allocated skin remains visible as core overlap and missing skin
+0.000 s: Only the head with an actual motion has a known preview pose
+0.000 s: Only the head with an actual motion has a known preview pose
+0.000 s: Only the head with an actual motion has a known preview pose
+0.000 s: Material time limits require finite nonnegative seconds
+0.000 s: Independent head tracks interpolate on a common clock including gaps and unassigned heads
+0.010 s: Closed material inputs validate the closing supply and original endpoint definitions
+0.003 s: Curved radial cells preserve their spatial sector volume and expose the independent supply residual
+0.000 s: Three independently supplied tracks retain their own known poses and activity
+0.094 s: Different materials keep regional intrusion and cross-material overlap separate
+MULTI_MATERIAL,order=012,hybrid_ok=1,material_status=0,elapsed_s=0.33402880000000001,missing=0,outside=0,duplicate=-0,core_overlap=0,error=
+MULTI_MATERIAL_REGION,id=1,nozzle=0.80000000000000004,height=0.25,depth=0.5,local_width=0.88731725920399274,supply=12,residual=-1.4988010832439613e-15,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0001821875983411e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=2,nozzle=0.40000000000000002,height=0.125,depth=0.375,local_width=0.42884336059302786,supply=9,residual=8.5348395018058909e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0003708144902249e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=3,nozzle=0.59999999999999998,height=0.1875,depth=0.75,local_width=0.7432710106556315,supply=18,residual=-3.8857805861880479e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0005919709167302e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL,order=021,hybrid_ok=1,material_status=0,elapsed_s=0.33561580000000002,missing=0,outside=0,duplicate=-0,core_overlap=0,error=
+MULTI_MATERIAL_REGION,id=1,nozzle=0.80000000000000004,height=0.25,depth=0.5,local_width=0.88731725920399274,supply=12,residual=-1.4988010832439613e-15,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0001821875983411e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=3,nozzle=0.59999999999999998,height=0.1875,depth=0.75,local_width=0.7432710106556315,supply=18,residual=-3.8857805861880479e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0005919709167302e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=2,nozzle=0.40000000000000002,height=0.125,depth=0.375,local_width=0.42884336059302786,supply=9,residual=8.5348395018058909e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0003708144902249e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL,order=102,hybrid_ok=1,material_status=0,elapsed_s=0.33911669999999999,missing=0,outside=0,duplicate=-0,core_overlap=0,error=
+MULTI_MATERIAL_REGION,id=2,nozzle=0.40000000000000002,height=0.125,depth=0.375,local_width=0.42884336059302786,supply=9,residual=8.5348395018058909e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0003708144902249e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=1,nozzle=0.80000000000000004,height=0.25,depth=0.5,local_width=0.88731725920399274,supply=12,residual=-1.4988010832439613e-15,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0001821875983411e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=3,nozzle=0.59999999999999998,height=0.1875,depth=0.75,local_width=0.7432710106556315,supply=18,residual=-3.8857805861880479e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0005919709167302e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL,order=120,hybrid_ok=1,material_status=0,elapsed_s=0.33221420000000002,missing=0,outside=0,duplicate=-0,core_overlap=0,error=
+MULTI_MATERIAL_REGION,id=2,nozzle=0.40000000000000002,height=0.125,depth=0.375,local_width=0.42884336059302786,supply=9,residual=8.5348395018058909e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0003708144902249e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=3,nozzle=0.59999999999999998,height=0.1875,depth=0.75,local_width=0.7432710106556315,supply=18,residual=-3.8857805861880479e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0005919709167302e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=1,nozzle=0.80000000000000004,height=0.25,depth=0.5,local_width=0.88731725920399274,supply=12,residual=-1.4988010832439613e-15,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0001821875983411e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL,order=201,hybrid_ok=1,material_status=0,elapsed_s=0.42063889999999998,missing=0,outside=0,duplicate=-0,core_overlap=0,error=
+MULTI_MATERIAL_REGION,id=3,nozzle=0.59999999999999998,height=0.1875,depth=0.75,local_width=0.7432710106556315,supply=18,residual=-3.8857805861880479e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0005919709167302e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=1,nozzle=0.80000000000000004,height=0.25,depth=0.5,local_width=0.88731725920399274,supply=12,residual=-1.4988010832439613e-15,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0001821875983411e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=2,nozzle=0.40000000000000002,height=0.125,depth=0.375,local_width=0.42884336059302786,supply=9,residual=8.5348395018058909e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0003708144902249e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL,order=210,hybrid_ok=1,material_status=0,elapsed_s=0.53585400000000005,missing=0,outside=0,duplicate=-0,core_overlap=0,error=
+MULTI_MATERIAL_REGION,id=3,nozzle=0.59999999999999998,height=0.1875,depth=0.75,local_width=0.7432710106556315,supply=18,residual=-3.8857805861880479e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0005919709167302e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=2,nozzle=0.40000000000000002,height=0.125,depth=0.375,local_width=0.42884336059302786,supply=9,residual=8.5348395018058909e-16,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0003708144902249e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+MULTI_MATERIAL_REGION,id=1,nozzle=0.80000000000000004,height=0.25,depth=0.5,local_width=0.88731725920399274,supply=12,residual=-1.4988010832439613e-15,maximum=0,mean=0,rms=0,upper=0,bounds=0/1.7148488087449959e-15/3.8146972514141453e-07/1.0001821875983411e-09/4.4408920985006281e-16,verified=1,adhesion=unverified
+2.485 s: Three independent nozzle and material profiles fill one adjacent multilayer workpiece in every region order
+MULTI_MATERIAL_MISSING_INNER,missing=3,boundary_lower=0.12499999999999999,boundary_upper=inf,outer_B_upper=0
+3.336 s: An absent inner layer remains a regional material deficit despite two complete neighboring materials
+0.004 s: An exact finite material prism fills its target and separately bounds its outer sheet
+0.000 s: Empty preview tracks never provide nozzle positions at any seek time
+0.019 s: A closed polygonal cylinder ring retains radial nozzle axes and its independent supply ledger
+0.096 s: Closed material rings have one cyclic miter at every station and no artificial seam
+0.341 s: Open material paths do not acquire an implicit closing extrusion
+0.016 s: Thickness and full wall modes control layer depth without expanding the model
+0.009 s: Vertical walls require explicit permission and bounded nozzle deviation
+0.011 s: Merged region masks create one path across their former boundary
+0.003 s: Tilted nominal cells retain their real geometric volume instead of adjusting the supplied flow
+0.000 s: Closed sweep budgets include the closing cell and cancellation discards evidence
+0.030 s: Ordered raster runs unite into a closed multilayer material body before spatial grouping
+0.001 s: An empty material plan reports all missing volume and undefined distance statistics
+0.001 s: Failed or canceled material audits preserve only diagnostic cells and no accepted evidence
+0.012 s: Preview rejects holes, open solids, invalid limits and unsupported full-wall variation
+0.009 s: Smooth patches produce continuous nonplanar layers with a faithful outer contour
+0.008 s: Smooth patches produce continuous nonplanar layers with a faithful outer contour
+0.007 s: Smooth patches produce continuous nonplanar layers with a faithful outer contour
+0.009 s: Smooth patches produce continuous nonplanar layers with a faithful outer contour
+0.172 s: Three material bodies share exact mitered interfaces with independent nozzle sections and axes
+0.008 s: Mitered material turns preserve finite volume despite redundant collinear stations
+0.047 s: Large segment supply ledgers avoid a recursive lazy arithmetic chain
+0.000 s: Invalid lateral endpoints are rejected before a redundant station can be removed
+0.361 s: A local gap and a different material intrusion cannot cancel across three mitered bodies
+===============================================================================
+All tests passed (86355 assertions in 42 test cases)
+

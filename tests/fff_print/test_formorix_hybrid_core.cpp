@@ -3,6 +3,7 @@
 #include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include "libslic3r/FormorixCorePreview.hpp"
+#include "libslic3r/libslic3r.h"
 #include "libslic3r/FormorixGeometry.hpp"
 #include "libslic3r/FormorixHybrid.hpp"
 #include "libslic3r/FormorixSurfaces.hpp"
@@ -10,6 +11,10 @@
 #include "libslic3r/Format/ProjectStrategy.hpp"
 #include "libslic3r/Config.hpp"
 #include "libslic3r/ExtrusionEntity.hpp"
+#include "libslic3r/ExPolygon.hpp"
+#include "libslic3r/Polygon.hpp"
+#include "libslic3r/ClipperUtils.hpp"
+#include "libslic3r/Polyline.hpp"
 #include "libslic3r/GCode.hpp"
 #include "libslic3r/Model.hpp"
 #include "libslic3r/Point.hpp"
@@ -21,9 +26,11 @@
 #include <boost/filesystem/operations.hpp>
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cmath>
 #include <cstddef>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -68,7 +75,283 @@ FG::Mesh geometry(const TriangleMesh& mesh)
         out.vertices.push_back(p.cast<double>());
     return out;
 }
+ExPolygon dense_rectangle(double x0, double y0, double x1, double y1)
+{
+    return ExPolygon{{Point(scale_(x0), scale_(y0)), Point(scale_(x1), scale_(y0)),
+                      Point(scale_(x1), scale_(y1)), Point(scale_(x0), scale_(y1))}};
+}
+std::array<CP::Source, 3> dense_sources()
+{
+    auto out = sources();
+    out[0].config.set_deserialize_strict({{"top_shell_layers", "0"}, {"bottom_shell_layers", "0"}, {"wall_loops", "1"},
+                                         {"sparse_infill_pattern", "rectilinear"}, {"print_flow_ratio", "1.13"},
+                                         {"set_other_flow_ratios", "1"}, {"sparse_infill_flow_ratio", "0.93"}});
+    out[0].process.flow_ratio = .98;
+    return out;
+}
+CP::DenseRequest dense_request(const CP::LayerSlice& layer, ExPolygons area, double density, int region = 1)
+{
+    return {region, std::move(area), layer.bottom_z, layer.top_z, layer.slice_z, density};
+}
+void same_core_paths(const CP::Result& a, const CP::Result& b)
+{
+    REQUIRE(a.ok());
+    REQUIRE(b.ok());
+    REQUIRE(a.paths.size() == b.paths.size());
+    for (std::size_t i = 0; i < a.paths.size(); ++i) {
+        const auto& x = a.paths[i];
+        const auto& y = b.paths[i];
+        CHECK(x.points == y.points);
+        CHECK(x.role == y.role);
+        CHECK(x.head == y.head);
+        CHECK(x.support == y.support);
+        CHECK(x.dense_transition == y.dense_transition);
+        CHECK_THAT(x.native_infill_density, WithinAbs(y.native_infill_density, 0.));
+        CHECK_THAT(x.mm3_per_mm, WithinAbs(y.mm3_per_mm, 0.));
+        CHECK_THAT(x.nominal_supplied_mm3_per_mm, WithinAbs(y.nominal_supplied_mm3_per_mm, 0.));
+        CHECK_THAT(x.width, WithinAbs(y.width, 0.));
+        CHECK_THAT(x.height, WithinAbs(y.height, 0.));
+        CHECK_THAT(x.process.speed, WithinAbs(y.process.speed, 0.));
+    }
+}
 } // namespace
+
+TEST_CASE("Local native density modifiers preserve source geometry profile flow and unaffected layers", "[FormorixHybridCore][DenseUnderlay]")
+{
+    auto core = geometry(Test::cube(10.));
+    const Vec3d placement(1500.123456789, 40.234567891, 3.123456789);
+    for (auto& vertex : core.vertices)
+        vertex += placement;
+    const auto original = core;
+    const auto configs = dense_sources();
+    const auto baseline = CP::slice(core, configs, 0, -1);
+    INFO(baseline.error);
+    REQUIRE(baseline.ok());
+    REQUIRE(baseline.layers.size() > 10);
+    const auto& layer = baseline.layers[baseline.layers.size() / 2];
+    CHECK(layer.slice_z > layer.bottom_z);
+    CHECK(layer.slice_z < layer.top_z);
+    CHECK_THAT(layer.print_top_z, WithinAbs(layer.top_z, 1e-12));
+    const auto request = dense_request(layer,
+        {dense_rectangle(placement.x() + 2., placement.y() + 2., placement.x() + 8., placement.y() + 8.)}, 100.);
+    const auto dense = CP::slice(core, configs, 0, -1, {}, {request});
+    INFO(dense.error);
+    REQUIRE(dense.ok());
+    CHECK(dense.dense_requests_applied == 1);
+    CHECK(dense.dense_modifier_volumes == 1);
+    CHECK(dense.applied_dense_regions == std::vector<int>{1});
+    CHECK(dense.modifier_float_conversion_bound < .001);
+    CHECK(dense.modifier_volume_error < .001);
+    REQUIRE(dense.layers.size() == baseline.layers.size());
+    for (std::size_t i = 0; i < dense.layers.size(); ++i) {
+        CHECK(diff_ex(dense.layers[i].region_area, baseline.layers[i].region_area).empty());
+        CHECK(diff_ex(baseline.layers[i].region_area, dense.layers[i].region_area).empty());
+        const auto native_inflated = union_safety_offset_ex(baseline.layers[i].area);
+        CHECK(diff_ex(dense.layers[i].area, native_inflated).empty());
+        CHECK(diff_ex(native_inflated, dense.layers[i].area).empty());
+        CHECK_THAT(dense.layers[i].slice_z, WithinAbs(baseline.layers[i].slice_z, 0.));
+    }
+    CHECK_THAT(dense.native_slice_expansion_bound,
+               WithinAbs((DefaultMiterLimit * ClipperSafetyOffset + std::sqrt(2.)) * SCALING_FACTOR, 1e-18));
+    bool found = false;
+    for (const auto& path : dense.paths) {
+        CHECK_THAT(path.process.flow_ratio, WithinAbs(.98, 1e-12));
+        CHECK_THAT(path.process.print_flow_ratio, WithinAbs(1.13, 1e-12));
+        CHECK_THAT(path.process.surface_flow_ratio, WithinAbs(1., 1e-12));
+        if (path.dense_transition) {
+            found = true;
+            CHECK_FALSE(path.support);
+            CHECK_THAT(path.native_infill_density, WithinAbs(100., 1e-12));
+            CHECK_THAT(path.points.front().z(), WithinAbs(layer.print_top_z, 1e-10));
+        }
+    }
+    CHECK(found);
+    CHECK(core.vertices == original.vertices);
+    CHECK(core.faces == original.faces);
+    const auto* density = configs[0].config.option<ConfigOptionPercent>("sparse_infill_density");
+    REQUIRE(density);
+    CHECK_THAT(density->value, WithinAbs(20., 0.));
+    CP::Result unchanged_before = baseline, dense_before = dense;
+    auto keep_lower = [&](CP::Result& result) {
+        result.paths.erase(std::remove_if(result.paths.begin(), result.paths.end(), [&](const CP::Path& path) {
+            return path.points.front().z() >= layer.print_bottom_z - 1e-8;
+        }), result.paths.end());
+    };
+    keep_lower(unchanged_before);
+    keep_lower(dense_before);
+    same_core_paths(unchanged_before, dense_before);
+    std::cout << "NATIVE_DENSE,requests=" << dense.dense_requests_applied << ",modifiers=" << dense.dense_modifier_volumes
+              << ",float_bound=" << dense.modifier_float_conversion_bound << ",volume_error=" << dense.modifier_volume_error
+              << ",native_safety_bound=" << dense.native_slice_expansion_bound << "\n";
+}
+
+TEST_CASE("Boundary dense masks retain an explicit conversion strip without changing the native core", "[FormorixHybridCore][DenseUnderlay]")
+{
+    const auto core = geometry(Test::cube(6.));
+    const auto configs = dense_sources();
+    const auto baseline = CP::slice(core, configs, 0, -1);
+    INFO(baseline.error);
+    REQUIRE(baseline.ok());
+    const auto& layer = baseline.layers[baseline.layers.size() / 2];
+    const auto result = CP::slice(core, configs, 0, -1, {}, {dense_request(layer, layer.region_area, 100.)});
+    INFO(result.error);
+    REQUIRE(result.ok());
+    CHECK(result.modifier_boundary_retreat_bound > 0.);
+    CHECK(result.modifier_boundary_retreat_bound < .001);
+    CHECK_THAT(result.dense_requested_area, WithinAbs(36., 1e-12));
+    CHECK(result.dense_applied_area < result.dense_requested_area);
+    CHECK(result.dense_applied_area > 35.99);
+    REQUIRE(result.layers.size() == baseline.layers.size());
+    for (std::size_t i = 0; i < result.layers.size(); ++i) {
+        CHECK(diff_ex(result.layers[i].region_area, baseline.layers[i].region_area).empty());
+        CHECK(diff_ex(baseline.layers[i].region_area, result.layers[i].region_area).empty());
+    }
+    const auto tiny = CP::slice(core, configs, 0, -1, {},
+        {dense_request(layer, {dense_rectangle(0., 2., .000001, 4.)}, 100.)});
+    CHECK_FALSE(tiny.ok());
+    CHECK(tiny.error.find("disappears") != std::string::npos);
+    CHECK(tiny.paths.empty());
+    CHECK(tiny.dense_requests_applied == 0);
+    std::cout << "NATIVE_DENSE_BOUNDARY,requested_mm2=" << result.dense_requested_area
+              << ",applied_mm2=" << result.dense_applied_area << ",retreat_bound=" << result.modifier_boundary_retreat_bound << '\n';
+}
+
+TEST_CASE("Disabled and nonincreasing native density requests are exact no ops", "[FormorixHybridCore][DenseUnderlay]")
+{
+    const auto core = geometry(Test::cube(6.));
+    const auto configs = dense_sources();
+    const auto baseline = CP::slice(core, configs, 0, -1);
+    INFO(baseline.error);
+    REQUIRE(baseline.ok());
+    REQUIRE_FALSE(baseline.layers.empty());
+    same_core_paths(baseline, CP::slice(core, configs, 0, -1, {}, {}));
+    for (double density : {0., 10., 20.}) {
+        const auto request = dense_request(baseline.layers[baseline.layers.size() / 2], {dense_rectangle(1., 1., 5., 5.)}, density);
+        const auto result = CP::slice(core, configs, 0, -1, {}, {request});
+        INFO(result.error);
+        same_core_paths(baseline, result);
+        CHECK(result.dense_modifier_volumes == 0);
+        CHECK(result.dense_requests_applied == 0);
+        CHECK(result.applied_dense_regions.empty());
+    }
+}
+
+TEST_CASE("Overlapping native density requests use their spatial maximum independently of request order", "[FormorixHybridCore][DenseUnderlay]")
+{
+    const auto core = geometry(Test::cube(10.));
+    const auto configs = dense_sources();
+    const auto baseline = CP::slice(core, configs, 0, -1);
+    REQUIRE(baseline.ok());
+    const auto& layer = baseline.layers[baseline.layers.size() / 2];
+    const auto low = dense_request(layer, {dense_rectangle(1., 1., 6., 9.)}, 50., 1);
+    const auto high = dense_request(layer, {dense_rectangle(4., 1., 9., 9.)}, 90., 2);
+    const auto forward = CP::slice(core, configs, 0, -1, {}, {low, high});
+    const auto reverse = CP::slice(core, configs, 0, -1, {}, {high, low});
+    INFO(forward.error);
+    INFO(reverse.error);
+    same_core_paths(forward, reverse);
+    CHECK(forward.dense_modifier_volumes == 2);
+    CHECK(forward.applied_dense_regions == std::vector<int>{1, 2});
+    bool lower_seen = false, higher_seen = false;
+    for (const auto& path : forward.paths) {
+        if (!path.dense_transition || !is_infill(path.role))
+            continue;
+        lower_seen |= path.native_infill_density == 50.;
+        higher_seen |= path.native_infill_density == 90.;
+        for (std::size_t i = 1; i < path.points.size(); ++i) {
+            const auto midpoint = (path.points[i - 1] + path.points[i]) * .5;
+            if (midpoint.x() > 4.5 && midpoint.x() < 5.5 && midpoint.y() > 2. && midpoint.y() < 8.)
+                CHECK_THAT(path.native_infill_density, WithinAbs(90., 1e-12));
+        }
+    }
+    CHECK(lower_seen);
+    CHECK(higher_seen);
+}
+
+TEST_CASE("A native dense modifier retains its hole instead of filling the excluded area", "[FormorixHybridCore][DenseUnderlay]")
+{
+    const auto core = geometry(Test::cube(10.));
+    const auto configs = dense_sources();
+    const auto baseline = CP::slice(core, configs, 0, -1);
+    REQUIRE(baseline.ok());
+    auto area = dense_rectangle(1., 1., 9., 9.);
+    auto hole = dense_rectangle(3., 3., 7., 7.).contour;
+    std::reverse(hole.points.begin(), hole.points.end());
+    area.holes.push_back(hole);
+    const auto request = dense_request(baseline.layers[baseline.layers.size() / 2], {area}, 80.);
+    const auto result = CP::slice(core, configs, 0, -1, {}, {request});
+    INFO(result.error);
+    REQUIRE(result.ok());
+    CHECK(result.dense_modifier_volumes == 1);
+    CHECK(result.modifier_volume_error < .001);
+    const ExPolygons hole_interior{dense_rectangle(3.2, 3.2, 6.8, 6.8)};
+    bool found = false;
+    for (const auto& path : result.paths)
+        if (path.dense_transition && is_infill(path.role)) {
+            found = true;
+            Polyline line;
+            for (const auto& p : path.points)
+                line.points.emplace_back(scale_(p.x()), scale_(p.y()));
+            CHECK(intersection_pl(Polylines{line}, hole_interior).empty());
+        }
+    CHECK(found);
+}
+
+TEST_CASE("Invalid stale and canceled dense requests retain no native partial evidence", "[FormorixHybridCore][DenseUnderlay]")
+{
+    const auto core = geometry(Test::cube(6.));
+    const auto configs = dense_sources();
+    const auto baseline = CP::slice(core, configs, 0, -1);
+    REQUIRE(baseline.ok());
+    const auto valid = dense_request(baseline.layers[baseline.layers.size() / 2], {dense_rectangle(1., 1., 5., 5.)}, 80.);
+    std::vector<CP::DenseRequest> invalid(5, valid);
+    invalid[0].density = 101.;
+    invalid[1].density = std::numeric_limits<double>::quiet_NaN();
+    invalid[2].slice_z += .001;
+    invalid[3].area = {dense_rectangle(5., 1., 7., 5.)};
+    invalid[4].top_z = invalid[4].bottom_z;
+    for (const auto& request : invalid) {
+        const auto result = CP::slice(core, configs, 0, -1, {}, {request});
+        CHECK_FALSE(result.ok());
+        CHECK_FALSE(result.error.empty());
+        CHECK(result.paths.empty());
+        CHECK(result.layers.empty());
+        CHECK(result.applied_dense_regions.empty());
+    }
+    CHECK_FALSE(CP::slice(core, configs, 0, -1, {}, std::vector<CP::DenseRequest>(257, valid)).ok());
+    const auto canceled = CP::slice(core, configs, 0, -1, [] { return true; }, {valid});
+    CHECK_FALSE(canceled.ok());
+    CHECK(canceled.paths.empty());
+    CHECK(canceled.layers.empty());
+}
+
+TEST_CASE("Native layer metadata keeps raft lift separate from mesh slice coordinates", "[FormorixHybridCore][DenseUnderlay]")
+{
+    auto configs = sources();
+    configs[0].config.set_deserialize_strict({{"enable_support", "1"}, {"raft_layers", "2"}});
+    const auto result = CP::slice(geometry(Test::cube(6.)), configs, 0, 0);
+    INFO(result.error);
+    REQUIRE(result.ok());
+    REQUIRE_FALSE(result.layers.empty());
+    for (const auto& layer : result.layers) {
+        CHECK(layer.slice_z > layer.bottom_z);
+        CHECK(layer.slice_z < layer.top_z);
+        CHECK(layer.print_top_z > layer.top_z);
+        CHECK_THAT(layer.print_top_z - layer.top_z, WithinAbs(layer.print_bottom_z - layer.bottom_z, 1e-10));
+    }
+}
+
+TEST_CASE("Deferred native cancellation clears all collected preview evidence", "[FormorixHybridCore][DenseUnderlay]")
+{
+    std::atomic<std::size_t> checks{0};
+    const auto result = CP::slice(geometry(Test::cube(10.)), sources(), 0, -1,
+        [&] { return checks.fetch_add(1, std::memory_order_relaxed) + 1 >= 64; });
+    CHECK(checks.load(std::memory_order_relaxed) >= 64);
+    CHECK_FALSE(result.ok());
+    CHECK(result.paths.empty());
+    CHECK(result.layers.empty());
+    CHECK(result.applied_dense_regions.empty());
+}
 
 TEST_CASE("An immutable hybrid preview can slice but cannot export after configuration changes", "[FormorixHybridCore]")
 {
@@ -161,6 +444,11 @@ TEST_CASE("Native support paths use their independent support head configuration
     auto configs = sources();
     for (auto& s : configs)
         s.config.set_deserialize_strict({{"enable_support", "1"}, {"support_threshold_angle", "60"}, {"support_type", "normal(auto)"}});
+    configs[1].process.flow_ratio = .91;
+    configs[1].process.surface_flow_ratio = 1.7; // 5D outer-wall metadata must not affect native support.
+    configs[1].config.set_deserialize_strict({{"print_flow_ratio", "1.13"}, {"set_other_flow_ratios", "1"},
+                                            {"support_flow_ratio", "0.66"}, {"support_interface_flow_ratio", "0.77"},
+                                            {"first_layer_flow_ratio", "1.15"}});
     const auto result = CP::slice(core, configs, 0, 1);
     INFO(result.error);
     REQUIRE(result.ok());
@@ -172,8 +460,105 @@ TEST_CASE("Native support paths use their independent support head configuration
             CHECK(path.process.material_id == "PVA");
             CHECK_THAT(path.process.nozzle_diameter, WithinAbs(.4, 1e-12));
             CHECK(path.width > 0.);
+            const double role_factor = path.role == erSupportMaterial ? .66 : path.role == erSupportMaterialInterface ? .77 : 1.;
+            CHECK_THAT(path.role_flow_ratio, WithinAbs(role_factor, 1e-12));
+            CHECK_THAT(path.process.surface_flow_ratio, WithinAbs(1., 1e-12));
+            CHECK_THAT(path.nominal_supplied_mm3_per_mm,
+                       WithinAbs(path.mm3_per_mm * .91 * 1.13 * role_factor * path.first_layer_flow_ratio, 1e-12));
         }
     CHECK(found);
+}
+TEST_CASE("Native flow metadata applies export ratios once without changing Orca geometry", "[FormorixHybridCore]")
+{
+    const auto core = geometry(Test::cube(8.));
+    const auto baseline = CP::slice(core, sources(), 0, -1);
+    INFO(baseline.error);
+    REQUIRE(baseline.ok());
+    const std::vector<std::pair<ExtrusionRole, double>> optional_role_factors{
+        {erExternalPerimeter, .82}, {erPerimeter, .88}, {erInternalInfill, .93}, {erSolidInfill, 1.04}, {erGapFill, .97}};
+    const std::vector<std::pair<ExtrusionRole, double>> always_role_factors{
+        {erTopSolidInfill, .79}, {erBottomSurface, 1.21}, {erInternalBridgeInfill, 1.07}};
+    for (bool enabled : {false, true}) {
+        auto configs = sources();
+        auto& source = configs[0];
+        source.process.flow_ratio = .91;
+        source.process.print_flow_ratio = .77; // The actual projected Orca pass is authoritative.
+        source.process.surface_flow_ratio = 1.7;
+        source.process.local_width_limits = FormorixProcess::WidthLimits{.8, .95};
+        source.process.volumetric_limit = .2;
+        source.config.set_deserialize_strict({{"print_flow_ratio", "1.13"},
+                                             {"set_other_flow_ratios", enabled ? "1" : "0"},
+                                             {"outer_wall_flow_ratio", "0.82"}, {"inner_wall_flow_ratio", "0.88"},
+                                             {"sparse_infill_flow_ratio", "0.93"}, {"internal_solid_infill_flow_ratio", "1.04"},
+                                             {"gap_fill_flow_ratio", "0.97"}, {"top_solid_infill_flow_ratio", "0.79"},
+                                             {"bottom_solid_infill_flow_ratio", "1.21"}, {"internal_bridge_flow", "1.07"},
+                                             {"first_layer_flow_ratio", "1.15"}});
+        const auto result = CP::slice(core, configs, 0, -1);
+        INFO(result.error);
+        REQUIRE(result.ok());
+        REQUIRE(result.paths.size() == baseline.paths.size());
+        bool external = false, sparse = false, top = false, bottom = false, first_layer = false;
+        for (std::size_t i = 0; i < result.paths.size(); ++i) {
+            const auto& path = result.paths[i];
+            const auto& original = baseline.paths[i];
+            CHECK(path.points == original.points);
+            CHECK(path.role == original.role);
+            CHECK_THAT(path.width, WithinAbs(original.width, 1e-12));
+            CHECK_THAT(path.height, WithinAbs(original.height, 1e-12));
+            CHECK_THAT(path.mm3_per_mm, WithinAbs(original.mm3_per_mm, 1e-12));
+            double role_factor = 1.;
+            for (const auto& factor : optional_role_factors)
+                if (enabled && path.role == factor.first)
+                    role_factor = factor.second;
+            for (const auto& factor : always_role_factors)
+                if (path.role == factor.first)
+                    role_factor = factor.second;
+            const bool on_first = std::abs(path.points.front().z() - .2) < 1e-6;
+            const double first_factor = enabled && on_first ? 1.15 : 1.;
+            CHECK_THAT(path.role_flow_ratio, WithinAbs(role_factor, 1e-12));
+            CHECK_THAT(path.first_layer_flow_ratio, WithinAbs(first_factor, 1e-12));
+            CHECK_THAT(path.process.flow_ratio, WithinAbs(.91, 1e-12));
+            CHECK_THAT(path.process.print_flow_ratio, WithinAbs(1.13, 1e-12));
+            CHECK_THAT(path.process.surface_flow_ratio, WithinAbs(1., 1e-12));
+            CHECK_FALSE(path.process.local_width_limits);
+            CHECK(path.flow_geometry_unverified);
+            const double expected_supply = original.mm3_per_mm * .91 * 1.13 * role_factor * first_factor;
+            CHECK_THAT(path.nominal_supplied_mm3_per_mm, WithinAbs(expected_supply, 1e-12));
+            CHECK_THAT(path.process.speed * path.nominal_supplied_mm3_per_mm, WithinAbs(.2, 1e-10));
+            external |= path.role == erExternalPerimeter;
+            sparse |= path.role == erInternalInfill;
+            top |= path.role == erTopSolidInfill;
+            bottom |= path.role == erBottomSurface;
+            first_layer |= on_first;
+        }
+        CHECK(external);
+        CHECK(sparse);
+        CHECK(top);
+        CHECK(bottom);
+        CHECK(first_layer);
+        CHECK_THAT(source.process.print_flow_ratio, WithinAbs(.77, 1e-12));
+        CHECK_THAT(source.process.surface_flow_ratio, WithinAbs(1.7, 1e-12));
+        REQUIRE(source.process.local_width_limits);
+        CHECK_THAT(source.process.local_width_limits->minimum_mm, WithinAbs(.8, 1e-12));
+    }
+}
+TEST_CASE("Zero native role flow retains display geometry without claiming material supply", "[FormorixHybridCore]")
+{
+    auto configs = sources();
+    configs[0].config.set_deserialize_strict("top_solid_infill_flow_ratio", "0");
+    const auto result = CP::slice(geometry(Test::cube(8.)), configs, 0, -1);
+    INFO(result.error);
+    REQUIRE(result.ok());
+    bool top = false;
+    for (const auto& path : result.paths)
+        if (path.role == erTopSolidInfill) {
+            top = true;
+            CHECK(path.mm3_per_mm > 0.);
+            CHECK_THAT(path.nominal_supplied_mm3_per_mm, WithinAbs(0., 1e-15));
+            CHECK(path.flow_geometry_unverified);
+            CHECK(std::isfinite(path.process.speed));
+        }
+    CHECK(top);
 }
 TEST_CASE("An explicitly selected second nozzle retains its process variant in the isolated core pass", "[FormorixHybridCore]")
 {

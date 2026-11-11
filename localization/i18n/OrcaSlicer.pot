@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-11 09:15+0100\n"
+"POT-Creation-Date: 2026-11-11 16:52+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -10075,7 +10075,22 @@ msgstr ""
 msgid "Nozzle slot"
 msgstr ""
 
+msgid "Orca process profile"
+msgstr ""
+
+msgid "Declare local line width limits"
+msgstr ""
+
+msgid "Minimum local line width (mm)"
+msgstr ""
+
+msgid "Maximum local line width (mm)"
+msgstr ""
+
 msgid "Material suitability: not checked."
+msgstr ""
+
+msgid "Declared width limits are not material calibration."
 msgstr ""
 
 #, possible-boost-format
@@ -10120,6 +10135,9 @@ msgstr ""
 msgid "Current Orca printer"
 msgstr ""
 
+msgid "Current Orca process"
+msgstr ""
+
 msgid "Orca profile changed. Derived head values were invalidated and will be refreshed before calculation."
 msgstr ""
 
@@ -10157,6 +10175,9 @@ msgstr ""
 msgid "Checking geometric underlay…"
 msgstr ""
 
+msgid "Calculating local Orca underlay…"
+msgstr ""
+
 msgid "Hybrid preview calculation failed."
 msgstr ""
 
@@ -10170,6 +10191,9 @@ msgstr ""
 
 #, possible-boost-format
 msgid "Orca core preview failed: %1%"
+msgstr ""
+
+msgid "Underlay verification is incomplete. See the geometry report."
 msgstr ""
 
 msgid "Hybrid preview ready. Review coverage, material volume and underlay; export remains blocked."
@@ -10271,10 +10295,31 @@ msgstr ""
 msgid "Unverified regions"
 msgstr ""
 
+msgid "All calculated layers; independent of playback time."
+msgstr ""
+
+msgid "Nominal 3D material"
+msgstr ""
+
+msgid "Missing material"
+msgstr ""
+
+msgid "Excess material"
+msgstr ""
+
+msgid "Material overlaps"
+msgstr ""
+
+msgid "Diagnostic cells (unverified)"
+msgstr ""
+
 msgid "Orca preview"
 msgstr ""
 
 msgid "Geometry report"
+msgstr ""
+
+msgid "Positions are shown only for heads with calculated movements."
 msgstr ""
 
 msgid "Time: 5D part only. Orca core paths are not synchronized; supports and waiting times are excluded."
@@ -10288,6 +10333,37 @@ msgstr ""
 
 #, possible-boost-format
 msgid "Original volume: %1% mm³; partition residual: %2% mm³."
+msgstr ""
+
+#, possible-boost-format
+msgid "%1%: sampled maximum / mean / RMS = %2% / %3% / %4% mm; conservative upper bound = %5% mm; observed lower bound = %6% mm; samples: %7%."
+msgstr ""
+
+msgid "Spatial material audit incomplete. Volumes, missing material and overlaps are unknown; raw diagnostic cells may be incomplete."
+msgstr ""
+
+#, possible-boost-format
+msgid "All-layer 3D material (mm³), supplied / cells / union / missing / outside / duplicate / core overlap: %1% / %2% / %3% / %4% / %5% / %6% / %7%."
+msgstr ""
+
+#, possible-boost-format
+msgid "Supply minus cell volume: %1% mm³; spatial output rounding allowance: %2% mm; audit time: %3% s."
+msgstr ""
+
+msgid "Complete volume boundaries"
+msgstr ""
+
+msgid "Nominal outer-layer sheets"
+msgstr ""
+
+msgid "Outer-layer sheets alone do not prove the complete material envelope. Same-material duplicate volume is measured but has no separate display mesh."
+msgstr ""
+
+#, possible-boost-format
+msgid "Overlap between materials %1% and %2%: %3% mm³."
+msgstr ""
+
+msgid "The GPU display omits triangles below its numerical resolution. Numerical audit values remain authoritative."
 msgstr ""
 
 #, possible-boost-format
@@ -10307,6 +10383,23 @@ msgid "Material %1%; nozzle %2% mm; line width %3% mm; layer height %4% mm; temp
 msgstr ""
 
 #, possible-boost-format
+msgid "Configured flow factors, filament / process / surface: %1% / %2% / %3%; local requested line width: %4%–%5% mm."
+msgstr ""
+
+#, possible-boost-format
+msgid "Regional 3D volumes (mm³), target / deposited / missing / outside / duplicate / core overlap: %1% / %2% / %3% / %4% / %5% / %6%."
+msgstr ""
+
+msgid "Regional volume boundaries"
+msgstr ""
+
+msgid "Nominal regional CAD error budget ≤ 0.01 mm. Physical accuracy and conventional deposited surfaces remain unverified."
+msgstr ""
+
+msgid "Regional CAD error budget ≤ 0.01 mm is not verified."
+msgstr ""
+
+#, possible-boost-format
 msgid "Coverage samples: %1%; uncovered fraction: %2%. Sample error max / mean / RMS: %3% / %4% / %5% mm."
 msgstr ""
 
@@ -10323,7 +10416,11 @@ msgid "Error bounds (mm), CAD / shell / conversion / path / nominal material: %1
 msgstr ""
 
 #, possible-boost-format
-msgid "Underlay: %1% missing samples of %2%; maximum gap: %3% mm. Full footprint and material adhesion remain unverified."
+msgid "Conservative combined error bound: %1% mm. Unknown CAD input keeps the total unverified."
+msgstr ""
+
+#, possible-boost-format
+msgid "Underlay: contact unconfirmed at %1% of %2% samples; maximum gap: %3% mm. Full footprint and material adhesion remain unverified."
 msgstr ""
 
 #, possible-boost-format
@@ -10335,7 +10432,36 @@ msgid "Largest observed contact gap: %1% mm; samples without eligible contact wi
 msgstr ""
 
 #, possible-boost-format
+msgid "Raw native contact not demonstrated: %1% samples; native-layer gaps: %2%. Unsupported cross-sections are included in the first count; material suitability remains unverified."
+msgstr ""
+
+#, possible-boost-format
+msgid "Region %1%: sampled interface area %2% mm²; raw missing / native-layer gaps / path gaps / unknown: %3% / %4% / %5% / %6% mm². Area-weighted samples, not a complete contact certificate."
+msgstr ""
+
+msgid "No core interface: an external underlay operation is required and remains unassigned."
+msgstr ""
+
+msgid "Underlay before local Orca refinement"
+msgstr ""
+
+msgid "Underlay after local Orca refinement"
+msgstr ""
+
+#, possible-boost-format
 msgid "Orca conversion bound: %1% mm; coordinate quantization: %2% mm; volume residual: %3% mm³."
+msgstr ""
+
+#, possible-boost-format
+msgid "Native underlay requests applied: %1%; modifier volumes: %2%; modifier conversion bound: %3% mm. Manufacturing dependencies remain pending."
+msgstr ""
+
+#, possible-boost-format
+msgid "Native slice safety expansion bound: %1% mm. Original core geometry is unchanged."
+msgstr ""
+
+#, possible-boost-format
+msgid "Requested / applied density area summed over native layers: %1% / %2% mm²; modifier offset allowance: %3% mm. This does not bound the distance across removed thin mask features."
 msgstr ""
 
 msgid "Hybrid geometry report"
@@ -10358,7 +10484,13 @@ msgstr ""
 msgid "Nominal material volume implausible; flow unchanged. CAD accuracy and full surface coverage are unverified."
 msgstr ""
 
-msgid "Geometric underlay is missing at sampled points."
+msgid "Spatial material audit incomplete. Accepted 3D volumes are unavailable; diagnostic cells remain unverified."
+msgstr ""
+
+msgid "Underlay contact is missing or unverified at sampled points."
+msgstr ""
+
+msgid "Local density creates unverified cross-sections. See the geometry report."
 msgstr ""
 
 msgid "All 5D layers"
@@ -33185,6 +33317,1180 @@ msgstr ""
 
 #, possible-boost-format
 msgid "Suspiciously low number of configuration values extracted from %1%: %2%"
+msgstr ""
+
+msgid "Planar boundary layout canceled"
+msgstr ""
+
+msgid "A boundary layout requires a nonempty triangulated surface"
+msgstr ""
+
+msgid "Planar boundary input exceeds the triangle budget"
+msgstr ""
+
+msgid "Invalid planar boundary coordinate"
+msgstr ""
+
+msgid "Invalid planar boundary triangle index"
+msgstr ""
+
+msgid "A degenerate or numerically unresolved projected triangle prevents boundary layout"
+msgstr ""
+
+msgid "Folded or inconsistently oriented surface projection is unsupported"
+msgstr ""
+
+msgid "The projected surface has a duplicate or nonmanifold edge"
+msgstr ""
+
+msgid "Disconnected projected regions require separate boundary layouts"
+msgstr ""
+
+msgid "The projected boundary has a branch or a point contact"
+msgstr ""
+
+msgid "Holes or non-disk projected surfaces are not supported by rectangular boundary layout"
+msgstr ""
+
+msgid "The projected boundary is not a closed simple contour"
+msgstr ""
+
+msgid "Holes or multiple boundary contours are unsupported"
+msgstr ""
+
+msgid "The projected rectangle has no positive area"
+msgstr ""
+
+msgid "Sloping, curved or reentrant boundaries require a different finite-cap layout"
+msgstr ""
+
+msgid "The projected contour does not cover all four rectangle sides"
+msgstr ""
+
+msgid "Invalid planar boundary resource limits or rectangle tolerance"
+msgstr ""
+
+msgid "Local width limits do not allow a valid rounded-rectangle cross-section"
+msgstr ""
+
+msgid "No complete ribbon count fits the rectangle within the explicit local width limits"
+msgstr ""
+
+msgid "Planar boundary row budget exceeded"
+msgstr ""
+
+msgid "The computed local width lies outside its explicit bounds"
+msgstr ""
+
+msgid "The requested local width cannot reproduce the selected ribbon spacing"
+msgstr ""
+
+msgid "The region is narrower than one fixed-width ribbon; explicit local width limits are required"
+msgstr ""
+
+msgid "No finite ribbon layout fits this rectangle"
+msgstr ""
+
+msgid "Planar boundary station budget exceeded"
+msgstr ""
+
+msgid "The rectangle is too short for finite mitered turns in the requested raster direction"
+msgstr ""
+
+msgid "Canonical boundary rails exceed the nominal profile's numerical construction allowance"
+msgstr ""
+
+msgid "Rectangular candidate requires the full spatial material audit"
+msgstr ""
+
+msgid "Fixed profile width leaves explicit unfilled boundary strips; Flow remains unchanged"
+msgstr ""
+
+msgid "Surface contour generation canceled"
+msgstr ""
+
+msgid "Surface contours require a nonempty mesh and a normal at every source vertex"
+msgstr ""
+
+msgid "Invalid surface contour planes, interpolation tolerance or resource limits"
+msgstr ""
+
+msgid "Surface contour input exceeds its mesh or plane budget"
+msgstr ""
+
+msgid "Invalid surface normal field"
+msgstr ""
+
+msgid "Invalid surface contour plane offset"
+msgstr ""
+
+msgid "Repeated contour plane offsets would duplicate the same material path"
+msgstr ""
+
+msgid "The interpolated surface normal vanishes"
+msgstr ""
+
+msgid "The surface normal cannot be normalized with a finite bound"
+msgstr ""
+
+msgid "Surface contour output cannot be represented in double precision"
+msgstr ""
+
+msgid "Opposing surface normals make the offset interpolation undefined"
+msgstr ""
+
+msgid "Invalid surface contour mesh coordinate"
+msgstr ""
+
+msgid "Coincident source vertices have inconsistent surface normal fields"
+msgstr ""
+
+msgid "Invalid surface contour triangle index"
+msgstr ""
+
+msgid "A degenerate source triangle prevents exact surface contours"
+msgstr ""
+
+msgid "The surface contour mesh is nonmanifold or inconsistently oriented"
+msgstr ""
+
+msgid "Invalid triangulated surface graph"
+msgstr ""
+
+msgid "The source surface contains a nonmanifold vertex or a self-intersection"
+msgstr ""
+
+msgid "An exact contour point leaves its source triangle carrier"
+msgstr ""
+
+msgid "A closed contour has fewer than three distinct points"
+msgstr ""
+
+msgid "Surface contour knot budget exceeded"
+msgstr ""
+
+msgid "A surface contour has an unresolved self-contact"
+msgstr ""
+
+msgid "A surface contour contains a collapsed segment"
+msgstr ""
+
+msgid "Surface contour carrier-query budget exceeded"
+msgstr ""
+
+msgid "A contour segment has no exact single-triangle carrier; no nearest-surface fallback is used"
+msgstr ""
+
+msgid "The normal field is discontinuous across a shared triangle boundary"
+msgstr ""
+
+msgid "The normal field is discontinuous at the closed contour seam"
+msgstr ""
+
+msgid "Surface normal interpolation cannot reach the requested bound within its refinement limit"
+msgstr ""
+
+msgid "Double conversion collapses a nonzero surface contour segment"
+msgstr ""
+
+msgid "Adaptive surface contour knot budget exceeded"
+msgstr ""
+
+msgid "Surface contour carriers do not match their motion segments"
+msgstr ""
+
+msgid "Coplanar surface faces contribute boundary curves only; these curves do not certify area coverage"
+msgstr ""
+
+msgid "Isolated plane contacts have no extrusion length and are not planned"
+msgstr ""
+
+msgid "No nondegenerate contour intersects the selected surface"
+msgstr ""
+
+msgid "The selected surface is empty."
+msgstr ""
+
+msgid "The selected surface contains disconnected islands."
+msgstr ""
+
+msgid "The selected surface has holes or a branching boundary unsupported by the continuous planner."
+msgstr ""
+
+msgid "The surface folds over its local projection or has multiple intervals in a raster row."
+msgstr ""
+
+msgid "The available wall is too thin for the requested layer."
+msgstr ""
+
+msgid "The requested normal offset folds or self-intersects."
+msgstr ""
+
+msgid "Full-wall mode requires a local termination strategy for variable wall thickness."
+msgstr ""
+
+msgid "Vertical surfaces require explicit permission."
+msgstr ""
+
+msgid "The desired nozzle direction exceeds the configured tilt and deviation."
+msgstr ""
+
+msgid "The preview exceeds the current mesh or path resource limit."
+msgstr ""
+
+msgid "Calculation was canceled."
+msgstr ""
+
+msgid "Surface markings no longer match the mesh topology."
+msgstr ""
+
+msgid "A single surface requires one explicitly assigned head."
+msgstr ""
+
+msgid "A required nozzle or material profile is unavailable."
+msgstr ""
+
+msgid "The selected reference edge is no longer valid."
+msgstr ""
+
+msgid "The selected mesh is invalid for continuous surface planning."
+msgstr ""
+
+msgid "Hybrid calculation canceled"
+msgstr ""
+
+msgid "Non-finite hybrid vertex"
+msgstr ""
+
+msgid "Cannot locate selected surface"
+msgstr ""
+
+msgid "Degenerate selected surface"
+msgstr ""
+
+msgid "Ambiguous selected normal"
+msgstr ""
+
+msgid "Invalid machine tilt limit"
+msgstr ""
+
+msgid "Vertical 5D surface requires explicit permission"
+msgstr ""
+
+msgid "Requested surface exceeds nominal nozzle tilt"
+msgstr ""
+
+msgid "Hybrid shell exceeds 200 layers"
+msgstr ""
+
+msgid "Invalid hybrid layer height"
+msgstr ""
+
+msgid "Empty 5D shell"
+msgstr ""
+
+msgid "Hybrid surface audit resource limit"
+msgstr ""
+
+msgid "Unusable surface projection"
+msgstr ""
+
+msgid "Invalid double to Orca conversion"
+msgstr ""
+
+msgid "Invalid hybrid instance"
+msgstr ""
+
+#, possible-boost-format
+msgid "Hybrid preview does not yet preserve object or part override: %1%"
+msgstr ""
+
+msgid "Hybrid preview does not yet preserve layer-range overrides or variable layer-height profiles"
+msgstr ""
+
+msgid "Hybrid preview does not yet support negative volumes, modifiers or support modifiers"
+msgstr ""
+
+msgid "Hybrid preview does not yet remap conventional support, seam, material or fuzzy-skin painting onto the computed core"
+msgstr ""
+
+msgid "Surface markings no longer match model topology"
+msgstr ""
+
+msgid "A hybrid region requires one assigned head"
+msgstr ""
+
+msgid "A painted region has no enabled resolved head profile"
+msgstr ""
+
+msgid "The selected reference edge no longer belongs to this model instance"
+msgstr ""
+
+msgid "Hybrid calculation requires marked surfaces on a valid closed solid"
+msgstr ""
+
+msgid "Hybrid regions require unique positive IDs and one of three valid heads"
+msgstr ""
+
+msgid "Invalid per-head hybrid process profile"
+msgstr ""
+
+msgid "Invalid hybrid surface quality selection"
+msgstr ""
+
+msgid "Hybrid ribbon requires neutral height correction until calibrated normal thickness is available"
+msgstr ""
+
+msgid "Hybrid preview requires neutral material shrink compensation until the core and skin share a common compensated geometry"
+msgstr ""
+
+msgid "Ambiguous normal in selected region"
+msgstr ""
+
+msgid "No inward wall intersection below selected surface"
+msgstr ""
+
+msgid "Full-wall thickness is undefined at the selected boundary"
+msgstr ""
+
+#, possible-boost-format
+msgid "Region %1%: offset is clipped at the original boundary; wall thickness there is not verified"
+msgstr ""
+
+msgid "Variable full-wall thickness needs a local layer termination strategy"
+msgstr ""
+
+msgid "Hybrid layer mesh budget exceeded; reduce the marked area, mesh detail or layer count"
+msgstr ""
+
+msgid "Requested 5D shell exceeds the entire sampled wall thickness"
+msgstr ""
+
+#, possible-boost-format
+msgid "Region %1%: local thin walls require clipped layer termination"
+msgstr ""
+
+msgid "Missing allocated 5D skin"
+msgstr ""
+
+msgid "The requested raster direction is perpendicular to the surface"
+msgstr ""
+
+msgid "Cannot determine a stable surface contour direction"
+msgstr ""
+
+msgid "This wrapped surface requires automatic contour direction"
+msgstr ""
+
+msgid "The selected span cannot fit this fixed-width ribbon; use a smaller nozzle or another direction"
+msgstr ""
+
+msgid "Surface contour row budget exceeded"
+msgstr ""
+
+msgid "The selected surface has no usable spatial contour"
+msgstr ""
+
+msgid "The rigid tilted nozzle-section does not fit the requested normal layer thickness; the compacted ribbon requires a perpendicular nozzle"
+msgstr ""
+
+msgid "Hybrid adaptive path limit"
+msgstr ""
+
+msgid "Hybrid movement budget exceeded; reduce the marked area or layer count"
+msgstr ""
+
+msgid "Collapsed compensated ribbon segment"
+msgstr ""
+
+msgid "Collapsed material-center segment cannot carry ribbon extrusion"
+msgstr ""
+
+msgid "No ribbon extrusion fits inside the allocated shell"
+msgstr ""
+
+#, possible-boost-format
+msgid "Region %1%: local boundary termination inserted non-extruding movements; their collision safety is unverified"
+msgstr ""
+
+#, possible-boost-format
+msgid "Region %1%: nominal material supply exceeds 110%% of the allocated skin volume; the ribbon plan is rejected without changing flow"
+msgstr ""
+
+#, possible-boost-format
+msgid "Region %1%: nominal supply exceeds the allocated skin by %2% mm3; this material region is inadmissible"
+msgstr ""
+
+#, possible-boost-format
+msgid "Region %1%: nominal material volume is inconsistent; flow was not corrected"
+msgstr ""
+
+#, possible-boost-format
+msgid "Region %1%: nominal bead crosses the local core interface by %2% mm; this material overlap is not resolved"
+msgstr ""
+
+msgid "Missing process identity for material target"
+msgstr ""
+
+#, possible-boost-format
+msgid "Three-dimensional nominal material audit is incomplete: %1%"
+msgstr ""
+
+#, possible-boost-format
+msgid "Region %1%: 0.01 mm whole-surface accuracy is not verified"
+msgstr ""
+
+msgid "Invalid 5D-only preview timing"
+msgstr ""
+
+msgid "Inconsistent interface audit data"
+msgstr ""
+
+msgid "Invalid interface audit position or normal"
+msgstr ""
+
+#, possible-boost-format
+msgid "Region %1%: underlay is sampled, not a full contact or material-adhesion certificate"
+msgstr ""
+
+#, possible-boost-format
+msgid "Region %1%: dense transition underlay is a requested native operation; completion and material suitability remain unverified"
+msgstr ""
+
+#, possible-boost-format
+msgid "Region %1%: additional 5D support is not generated; only existing conventional Orca support paths can contribute contact"
+msgstr ""
+
+#, possible-boost-format
+msgid "Region %1%: full-wall 5D requires a prior supporting structure; completion and strength remain unverified"
+msgstr ""
+
+#, possible-boost-format
+msgid "Region %1%: hybrid sequencing is not implemented; the core retains the Orca process infill-first setting"
+msgstr ""
+
+#, possible-boost-format
+msgid "Region %1%: breakaway support suitability and interface adhesion are unverified"
+msgstr ""
+
+#, possible-boost-format
+msgid "Region %1%: soluble support material suitability and interface adhesion are unverified"
+msgstr ""
+
+#, possible-boost-format
+msgid "Region %1%: automatic support-material selection and interface compatibility are unverified"
+msgstr ""
+
+msgid "Too many local dense-underlay requests"
+msgstr ""
+
+msgid "Invalid local dense-underlay density, slice interval or area"
+msgstr ""
+
+msgid "Local dense-underlay polygon budget exceeded"
+msgstr ""
+
+msgid "Local dense-underlay contours must have valid outer and hole orientations"
+msgstr ""
+
+msgid "A local dense-underlay hole lies outside its contour"
+msgstr ""
+
+msgid "Invalid or repeated local dense-underlay polygon vertex"
+msgstr ""
+
+msgid "Local dense-underlay area exceeds the supported geometric span"
+msgstr ""
+
+msgid "Local dense-underlay intersection budget exceeded"
+msgstr ""
+
+msgid "Local dense-underlay boundaries intersect or touch themselves"
+msgstr ""
+
+msgid "Local dense-underlay components or holes overlap"
+msgstr ""
+
+msgid "Local dense-underlay modifier boundaries touch after clipping"
+msgstr ""
+
+msgid "Local dense-underlay modifier mesh budget exceeded"
+msgstr ""
+
+msgid "Local dense-underlay modifier cannot be represented as a valid native solid"
+msgstr ""
+
+msgid "Native modifier conversion changes a local dense-underlay component or hole"
+msgstr ""
+
+msgid "Native modifier conversion does not preserve the requested dense-underlay volume"
+msgstr ""
+
+msgid "Local dense-underlay request no longer matches the current native slice"
+msgstr ""
+
+msgid "Local dense-underlay request extends outside the native slice"
+msgstr ""
+
+msgid "Local dense-underlay area disappears within its native conversion uncertainty"
+msgstr ""
+
+msgid "Combined local dense-underlay modifier mesh budget exceeded"
+msgstr ""
+
+msgid "Formorix dense underlay"
+msgstr ""
+
+#, possible-boost-format
+msgid "Missing explicit per-head Orca option: %1%"
+msgstr ""
+
+msgid "Invalid resolved head profile"
+msgstr ""
+
+msgid "Hybrid core preview does not support belt or spiral mode"
+msgstr ""
+
+#, possible-boost-format
+msgid "Missing paired machine limit: %1%"
+msgstr ""
+
+msgid "Hybrid core preview requires one concrete nozzle volume type per head"
+msgstr ""
+
+msgid "Hybrid core preview requires neutral XY/Z shrink compensation until core and shell share a compensation transform."
+msgstr ""
+
+#, possible-boost-format
+msgid "Hybrid core preview requires 100%% %1%; automatic shrink neutralization is not applied."
+msgstr ""
+
+msgid "Sloped or contoured conventional extrusions are not supported by hybrid preview"
+msgstr ""
+
+msgid "Hybrid core preview requires nonnegative finite native flow factors"
+msgstr ""
+
+msgid "Invalid nominal conventional material supply"
+msgstr ""
+
+msgid "Unknown Orca extrusion entity"
+msgstr ""
+
+msgid "Hybrid core preview path limit exceeded"
+msgstr ""
+
+msgid "Invalid native sparse-infill density for local underlay"
+msgstr ""
+
+msgid "Local dense-underlay modifiers changed the native layer intervals"
+msgstr ""
+
+msgid "Local dense-underlay modifiers changed the native slice geometry"
+msgstr ""
+
+msgid "Local dense-underlay modifiers changed the native slice beyond its safety offset"
+msgstr ""
+
+msgid "Local dense-underlay masks leave a boundary strip within native conversion uncertainty; the core is unchanged."
+msgstr ""
+
+msgid "Native merged slice outlines include Orca's safety expansion; their raw region union remains unchanged."
+msgstr ""
+
+msgid "Nominal conventional supply excludes Orca's small-area G-code flow compensation."
+msgstr ""
+
+msgid "Invalid conventional core or head assignment"
+msgstr ""
+
+msgid "Assign a support head before calculating enabled supports or a raft."
+msgstr ""
+
+msgid "Float conversion invalidates the conventional core"
+msgstr ""
+
+msgid "Support paths use a separate Orca pass with the support head profile; no shared time schedule is implied."
+msgstr ""
+
+msgid "Orca produced no conventional core or support extrusions for this volume."
+msgstr ""
+
+msgid "Conventional speeds are nominal role values; acceleration, cooling slowdown and common scheduling are not simulated."
+msgstr ""
+
+msgid "Underlay analysis canceled"
+msgstr ""
+
+msgid "Invalid underlay sampling or resource limits"
+msgstr ""
+
+msgid "Underlay polygon query budget exceeded"
+msgstr ""
+
+msgid "Invalid native layer coordinates for underlay analysis"
+msgstr ""
+
+msgid "Invalid native layer polygon"
+msgstr ""
+
+msgid "Underlay native polygon budget exceeded"
+msgstr ""
+
+msgid "Invalid native layer polygon coordinate"
+msgstr ""
+
+msgid "Interleaved native layer intervals require a separate underlay model"
+msgstr ""
+
+msgid "Underlay preparation requires a surface region"
+msgstr ""
+
+msgid "Invalid or duplicate underlay region"
+msgstr ""
+
+msgid "A core interface exists without a conventional core"
+msgstr ""
+
+msgid "Underlay interface face budget exceeded"
+msgstr ""
+
+msgid "Invalid underlay interface triangle"
+msgstr ""
+
+msgid "Invalid underlay interface coordinate"
+msgstr ""
+
+msgid "Degenerate underlay interface triangle"
+msgstr ""
+
+msgid "Underlay subdivision budget exceeded"
+msgstr ""
+
+msgid "Underlay sample budget exceeded"
+msgstr ""
+
+msgid "Underlay footprint is not numerically representable"
+msgstr ""
+
+msgid "A 5D region has no core interface: an unplanned external supporting structure is required"
+msgstr ""
+
+msgid "Underlay analysis requires matching interface samples and native layer data"
+msgstr ""
+
+msgid "Underlay contacts or local process settings do not match their prepared region"
+msgstr ""
+
+msgid "Stale or invalid underlay contact metadata"
+msgstr ""
+
+msgid "Underlay native layer query budget exceeded"
+msgstr ""
+
+msgid "Underlay footprint budget exceeded"
+msgstr ""
+
+msgid "Underlay local modifier request budget exceeded"
+msgstr ""
+
+msgid "Underlay polygon exceeds the per-request native modifier budget"
+msgstr ""
+
+msgid "Underlay polygons exceed the combined native modifier budget"
+msgstr ""
+
+msgid "Invalid underlay manufacturing dependency identities"
+msgstr ""
+
+msgid "Underlay evidence is finite area-weighted sampling, not complete footprint, adhesion or strength verification"
+msgstr ""
+
+msgid "Local dense underlay requests are unplanned; only regenerated native paths can establish new contact evidence"
+msgstr ""
+
+msgid "Empty mesh or geometry resource limit"
+msgstr ""
+
+msgid "Invalid mesh coordinate"
+msgstr ""
+
+msgid "Invalid vertex index"
+msgstr ""
+
+msgid "Degenerate face"
+msgstr ""
+
+msgid "Non-manifold or inconsistently oriented patch"
+msgstr ""
+
+msgid "Folded offset or reversed normal"
+msgstr ""
+
+msgid "Invalid shell request"
+msgstr ""
+
+msgid "Invalid shell depth/normal"
+msgstr ""
+
+msgid "Shared shell edge is not a two-region boundary"
+msgstr ""
+
+msgid "Shared shell boundary has inconsistent surface orientation"
+msgstr ""
+
+msgid "Incompatible offset planes at shared shell junction"
+msgstr ""
+
+msgid "Shared shell junction exceeds the geometric miter limit"
+msgstr ""
+
+msgid "Shared shell offset constraint could not be resolved"
+msgstr ""
+
+msgid "Invalid region count"
+msgstr ""
+
+msgid "Boolean resource limit"
+msgstr ""
+
+msgid "Invalid coordinate"
+msgstr ""
+
+msgid "Invalid face index"
+msgstr ""
+
+msgid "Non-manifold mesh"
+msgstr ""
+
+msgid "Unrepresentable degenerate output"
+msgstr ""
+
+msgid "Repair changed vertex coordinates"
+msgstr ""
+
+msgid "Invalid solid"
+msgstr ""
+
+msgid "Source is not a valid oriented solid"
+msgstr ""
+
+msgid "Duplicate shell region"
+msgstr ""
+
+msgid "Offset is self-intersecting or not a valid volume"
+msgstr ""
+
+msgid "Clipped shell is not a valid volume"
+msgstr ""
+
+msgid "Non-manifold Boolean result"
+msgstr ""
+
+msgid "Shell exceeds available wall or overlaps another region"
+msgstr ""
+
+msgid "Invalid shell/core partition"
+msgstr ""
+
+msgid "Invalid refined part"
+msgstr ""
+
+msgid "Exact volume conservation failed"
+msgstr ""
+
+msgid "Double conversion opens solid"
+msgstr ""
+
+msgid "Double conversion creates self-intersections"
+msgstr ""
+
+msgid "Double conversion invalidates volume orientation"
+msgstr ""
+
+msgid "Double conversion overlaps material volumes"
+msgstr ""
+
+msgid "Shared interface was not recovered"
+msgstr ""
+
+msgid "Invalid planar miter source"
+msgstr ""
+
+msgid "Planar miter retriangulation requires parallel planar sheets and a perpendicular normal"
+msgstr ""
+
+msgid "Planar miter retriangulation requires an exactly planar region with constant normal and depth"
+msgstr ""
+
+msgid "Planar miter clipping requires a complete matching shared boundary, not a partial edge"
+msgstr ""
+
+msgid "Planar miter boundary branches"
+msgstr ""
+
+msgid "Planar miter requires one straight shared boundary chain"
+msgstr ""
+
+msgid "Planar miter touches an unrelated source vertex"
+msgstr ""
+
+msgid "A folded miter has no validated planar shared boundary"
+msgstr ""
+
+msgid "The original shell prism is invalid before planar miter clipping"
+msgstr ""
+
+msgid "Invalid planar miter region index"
+msgstr ""
+
+msgid "Invalid planar miter boundary index"
+msgstr ""
+
+msgid "The planar miter plane is degenerate"
+msgstr ""
+
+msgid "The common miter seam does not lie on both exact planar inner sheets"
+msgstr ""
+
+msgid "The planar miter would cut the original outer contour"
+msgstr ""
+
+msgid "Adjacent planar regions are not on complementary sides of their miter"
+msgstr ""
+
+msgid "The planar miter does not separate adjacent outer regions"
+msgstr ""
+
+msgid "The shared planar boundary does not define one exact miter plane"
+msgstr ""
+
+msgid "Planar miter clipping did not produce a closed valid shell"
+msgstr ""
+
+msgid "Planar miter retriangulation exceeds the geometry budget"
+msgstr ""
+
+msgid "The planar miter consumes the entire inner face; a different wall strategy is required"
+msgstr ""
+
+msgid "Planar miter clipping changed an original outer triangle"
+msgstr ""
+
+msgid "Material volume audit canceled"
+msgstr ""
+
+msgid "Invalid material station or cross-section"
+msgstr ""
+
+msgid "Nonfinite shared material endpoints"
+msgstr ""
+
+msgid "Shared material height endpoints disagree with the station definition"
+msgstr ""
+
+msgid "Collapsed material segment"
+msgstr ""
+
+msgid "Material axis is parallel to its path"
+msgstr ""
+
+msgid "Reversing material turn has no finite miter"
+msgstr ""
+
+msgid "Material turn exceeds the miter limit"
+msgstr ""
+
+msgid "Nonfinite shared material lateral endpoints"
+msgstr ""
+
+msgid "Shared material lateral endpoints disagree with the nominal miter"
+msgstr ""
+
+msgid "Material audit elapsed time budget exceeded at a cooperative checkpoint; individual CGAL operations are not immediately interruptible"
+msgstr ""
+
+msgid "Invalid material audit targets or resource limits"
+msgstr ""
+
+msgid "Material targets require distinct regions and nonempty solids"
+msgstr ""
+
+msgid "Aggregate material input geometry exceeds the budget"
+msgstr ""
+
+msgid "Material run has invalid ownership or segment supply"
+msgstr ""
+
+msgid "Material station budget exceeded"
+msgstr ""
+
+msgid "Closed material runs require distinct station centers, without a repeated endpoint"
+msgstr ""
+
+msgid "Extruding material segment requires positive finite supply"
+msgstr ""
+
+msgid "Material sweep face budget exceeded"
+msgstr ""
+
+msgid "Material Boolean face budget exceeded"
+msgstr ""
+
+msgid "Nonfinite material volume"
+msgstr ""
+
+msgid "Material Boolean input exceeds face budget"
+msgstr ""
+
+msgid "Invalid material mesh coordinate"
+msgstr ""
+
+msgid "Invalid material mesh index"
+msgstr ""
+
+msgid "Degenerate or nonmanifold material mesh"
+msgstr ""
+
+msgid "Material mesh is folded, self-intersecting or does not bound a volume"
+msgstr ""
+
+msgid "Double material output collapses topology"
+msgstr ""
+
+msgid "Exact planar material output retriangulation is invalid"
+msgstr ""
+
+msgid "Planar material output retriangulation introduced a new coordinate"
+msgstr ""
+
+msgid "planar output removed volume"
+msgstr ""
+
+msgid "planar output added volume"
+msgstr ""
+
+msgid "Planar material output retriangulation changed the exact volume set"
+msgstr ""
+
+#, possible-boost-format
+msgid "Material output conversion failed (%1%): %2%"
+msgstr ""
+
+msgid "material audit"
+msgstr ""
+
+msgid "Material Boolean operation budget exceeded"
+msgstr ""
+
+#, possible-boost-format
+msgid "%1%: Boolean operation %2% failed (work %3%, input faces %4%/%5%): nonmanifold or invalid result"
+msgstr ""
+
+msgid "Material outer sheet exceeds face budget"
+msgstr ""
+
+msgid "Invalid nominal outer sheet"
+msgstr ""
+
+msgid "Material station simplification canceled"
+msgstr ""
+
+msgid "target overlap"
+msgstr ""
+
+msgid "Material target regions have overlapping interiors"
+msgstr ""
+
+#, possible-boost-format
+msgid "Material run %1%, cell %2%: %3%"
+msgstr ""
+
+#, possible-boost-format
+msgid "run %1%"
+msgstr ""
+
+msgid "target union"
+msgstr ""
+
+#, possible-boost-format
+msgid "region %1%"
+msgstr ""
+
+msgid "regional missing"
+msgstr ""
+
+msgid "regional outside"
+msgstr ""
+
+msgid "regional core overlap"
+msgstr ""
+
+msgid "Material union exceeds the sum of its cells"
+msgstr ""
+
+#, possible-boost-format
+msgid "region %1%, missing material"
+msgstr ""
+
+#, possible-boost-format
+msgid "region %1%, excess material"
+msgstr ""
+
+#, possible-boost-format
+msgid "material %1%"
+msgstr ""
+
+msgid "cross-material overlap"
+msgstr ""
+
+#, possible-boost-format
+msgid "overlap between materials %1% and %2%"
+msgstr ""
+
+msgid "complete deposited union"
+msgstr ""
+
+msgid "complete missing"
+msgstr ""
+
+msgid "complete outside"
+msgstr ""
+
+msgid "complete core overlap"
+msgstr ""
+
+msgid "Combined material union exceeds supplied cell geometry"
+msgstr ""
+
+msgid "complete missing material"
+msgstr ""
+
+msgid "complete excess material"
+msgstr ""
+
+msgid "core overlap"
+msgstr ""
+
+msgid "Invalid per-head deposition profile"
+msgstr ""
+
+msgid "Invalid declared local line width limits"
+msgstr ""
+
+msgid "The configured surface flow is not numerically representable"
+msgstr ""
+
+msgid "Missing indexed Orca nozzle/material profile values"
+msgstr ""
+
+msgid "Missing Orca outer-wall flow ratio"
+msgstr ""
+
+msgid "Local line width is outside the explicitly declared limits"
+msgstr ""
+
+msgid "Nominal compacted ribbon requires width at least equal to height"
+msgstr ""
+
+msgid "The configured ribbon supply is not numerically representable"
+msgstr ""
+
+msgid "Invalid nominal ribbon volume ledger"
+msgstr ""
+
+msgid "Unrepresentable ribbon volume tolerance"
+msgstr ""
+
+msgid "An assigned Formorix material, nozzle or process preset is missing"
+msgstr ""
+
+msgid "Invalid Formorix profile source"
+msgstr ""
+
+msgid "The assigned Formorix nozzle slot does not exist"
+msgstr ""
+
+msgid "Missing nozzle volume or extruder type in Formorix source"
+msgstr ""
+
+msgid "Formorix requires one concrete nozzle per assigned extruder; mixed nozzle inventories are not supported"
+msgstr ""
+
+msgid "The assigned material has no matching variant for this nozzle type"
+msgstr ""
+
+msgid "The nozzle preset layout could not be resolved without changing its slot"
+msgstr ""
+
+msgid "Missing Orca surface line width"
+msgstr ""
+
+msgid "Missing Formorix surface speed"
+msgstr ""
+
+msgid "The Orca surface width is outside the declared local line width limits"
+msgstr ""
+
+msgid "Save the edited default Formorix source as a named preset before saving the project"
+msgstr ""
+
+#, possible-boost-format
+msgid "The Formorix project source \"%1%\" has conflicting definitions. Import or rename the source explicitly before loading this project."
+msgstr ""
+
+msgid "Invalid Formorix nozzle slot"
+msgstr ""
+
+msgid "Unsupported Formorix surface schema"
+msgstr ""
+
+msgid "Invalid Formorix project settings"
+msgstr ""
+
+msgid "Invalid Formorix selection settings"
+msgstr ""
+
+msgid "Invalid or duplicate Formorix region"
+msgstr ""
+
+msgid "Invalid Formorix region settings"
+msgstr ""
+
+msgid "Invalid surface direction"
+msgstr ""
+
+msgid "Surface direction must be nonzero"
+msgstr ""
+
+msgid "Invalid reference edge"
+msgstr ""
+
+msgid "Invalid Formorix head assignment"
+msgstr ""
+
+msgid "Invalid Formorix transition"
+msgstr ""
+
+msgid "Formorix settings exceed size limit"
+msgstr ""
+
+msgid "Invalid Formorix surface object"
+msgstr ""
+
+msgid "Formorix requires three head assignments"
+msgstr ""
+
+msgid "Invalid region destination"
+msgstr ""
+
+msgid "Invalid region source"
+msgstr ""
+
+msgid "Select at least two regions including the destination"
+msgstr ""
+
+msgid "Unknown region"
 msgstr ""
 
 msgid ""

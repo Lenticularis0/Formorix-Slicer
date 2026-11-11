@@ -1,0 +1,264 @@
+Filters: [FormorixBoundary],[FormorixHybrid],[FormorixPreview],[FormorixProfiles],[FormorixSurfaces],[FormorixFoundations],[FormorixMaterial]
+Randomness seeded to: 42
+MITER curved_edge,0,8.44346e-16,3.33067e-16
+0.123 s: A curved common edge keeps one disjoint miter with independent varying normals
+MATERIAL3D complete_top_boundary,status=3,supplied=0,union=0,missing=0,outside=0,duplicate=0,core_overlap=0,supply_residual=0,maximum=inf,mean=inf,rms=inf,upper=inf,bounded=0,cells=26,queries=0,error=region 1: Boolean operation 0 failed (work 25, input faces 60/60): nonmanifold or invalid result
+ACCURACY complete_top_boundary,region=1,topology=1,bounds=0/1.0367978580023512e-15/2.5041230392890558e-07/1.0000008881784198e-09/inf,inadmissible=0,volume_plausible=1
+HYBRID complete_top_boundary,1,0,2.5041230392890558e-07,inf,inf,inf,0.023407000000000001,1.3534776970152056e-07,0.98455254031763939,0
+0.328 s: Whole top faces either retain internal material centers or explicitly require boundary termination
+MATERIAL3D complete_top_boundary,status=2,supplied=0,union=0,missing=0,outside=0,duplicate=0,core_overlap=0,supply_residual=0,maximum=inf,mean=inf,rms=inf,upper=inf,bounded=0,cells=1392,queries=0,error=Material run 6, cell 93: Material mesh is folded, self-intersecting or does not bound a volume
+ACCURACY complete_top_boundary,region=1,topology=1,bounds=inf/inf/4.8499830593914493e-07/inf/inf,inadmissible=0,volume_plausible=0
+HYBRID complete_top_boundary,1,0,4.8499830593914493e-07,inf,inf,inf,0.035198611401035466,0.034123614570202673,0.79424609726892326,0
+0.143 s: Whole top faces either retain internal material centers or explicitly require boundary termination
+MATERIAL3D complete_top_boundary,status=3,supplied=0,union=0,missing=0,outside=0,duplicate=0,core_overlap=0,supply_residual=0,maximum=inf,mean=inf,rms=inf,upper=inf,bounded=0,cells=1150,queries=0,error=region 1: Boolean operation 0 failed (work 1111, input faces 344/1824): nonmanifold or invalid result
+ACCURACY complete_top_boundary,region=1,topology=1,bounds=inf/inf/1.3442986432049498e-07/inf/inf,inadmissible=0,volume_plausible=0
+HYBRID complete_top_boundary,1,2.8421709430404007e-14,1.3442986432049498e-07,inf,inf,inf,0.2754865090802941,0.0001922356865218655,0.58365968276803093,0
+1.192 s: Whole top faces either retain internal material centers or explicitly require boundary termination
+MATERIAL3D complete_top_boundary,status=3,supplied=0,union=0,missing=0,outside=0,duplicate=0,core_overlap=0,supply_residual=0,maximum=inf,mean=inf,rms=inf,upper=inf,bounded=0,cells=357,queries=0,error=region 1: Boolean operation 0 failed (work 350, input faces 952/992): nonmanifold or invalid result
+ACCURACY complete_top_boundary,region=1,topology=1,bounds=inf/inf/2.3814574041666901e-07/inf/inf,inadmissible=0,volume_plausible=0
+HYBRID complete_top_boundary,1,-2.8421709430404007e-14,2.3814574041666901e-07,inf,inf,inf,0.27128589960987276,0,0.73136303526743995,0
+0.637 s: Whole top faces either retain internal material centers or explicitly require boundary termination
+0.000 s: Compacted nominal ribbons retain Orca supplied volume and independent head dimensions
+0.000 s: Compacted nominal ribbons retain Orca supplied volume and independent head dimensions
+0.000 s: Compacted nominal ribbons retain Orca supplied volume and independent head dimensions
+0.000 s: Compacted nominal ribbons retain Orca supplied volume and independent head dimensions
+0.000 s: Compacted nominal ribbons retain Orca supplied volume and independent head dimensions
+0.000 s: Compacted nominal ribbons retain Orca supplied volume and independent head dimensions
+0.000 s: Compacted nominal ribbons retain Orca supplied volume and independent head dimensions
+0.000 s: Compacted nominal ribbons retain Orca supplied volume and independent head dimensions
+0.000 s: Compacted nominal ribbons retain Orca supplied volume and independent head dimensions
+MATERIAL3D fixed_boundary_remainder,status=0,supplied=3.3599999999999994,union=3.360000000000003,missing=0.24000000000000044,outside=0,duplicate=0,core_overlap=0,supply_residual=-3.3395508580724707e-15,maximum=0.10000000000000009,mean=inf,rms=inf,upper=inf,bounded=0,cells=14,queries=50000,error=
+MATERIAL3D_REGION fixed_boundary_remainder,region=1,coverage=1,missing=0.24000000000000044,outside=0,supply_residual=-3.3395508580724707e-15,boundary_bounded=0,outer_bounded=0,outer_upper=inf,input_rounding=0/0,zero_checks=1/1/1
+ACCURACY fixed_boundary_remainder,region=1,topology=1,bounds=0/3.3306690738754696e-16/9.5367431285353632e-08/1.0000001110223025e-09/inf,inadmissible=0,volume_plausible=1
+HYBRID fixed_boundary_remainder,1,-2.8421709430404007e-14,9.5367431285353632e-08,inf,inf,inf,0.066666666666666666,0,0.93333333333333235,0
+1.952 s: A fixed profile leaves an explicit noncommensurate boundary remainder
+0.059 s: Hybrid expansion bounds the final movement count across all layers
+0.453 s: Repeated audits initialize every regional ledger including empty material input
+0.000 s: Parameterized nozzle envelopes retain placeholder status and respect configured axes
+0.000 s: Local ribbon widths require declared limits and preserve every configured flow component
+VOLUME circumferential,84.686809244740346,-1.5682672938055475e-09,5.6863312685931207e-10
+METRIC circumferential_import,0.0036136313844834511,0.0024213371148765058,0.0026389505688509873,0.0038424295678432053,43520,1
+METRIC circumferential_inner_interface,0.0033124955448875504,0.0022195589805288993,0.0024190379834284296,0.0035222272124223672,43520,1
+2.709 s: A circumferential shell supports vertical faces and overhangs without a height field
+0.000 s: Independent head tracks interpolate on a common clock including gaps and idle heads
+0.000 s: Ribbon speed respects supplied stadium volume without changing the flow setting
+0.009 s: Invalid head and region identities are rejected before constructing indexed tracks
+0.009 s: Invalid head and region identities are rejected before constructing indexed tracks
+0.009 s: Invalid head and region identities are rejected before constructing indexed tracks
+0.000 s: Ribbon numerical allowances are explicit signed residuals and never alter supplied material
+0.006 s: Narrow concave offsets and disconnected selections fail without partial paths
+0.547 s: A material target can retain an internal cavity instead of treating only its outer hull
+0.000 s: Infeasible width intervals and short turning regions are rejected with a reason
+METRIC planar_interface,0,0,0,0,24,1
+0.006 s: Planar shell and core share an exact interface without volume loss
+0.004 s: Duplicate material is counted spatially without hiding it in a target clip
+1.846 s: A complete fine outer layer cannot certify missing inner ribbon cells
+MATERIAL3D plane,status=0,supplied=3.0134866776461635,union=3.0134866776461662,missing=0.58651332235383746,outside=0,duplicate=0,core_overlap=0,supply_residual=-2.4544692302141185e-15,maximum=0.2443805509807655,mean=0.021863076465104641,rms=0.065393107370892559,upper=0.24509561524307172,bounded=1,cells=10,queries=50000,error=
+MATERIAL3D_REGION plane,region=1,coverage=1,missing=0.58651332235383746,outside=0,supply_residual=-2.4544692302141185e-15,boundary_bounded=1,outer_bounded=0,outer_upper=inf,input_rounding=0/0,zero_checks=1/1/1
+ACCURACY plane,region=1,topology=1,bounds=0/3.3306690738754696e-16/9.5367431285353632e-08/1.0000004440892099e-09/inf,inadmissible=0,volume_plausible=0
+HYBRID plane,1,-2.8421709430404007e-14,9.5367431285353632e-08,inf,inf,inf,0.16292000000000001,0,0.83707963267948915,0
+2.224 s: Hybrid partition preserves a planar reference and exposes an unfilled final ribbon strip
+0.551 s: A thin internal material gap survives exact union and cannot receive a zero boundary error
+0.001 s: The original surface preview also applies quality only to longitudinal samples
+0.022 s: Mitering preserves flat depth steps and refuses unconnected overlap
+0.000 s: Boundary layout rejects disconnected or invalid projections and honors its resource limits
+0.001 s: A nonmanifold intermediate union returns diagnostics without traversing failed CGAL output
+0.004 s: Offset and Boolean failures never leave partially accepted material volumes
+METRIC NACA0012_CAD_polyline,0.0003825423610574522,7.0948041756094553e-05,0.00010207011601910645,0.00099123999933014629,12587,1
+0.001 s: An analytic hydrofoil has a measured and bounded polyline error
+0.000 s: An isolated input vertex is rejected before invoking volume orientation predicates
+0.013 s: An exhausted distance budget never promotes samples to a complete surface bound
+MITER original_curved_wall_both_regions,18211.860008239746,0,1.0610771520684164e-13,1.8318679906315083e-14,20
+1.864 s: Both saved curved-wall markings have disjoint geometry before nozzle reachability is considered
+COVERAGE head_0,0.19554027718094297,0.27646015351590186,0.077567604263404075,0.28057426459810753,6.601372226633373e-12
+0.000 s: Nominal coverage exposes duplicate material volume instead of assuming a surface fit is enough
+COVERAGE head_1,0.13738995596476478,0.069115038378975466,0.027024704705479598,0.39101048540689826,4.7001152969627924e-12
+0.000 s: Nominal coverage exposes duplicate material volume instead of assuming a surface fit is enough
+COVERAGE head_2,0.16898520645310941,0.15550883635269477,0.050136087594316765,0.32240024920904098,5.7301108302709736e-12
+0.000 s: Nominal coverage exposes duplicate material volume instead of assuming a surface fit is enough
+HYBRID native_curved_wall_with_side,The rigid tilted nozzle-section does not fit the requested normal layer thickness; the compacted ribbon requires a perpendicular nozzle
+MATERIAL3D native_curved_wall,status=2,supplied=0,union=0,missing=0,outside=0,duplicate=0,core_overlap=0,supply_residual=0,maximum=inf,mean=inf,rms=inf,upper=inf,bounded=0,cells=22692,queries=0,error=Material run 0, cell 156: Material mesh is folded, self-intersecting or does not bound a volume
+ACCURACY native_curved_wall,region=1,topology=1,bounds=inf/inf/3.0465656477923302e-05/inf/inf,inadmissible=0,volume_plausible=1
+HYBRID native_curved_wall,1,3.637978807091713e-12,3.0465656477923302e-05,inf,inf,inf,0.024193280185488348,0.0022505366782189749,0.97539634136974851,0
+MATERIAL3D native_curved_wall_standard04,status=4,supplied=0,union=0,missing=0,outside=0,duplicate=0,core_overlap=0,supply_residual=0,maximum=inf,mean=inf,rms=inf,upper=inf,bounded=0,cells=0,queries=0,error=Material sweep face budget exceeded
+ACCURACY native_curved_wall_standard04,region=1,topology=1,bounds=inf/inf/3.0465656477923302e-05/inf/inf,inadmissible=0,volume_plausible=1
+HYBRID native_curved_wall_standard04,1,3.637978807091713e-12,3.0465656477923302e-05,inf,inf,inf,0.002607926872750614,0.0010320106171176836,0.99732198983257658,0
+9.878 s: The saved curved-wall project generates a hybrid preview from its real paint
+0.000 s: Ribbon volume ledgers reject invalid quantities and nonfinite uncertainty
+0.000 s: Ribbon volume ledgers reject invalid quantities and nonfinite uncertainty
+0.007 s: Explicit adjacent layer endpoints retain their shared interface without audit snapping
+VOLUME variable_wall,625,0,0
+0.003 s: Variable wall and shell thickness produce a closed core
+0.000 s: Orca material and nozzle indices resolve independently
+0.060 s: Same-name Orca edits invalidate snapshots and resolution never trusts cached values
+0.000 s: Invalid height endpoints are rejected before a collinear station can be removed
+METRIC sphere_two_curvatures,0.00021117239100831853,0.00014302449007209985,0.0001449259671897913,0.00042430817052599136,40960,1
+0.002 s: A doubly curved spherical CAD patch has a bounded import error
+0.105 s: Material below its allocated skin remains visible as core overlap and missing skin
+1.598 s: Missing nominal envelope samples never masquerade as zero geometric error
+0.000 s: Legacy process snapshots have neutral additional flow and no adaptive width authorization
+0.000 s: Surface project input rejects unsupported schemas and invalid bounds
+0.000 s: Surface project input rejects unsupported schemas and invalid bounds
+0.000 s: Surface project input rejects unsupported schemas and invalid bounds
+0.000 s: Surface project input rejects unsupported schemas and invalid bounds
+0.000 s: Surface project input rejects unsupported schemas and invalid bounds
+0.000 s: Surface project input rejects unsupported schemas and invalid bounds
+0.000 s: Surface project input rejects unsupported schemas and invalid bounds
+0.000 s: Surface project input rejects unsupported schemas and invalid bounds
+0.000 s: Surface project input rejects unsupported schemas and invalid bounds
+MATERIAL3D mixed_nozzle_commensurate,status=0,supplied=4.5,union=4.5,missing=0,outside=0,duplicate=-0,core_overlap=0,supply_residual=4.649058915617843e-16,maximum=0,mean=0,rms=0,upper=4.9406564584124654e-324,bounded=1,cells=59,queries=0,error=
+MATERIAL3D_REGION mixed_nozzle_commensurate,region=1,coverage=2,missing=0,outside=0,supply_residual=-1.3877787807814457e-15,boundary_bounded=1,outer_bounded=1,outer_upper=0,input_rounding=0/0,zero_checks=1/1/1
+MATERIAL3D_REGION mixed_nozzle_commensurate,region=2,coverage=2,missing=0,outside=0,supply_residual=1.85268467234323e-15,boundary_bounded=1,outer_bounded=1,outer_upper=0,input_rounding=0/0,zero_checks=1/1/1
+ACCURACY mixed_nozzle_commensurate,region=1,topology=1,bounds=0/4.8109664400423407e-16/9.5367431285353632e-08/1.0000000000000001e-09/4.9406564584124654e-324,inadmissible=0,volume_plausible=1
+HYBRID mixed_nozzle_commensurate,1,0,9.5367431285353632e-08,0,0,0,0,0,0.99999999999999922,1
+ACCURACY mixed_nozzle_commensurate,region=2,topology=1,bounds=0/5.9211894646674973e-16/9.5367431285353632e-08/1.0000000000000001e-09/4.9406564584124654e-324,inadmissible=0,volume_plausible=1
+HYBRID mixed_nozzle_commensurate,2,0,9.5367431285353632e-08,0,0,0,0,0,1.0000000000000004,1
+0.335 s: Different nozzle ribbons meet at an identical planar material boundary without geometric gaps
+0.004 s: Representable planar interfaces retain double precision without unnecessary output quantization
+0.004 s: Representable planar interfaces retain double precision without unnecessary output quantization
+METRIC planar_bead_head_0,0.0050000000000000044,0.0016615848353834506,0.0022324726545647649,0.0050000000000000044,1001,1
+0.000 s: Compensated elliptical beads follow the CAD contact rather than the TCP center
+METRIC planar_bead_head_1,0.0050000000000000044,0.0016529851718784429,0.0022241929717738747,0.0050000000000000044,1001,1
+0.000 s: Compensated elliptical beads follow the CAD contact rather than the TCP center
+METRIC planar_bead_head_2,0.0049999999999999984,0.001658739089367622,0.002229736937462859,0.0049999999999999984,1001,1
+0.000 s: Compensated elliptical beads follow the CAD contact rather than the TCP center
+METRIC tight_radius_import,1.6275600146026248e-05,1.6275600145984404e-05,1.6275600145984387e-05,7.5598586944176466e-05,512,1
+LIMIT tight_radius_bead,0.075610283453569543
+0.000 s: Small radii require tighter tessellation instead of an accuracy promise
+0.000 s: Timeline supply validation rejects invalid numbers and extrusion on travel
+MATERIAL3D commensurate_plane,status=0,supplied=3.6000000000000005,union=3.6000000000000032,missing=0,outside=0,duplicate=-0,core_overlap=0,supply_residual=-2.8310687127941492e-15,maximum=0,mean=0,rms=0,upper=4.9406564584124654e-324,bounded=1,cells=14,queries=0,error=
+MATERIAL3D_REGION commensurate_plane,region=1,coverage=2,missing=0,outside=0,supply_residual=-2.8310687127941492e-15,boundary_bounded=1,outer_bounded=1,outer_upper=0,input_rounding=0/0,zero_checks=1/1/1
+ACCURACY commensurate_plane,region=1,topology=1,bounds=0/3.3306690738754696e-16/9.5367431285353632e-08/1.0000000000000001e-09/4.9406564584124654e-324,inadmissible=0,volume_plausible=1
+HYBRID commensurate_plane,1,-2.8421709430404007e-14,9.5367431285353632e-08,0,0,0,0,0,0.99999999999999922,1
+0.166 s: A commensurate planar ribbon exactly partitions finite cells without changing flow
+4.359 s: Hybrid evidence distinguishes missing underlay unknown CAD and lossy float conversion
+0.000 s: Saved surface paint extracts all regions without changing the original object
+0.010 s: Unrepresentable tilted Boolean output is rejected without a hidden topology repair
+0.039 s: Unknown surface schemas remain opaque through project save and load
+0.000 s: A surface requires completed compatible bounded underlay evidence
+0.005 s: Curved radial cells preserve their spatial sector volume and expose the independent supply residual
+0.007 s: Assigned nozzle volume types select matching material variants and reject ambiguous inventories
+0.000 s: Raw boundary topology retains holes smaller than a planar integer grid
+METRIC convex_fine,0.00023437194825826069,0.00016926704686530476,0.00017371593279393268,0.00047172005817376405,2560,1
+METRIC convex_coarse,0.23681701799134469,0.15658514594207343,0.1719213700506621,0.23706142406057179,87376,1
+0.003 s: Adaptive CAD distance checks distinguish fine coarse and unverified geometry
+METRIC concave_fine,0.00023437194825826069,0.00016926704686530476,0.00017371593279393268,0.00047172005817376405,2560,1
+METRIC concave_coarse,0.23681701799134469,0.15658514594207343,0.1719213700506621,0.23706142406057179,87376,1
+0.003 s: Adaptive CAD distance checks distinguish fine coarse and unverified geometry
+0.010 s: Chart seams and holes preserve continuity without an extrusion restart
+METRIC convex_compensated_contact,0.00019335874557802152,0.00012246051255477322,0.00013780567726913282,0.00019335937500000207,2688,1
+0.000 s: Adaptive compensated paths bound center interpolation on both curved sides
+METRIC concave_compensated_contact,0.00019726498286265766,0.00012493446230339665,0.00014058963034532245,0.0001972656250000021,2688,1
+0.000 s: Adaptive compensated paths bound center interpolation on both curved sides
+0.010 s: Impossible hybrid partitions and canceled computations keep no accepted partial preview
+MATERIAL3D adjacent_materials,status=0,supplied=4.0083450247038677,union=4.0083450247038659,missing=0.49165497529613345,outside=0,duplicate=0,core_overlap=0,supply_residual=4.3164682355614237e-16,maximum=inf,mean=inf,rms=inf,upper=inf,bounded=0,cells=49,queries=50000,error=
+MATERIAL3D_REGION adjacent_materials,region=1,coverage=1,missing=0.29325666117691873,outside=0,supply_residual=-1.1162123126445436e-15,boundary_bounded=1,outer_bounded=0,outer_upper=inf,input_rounding=0/0,zero_checks=1/1/1
+MATERIAL3D_REGION adjacent_materials,region=2,coverage=1,missing=0.19839831411921471,outside=0,supply_residual=1.547859136200686e-15,boundary_bounded=0,outer_bounded=0,outer_upper=inf,input_rounding=0/0,zero_checks=1/1/1
+ACCURACY adjacent_materials,region=1,topology=1,bounds=0/4.8109664400423407e-16/9.5367431285353632e-08/1.000000222044605e-09/inf,inadmissible=0,volume_plausible=0
+HYBRID adjacent_materials,1,0,9.5367431285353632e-08,inf,inf,inf,0.16292000000000001,0,0.83707963267948915,0
+ACCURACY adjacent_materials,region=2,topology=1,bounds=0/5.9211894646674973e-16/9.5367431285353632e-08/1.0000004440892099e-09/inf,inadmissible=0,volume_plausible=1
+HYBRID adjacent_materials,2,0,9.5367431285353632e-08,inf,inf,inf,0.073480666666666666,0,0.92651914291880977,0
+1.887 s: Adjacent hybrid regions retain their own heads widths and materials without a scheduler
+0.182 s: Different materials keep regional intrusion and cross-material overlap separate
+0.042 s: Explicit local width limits fill a decimal rectangle with finite canonical miter rails
+0.000 s: Model cloning preserves surface regions with independent annotation identities
+0.000 s: Ribbon sections expose calibrated dimensions and reject inverted or invalid geometry
+0.036 s: Subdivided surface brush marks and settings survive a 3MF round trip
+0.003 s: An exact finite material prism fills its target and separately bounds its outer sheet
+0.021 s: Surface width resolution follows Orca automatic percent and inherited width semantics
+0.003 s: Hybrid extraction rejects model semantics which the rebuilt core cannot preserve
+0.000 s: Ribbon volume ledgers distinguish numerical residue from inadmissible and gross material excess
+1.717 s: Every hybrid deposition run retains its actual layer head material and supplied volume
+0.035 s: Topology replacement cannot reattach old region paint to different facets
+0.000 s: Surface manufacturing wishes round trip independently of printer settings
+MATERIAL3D inclined_variable_wall,status=3,supplied=0,union=0,missing=0,outside=0,duplicate=0,core_overlap=0,supply_residual=0,maximum=inf,mean=inf,rms=inf,upper=inf,bounded=0,cells=10,queries=0,error=region 1: Boolean operation 0 failed (work 9, input faces 28/28): nonmanifold or invalid result
+ACCURACY inclined_variable_wall,region=1,topology=1,bounds=0/1.6653345369377348e-16/2.3898029743976268e-07/1.0000004440892099e-09/inf,inadmissible=0,volume_plausible=0
+HYBRID inclined_variable_wall,1,-2.8421709430404007e-14,2.3898029743976268e-07,inf,inf,inf,0.16292000000000001,1.8046376479777325e-07,0.83707963267948948,0
+0.073 s: Hybrid shells process inclined convex concave and hydrofoil negative surfaces conservatively
+MATERIAL3D convex,status=2,supplied=0,union=0,missing=0,outside=0,duplicate=0,core_overlap=0,supply_residual=0,maximum=inf,mean=inf,rms=inf,upper=inf,bounded=0,cells=243,queries=0,error=Material run 2, cell 35: Material mesh is folded, self-intersecting or does not bound a volume
+ACCURACY convex,region=1,topology=1,bounds=inf/inf/4.6378157937314533e-07/inf/inf,inadmissible=0,volume_plausible=0
+HYBRID convex,1,0,4.6378157937314533e-07,inf,inf,inf,0.16470563097953927,0.0067192096813515406,0.75680877663541513,0
+0.060 s: Hybrid shells process inclined convex concave and hydrofoil negative surfaces conservatively
+MATERIAL3D concave,status=2,supplied=0,union=0,missing=0,outside=0,duplicate=0,core_overlap=0,supply_residual=0,maximum=inf,mean=inf,rms=inf,upper=inf,bounded=0,cells=244,queries=0,error=Material run 2, cell 36: Material mesh is folded, self-intersecting or does not bound a volume
+ACCURACY concave,region=1,topology=1,bounds=inf/inf/1.0662926408500084e-07/inf/inf,inadmissible=0,volume_plausible=0
+HYBRID concave,1,2.8421709430404007e-14,1.0662926408500084e-07,inf,inf,inf,0.16470531642462008,0.0067190355730124838,0.73757939017793439,0
+0.061 s: Hybrid shells process inclined convex concave and hydrofoil negative surfaces conservatively
+MATERIAL3D hydrofoil_negative,status=2,supplied=0,union=0,missing=0,outside=0,duplicate=0,core_overlap=0,supply_residual=0,maximum=inf,mean=inf,rms=inf,upper=inf,bounded=0,cells=88,queries=0,error=Material run 0, cell 11: Material mesh is folded, self-intersecting or does not bound a volume
+ACCURACY hydrofoil_negative,region=1,topology=1,bounds=inf/inf/2.313266919909065e-07/inf/inf,inadmissible=0,volume_plausible=0
+HYBRID hydrofoil_negative,1,-2.8421709430404007e-14,2.313266919909065e-07,inf,inf,inf,0.1622314319458385,0.00018126399574238799,0.83120864304567765,0
+0.046 s: Hybrid shells process inclined convex concave and hydrofoil negative surfaces conservatively
+MATERIAL3D adaptive_rectangle,status=0,supplied=29.280000000000001,union=29.280000000000022,missing=0,outside=0,duplicate=0,core_overlap=0,supply_residual=-2.2136736888000995e-14,maximum=0,mean=0,rms=0,upper=4.9406564584124654e-324,bounded=1,cells=30,queries=0,error=
+MATERIAL3D_REGION adaptive_rectangle,region=1,coverage=2,missing=0,outside=0,supply_residual=-2.2136736888000995e-14,boundary_bounded=1,outer_bounded=1,outer_upper=0,input_rounding=0/0,zero_checks=1/1/1
+ACCURACY adaptive_rectangle,region=1,topology=1,bounds=0/9.8618185625952712e-16/1.5641421744004929e-07/9.6367432173532048e-08/4.9406564584124654e-324,inadmissible=0,volume_plausible=1
+HYBRID adaptive_rectangle,1,-5.6843418860808015e-14,1.5641421744004929e-07,0,0,0,0,0,0.99999999999999922,1
+0.903 s: Explicit local width limits fill a noncommensurate rectangle without changing flow
+0.007 s: Edited source presets and explicit nozzle slots are resolved without a slot-zero fallback
+0.014 s: Thickness and full wall modes control layer depth without expanding the model
+0.067 s: Each layer independently respects width limits and retains exact adjacent height interfaces
+1.962 s: A uniform full-wall slab has no conventional core and still requires prior underlay
+0.055 s: An incomplete spatial audit cannot inherit a positive planar projection certificate
+0.009 s: Vertical walls require explicit permission and bounded nozzle deviation
+0.009 s: Merged region masks create one path across their former boundary
+0.019 s: Declared local width changes invalidate snapshots and never come from cached process data
+0.047 s: Three assigned Orca processes retain independent dimensions speeds and unchanged flow factors
+MITER sharp_box,1,2,0,6.1034223980296509e-16,0
+0.031 s: Sharp adjacent skins share a symmetric miter without changing the outside contour
+MITER sharp_box,0.59999999999999998,1.2,-5.6843418860808015e-14,5.6446708000632145e-10,3.3306690738754696e-16
+0.050 s: Sharp adjacent skins share a symmetric miter without changing the outside contour
+METRIC concave_bead_0,0.0065900951077453307,0.0021908865345248657,0.0029424398964872371,0.0067069642857142866,2001,1
+0.000 s: Curvature contributes a separate nominal material envelope error
+METRIC convex_bead_0,0.0034045985485464669,0.0011278815389615929,0.0015163175912105147,0.0067069642857142866,2001,1
+0.000 s: Curvature contributes a separate nominal material envelope error
+METRIC concave_bead_1,0.0057850887912795912,0.0019134577290903035,0.0025735637691513434,0.0058136206896551726,2001,1
+0.000 s: Curvature contributes a separate nominal material envelope error
+METRIC convex_bead_1,0.0042122905653010356,0.0013886407574264458,0.0018694689245985178,0.0058136206896551726,2001,1
+0.000 s: Curvature contributes a separate nominal material envelope error
+METRIC concave_bead_2,0.0061876188954008704,0.0020536323590495038,0.0027594171778496856,0.0062524561403508776,2001,1
+0.000 s: Curvature contributes a separate nominal material envelope error
+METRIC convex_bead_2,0.0038084173404393518,0.0012597105176886461,0.0016942903706724441,0.0062524561403508776,2001,1
+0.000 s: Curvature contributes a separate nominal material envelope error
+0.003 s: Tilted nominal cells retain their real geometric volume instead of adjusting the supplied flow
+0.019 s: A commensurate fixed-width rectangle retains its original profile and complete finite volume
+VOLUME adjacent_depths,500,0,8.3738264463134679e-16
+0.013 s: Adjacent shell regions retain distinct depths and conserve their common solid
+0.000 s: Holes and sloping boundaries cannot receive a rectangular fill candidate
+0.000 s: Finite mitered ribbon turns preserve a rectangular footprint and its supplied volume
+0.000 s: Finite mitered ribbon turns preserve a rectangular footprint and its supplied volume
+0.000 s: Finite mitered ribbon turns preserve a rectangular footprint and its supplied volume
+0.000 s: Finite mitered ribbon turns preserve a rectangular footprint and its supplied volume
+0.000 s: Finite mitered ribbon turns preserve a rectangular footprint and its supplied volume
+0.000 s: Finite mitered ribbon turns preserve a rectangular footprint and its supplied volume
+0.000 s: Finite mitered ribbon turns preserve a rectangular footprint and its supplied volume
+0.000 s: Finite mitered ribbon turns preserve a rectangular footprint and its supplied volume
+0.000 s: Finite mitered ribbon turns preserve a rectangular footprint and its supplied volume
+0.041 s: Boundary adaptation preserves every configured flow factor and the actual volumetric speed limit
+0.000 s: Merging regions preserves paint ownership and records continuous path intent
+0.020 s: Legacy surface schemas migrate explicit nozzle bindings without trusting serialized snapshots
+0.000 s: A miter that crosses the first fine inner row is rejected without altering CAD input
+0.070 s: Canonical lateral rails retain a shifted decimal rectangle across multiple layer heights
+0.029 s: Ordered raster runs unite into a closed multilayer material body before spatial grouping
+0.020 s: Current Orca sources produce independent nozzle and material process values
+0.001 s: An empty material plan reports all missing volume and undefined distance statistics
+0.001 s: Failed or canceled material audits preserve only diagnostic cells and no accepted evidence
+MATERIAL3D curved_tcp_offset,status=2,supplied=0,union=0,missing=0,outside=0,duplicate=0,core_overlap=0,supply_residual=0,maximum=inf,mean=inf,rms=inf,upper=inf,bounded=0,cells=243,queries=0,error=Material run 2, cell 35: Material mesh is folded, self-intersecting or does not bound a volume
+ACCURACY curved_tcp_offset,region=1,topology=1,bounds=inf/inf/4.6378157937314533e-07/inf/inf,inadmissible=0,volume_plausible=0
+HYBRID curved_tcp_offset,1,0,4.6378157937314533e-07,inf,inf,inf,0.16470563097953927,0.0067192096813515406,0.75680877663541513,0
+0.058 s: Curved ribbon timing preserves supply when the TCP has a contact offset
+1.459 s: A fixed profile leaves visible finite remainder strips instead of altering flow
+0.012 s: Preview rejects holes, open solids, invalid limits and unsupported full-wall variation
+RIBBON_QUALITY draft=213 fine=873 unchanged_pitch=0.83707963267948982
+0.143 s: Fine surface quality increases longitudinal resolution without changing material supply or pitch
+0.104 s: A rigid tilted section is rejected instead of intersecting the conventional core
+0.000 s: Declared head widths reject invalid ranges and clear only derived process snapshots
+0.009 s: Smooth patches produce continuous nonplanar layers with a faithful outer contour
+0.007 s: Smooth patches produce continuous nonplanar layers with a faithful outer contour
+0.007 s: Smooth patches produce continuous nonplanar layers with a faithful outer contour
+0.007 s: Smooth patches produce continuous nonplanar layers with a faithful outer contour
+0.037 s: Per-head deposition profiles survive native project archives
+0.007 s: Mitered material turns preserve finite volume despite redundant collinear stations
+0.039 s: Large segment supply ledgers avoid a recursive lazy arithmetic chain
+0.000 s: Three independent material profiles survive project migration and simultaneous time sampling
+0.000 s: Invalid lateral endpoints are rejected before a redundant station can be removed
+===============================================================================
+All tests passed (220131 assertions in 113 test cases)
+

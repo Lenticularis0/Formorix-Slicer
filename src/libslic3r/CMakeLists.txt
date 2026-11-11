@@ -27,14 +27,25 @@ if (SLIC3R_CAD)
 endif ()
 
 set(lisbslic3r_sources
+    FormorixBoundary.cpp
+    FormorixBoundary.hpp
+    FormorixSurfacePaths.cpp
+    FormorixSurfacePaths.hpp
+    FormorixSurfacePathsInternal.hpp
     FormorixCorePreview.cpp
     FormorixCorePreview.hpp
     FormorixHybrid.cpp
     FormorixHybrid.hpp
+    FormorixUnderlay.cpp
+    FormorixUnderlay.hpp
+    FormorixMaterial.cpp
+    FormorixMaterial.hpp
+    FormorixMaterialInternal.hpp
     FormorixProfiles.cpp
     FormorixProfiles.hpp
     FormorixGeometry.cpp
     FormorixGeometry.hpp
+    FormorixGeometryInternal.hpp
     FormorixProcess.cpp
     FormorixProcess.hpp
     FormorixDeposition.hpp
@@ -651,6 +662,8 @@ cmake_policy(POP)
 
 add_library(libslic3r_cgal STATIC
     FormorixGeometryCGAL.cpp
+    FormorixMaterialCGAL.cpp
+    FormorixSurfacePathsCGAL.cpp
     CutSurface.hpp CutSurface.cpp
     IntersectionPoints.hpp IntersectionPoints.cpp
     MeshBoolean.hpp MeshBoolean.cpp

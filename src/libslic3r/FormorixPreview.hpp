@@ -33,6 +33,7 @@ struct Motion
 struct HeadState
 {
     Pose pose;
+    bool pose_known     = false; // only an endpoint or interpolation from a supplied motion; empty tracks have no pose
     MotionKind kind     = MotionKind::Unassigned;
     bool extrusion      = false;
     std::size_t segment = 0;
@@ -41,7 +42,6 @@ struct HeadState
 struct Timeline
 {
     std::array<std::vector<Motion>, 3> heads;
-    std::array<Pose, 3> idle;
     double duration() const;
     bool valid() const;
     HeadState sample(int head, double seconds) const;
