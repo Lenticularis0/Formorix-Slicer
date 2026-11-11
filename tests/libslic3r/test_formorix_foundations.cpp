@@ -4,13 +4,22 @@
 #include <catch2/generators/catch_generators.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include "libslic3r/FormorixGeometry.hpp"
+#include "libslic3r/FormorixHybrid.hpp"
 #include "libslic3r/FormorixProcess.hpp"
 #include "libslic3r/FormorixDeposition.hpp"
+#include "libslic3r/Flow.hpp"
+#include "libslic3r/ClipperUtils.hpp"
+#include "libslic3r/Polygon.hpp"
+#include "libslic3r/Polyline.hpp"
+#include "libslic3r/libslic3r.h"
 #include "libslic3r/FormorixPreview.hpp"
 #include "libslic3r/FormorixSurfaces.hpp"
 #include "libslic3r/Config.hpp"
 #include "libslic3r/PrintConfig.hpp"
+#include "libslic3r/Model.hpp"
+#include "libslic3r/Format/ProjectStrategy.hpp"
 #include "libslic3r/Point.hpp"
+#include "test_utils.hpp"
 #include <nlohmann/json.hpp>
 #include <Eigen/Geometry>
 #include <algorithm>
@@ -161,6 +170,230 @@ TEST_CASE("Adjacent shell regions retain distinct depths and conserve their comm
     CHECK(result.interfaces.size() == 3);
     std::cout << "VOLUME adjacent_depths," << result.input_volume << "," << result.volume_residual << "," << result.rounding_bound << "\n";
 }
+TEST_CASE("Sharp adjacent skins share a symmetric miter without changing the outside contour", "[FormorixFoundations]")
+{
+    const double top_depth   = GENERATE(1., .6);
+    const double front_depth = 2. * top_depth;
+    const auto original      = box();
+    auto top                 = request(plane_patch(0., 10., 0., 10., 5.), top_depth, 7);
+    auto front = request({{{0., 0., 0.}, {10., 0., 0.}, {10., 0., 5.}, {0., 0., 5.}}, {{0, 1, 2}, {0, 2, 3}}}, front_depth, 11);
+    front.outward_normals.assign(4, -Vec3d::UnitY());
+    CHECK_FALSE(FG::partition_clipped(original, {top, front}).ok());
+    const auto result = FG::partition_clipped(original, {top, front}, FG::SharedBoundaryPolicy::MiterAdjacentEdges);
+    INFO(result.error);
+    REQUIRE(result.ok());
+    REQUIRE(result.parts.size() == 3);
+    CHECK(result.mitered_edges == 1);
+    CHECK(result.mitered_vertices == 2);
+    CHECK(result.miter_constraint_residual < 1e-12);
+    auto part_volume = [](const auto& partition, int region) {
+        for (const auto& part : partition.parts)
+            if (part.region == region)
+                return part.volume;
+        return -1.;
+    };
+    CHECK_THAT(part_volume(result, 7), WithinAbs(10. * top_depth * (10. - front_depth / 2.), 1e-7));
+    CHECK_THAT(part_volume(result, 11), WithinAbs(10. * front_depth * (5. - top_depth / 2.), 1e-7));
+    CHECK_THAT(part_volume(result, 0), WithinAbs(10. * (10. - front_depth) * (5. - top_depth), 1e-7));
+    CHECK_THAT(result.volume_residual, WithinAbs(0., 1e-7));
+    bool material_boundary = false;
+    for (const auto& interface : result.interfaces)
+        if (interface.first == 7 && interface.second == 11) {
+            material_boundary = true;
+            const auto error  = FG::measure(interface.mesh, FG::plane({0., 0., 5.}, Vec3d(0., top_depth, front_depth)));
+            CHECK(error.within(.000001));
+        }
+    REQUIRE(material_boundary); // region 7/11 may bind incompatible materials; never blended
+    const auto reverse = FG::partition_clipped(original, {front, top}, FG::SharedBoundaryPolicy::MiterAdjacentEdges);
+    INFO(reverse.error);
+    REQUIRE(reverse.ok());
+    for (const auto& part : result.parts) {
+        CHECK(FG::valid_solid(part.mesh));
+        CHECK_THAT(part_volume(reverse, part.region), WithinAbs(part.volume, 1e-9));
+    }
+    // Every exterior plane retains its complete original area, including the
+    // sharp top/front corner. Shared internal faces do not count in this sum.
+    for (int axis = 0; axis < 3; ++axis)
+        for (int side = 0; side < 2; ++side) {
+            const double coordinate = side ? (axis == 2 ? 5. : 10.) : 0.;
+            double area             = 0.;
+            for (const auto& part : result.parts)
+                for (const auto& face : part.mesh.faces) {
+                    const auto& a = part.mesh.vertices[face[0]];
+                    const auto& b = part.mesh.vertices[face[1]];
+                    const auto& c = part.mesh.vertices[face[2]];
+                    if (std::abs(a[axis] - coordinate) < 1e-12 && std::abs(b[axis] - coordinate) < 1e-12 &&
+                        std::abs(c[axis] - coordinate) < 1e-12)
+                        area += (b - a).cross(c - a).norm() / 2.;
+                }
+            CHECK_THAT(area, WithinAbs(axis == 2 ? 100. : 50., 1e-7));
+        }
+    std::cout << "MITER sharp_box," << top_depth << "," << front_depth << "," << result.volume_residual << "," << result.rounding_bound
+              << "," << result.miter_constraint_residual << "\n";
+}
+
+TEST_CASE("Mitering preserves flat depth steps and refuses unconnected overlap", "[FormorixFoundations]")
+{
+    auto first      = request(plane_patch(0., 5., 0., 10., 5.), 1., 1);
+    auto second     = request(plane_patch(5., 10., 0., 10., 5.), 2., 2);
+    const auto step = FG::partition_clipped(box(), {first, second}, FG::SharedBoundaryPolicy::MiterAdjacentEdges);
+    INFO(step.error);
+    REQUIRE(step.ok());
+    CHECK(step.mitered_edges == 0);
+    CHECK_THAT(step.volume_residual, WithinAbs(0., 1e-10));
+    second = request(plane_patch(4., 9., 0., 10., 5.), 1., 2);
+    CHECK_FALSE(FG::partition_clipped(box(), {first, second}, FG::SharedBoundaryPolicy::MiterAdjacentEdges).ok());
+    second        = first;
+    second.region = 2;
+    CHECK_FALSE(FG::partition_clipped(box(), {first, second}, FG::SharedBoundaryPolicy::MiterAdjacentEdges).ok());
+}
+
+TEST_CASE("A miter that crosses the first fine inner row is rejected without altering CAD input", "[FormorixFoundations]")
+{
+    const auto solid          = box();
+    const auto original       = solid;
+    FG::Mesh fine             = {{{0., 0., 5.}, {10., 0., 5.}, {0., .1, 5.}, {10., .1, 5.}, {0., 10., 5.}, {10., 10., 5.}},
+                                 {{0, 1, 2}, {1, 3, 2}, {2, 3, 4}, {3, 5, 4}}};
+    const auto surface_before = fine;
+    auto top                  = request(fine, .6, 1);
+    auto front                = request({{{0., 0., 0.}, {10., 0., 0.}, {10., 0., 5.}, {0., 0., 5.}}, {{0, 1, 2}, {0, 2, 3}}}, 1., 2);
+    front.outward_normals.assign(4, -Vec3d::UnitY());
+    const auto result = FG::partition_clipped(solid, {top, front}, FG::SharedBoundaryPolicy::MiterAdjacentEdges);
+    REQUIRE_FALSE(result.ok());
+    CHECK(result.error.find("Folded offset") != std::string::npos);
+    CHECK(result.parts.empty());
+    CHECK(result.interfaces.empty());
+    CHECK(solid.vertices == original.vertices);
+    CHECK(solid.faces == original.faces);
+    CHECK(top.surface.vertices == surface_before.vertices);
+    CHECK(top.surface.faces == surface_before.faces);
+    // The continuous miter exists, but relocating its inner boundary past
+    // y=.1 would invert the fixed triangulation. No silent CAD simplification.
+}
+
+TEST_CASE("A curved common edge keeps one disjoint miter with independent varying normals", "[FormorixFoundations]")
+{
+    constexpr int count = 5;
+    const std::array<double, count + 1> heights{{5., 6., 6.5, 6.5, 6., 5.}};
+    FG::Mesh solid, roof, front;
+    for (int i = 0; i <= count; ++i)
+        for (double y : {0., 10.})
+            roof.vertices.emplace_back(2. * i, y, heights[i]);
+    solid.vertices = roof.vertices;
+    const int base = int(solid.vertices.size());
+    for (int i = 0; i <= count; ++i)
+        for (double y : {0., 10.})
+            solid.vertices.emplace_back(2. * i, y, 0.);
+    for (int i = 0; i < count; ++i) {
+        const int a = 2 * i, b = a + 2;
+        roof.faces.emplace_back(a, b, a + 1);
+        roof.faces.emplace_back(b, b + 1, a + 1);
+        solid.faces.emplace_back(a + base, a + 1 + base, b + base);
+        solid.faces.emplace_back(b + base, a + 1 + base, b + 1 + base);
+        solid.faces.emplace_back(a + base, b + base, b);
+        solid.faces.emplace_back(a + base, b, a);
+        solid.faces.emplace_back(a + 1 + base, a + 1, b + 1);
+        solid.faces.emplace_back(a + 1 + base, b + 1, b + 1 + base);
+        front.faces.emplace_back(a, b, b + 1);
+        front.faces.emplace_back(a, b + 1, a + 1);
+    }
+    for (int i = 0; i <= count; ++i) {
+        front.vertices.emplace_back(2. * i, 0., 0.);
+        front.vertices.emplace_back(2. * i, 0., heights[i]);
+    }
+    solid.faces.insert(solid.faces.end(), roof.faces.begin(), roof.faces.end());
+    solid.faces.emplace_back(base, 0, 1);
+    solid.faces.emplace_back(base, 1, base + 1);
+    const int end = 2 * count;
+    solid.faces.emplace_back(base + end, base + end + 1, end + 1);
+    solid.faces.emplace_back(base + end, end + 1, end);
+    REQUIRE(FG::valid_solid(solid));
+    auto top_request   = request(roof, .4, 31);
+    auto front_request = request(front, .7, 47);
+    front_request.outward_normals.assign(front.vertices.size(), -Vec3d::UnitY());
+    for (int i = 0; i <= count; ++i) {
+        const int left = std::max(0, i - 1), right = std::min(count, i + 1);
+        const Vec3d normal                     = Vec3d(-(heights[right] - heights[left]) / (2. * (right - left)), 0., 1.).normalized();
+        top_request.outward_normals[2 * i]     = normal;
+        top_request.outward_normals[2 * i + 1] = normal;
+    }
+    const auto original_normals = top_request.outward_normals;
+    const auto result           = FG::partition_clipped(solid, {top_request, front_request}, FG::SharedBoundaryPolicy::MiterAdjacentEdges);
+    INFO(result.error);
+    REQUIRE(result.ok());
+    CHECK(result.mitered_edges == count);
+    CHECK(result.mitered_vertices == count + 1);
+    CHECK(result.miter_constraint_residual < 1e-12);
+    CHECK_THAT(result.volume_residual, WithinAbs(0., 1e-6));
+    CHECK(top_request.outward_normals == original_normals);
+    CHECK(std::any_of(result.interfaces.begin(), result.interfaces.end(), [](const auto& x) { return x.first == 31 && x.second == 47; }));
+    const auto reverse = FG::partition_clipped(solid, {front_request, top_request}, FG::SharedBoundaryPolicy::MiterAdjacentEdges);
+    INFO(reverse.error);
+    REQUIRE(reverse.ok());
+    for (const auto& part : result.parts) {
+        CHECK(FG::valid_solid(part.mesh));
+        const auto match = std::find_if(reverse.parts.begin(), reverse.parts.end(), [&](const auto& p) { return p.region == part.region; });
+        REQUIRE(match != reverse.parts.end());
+        CHECK_THAT(match->volume, WithinAbs(part.volume, 1e-7));
+    }
+    std::cout << "MITER curved_edge," << result.volume_residual << "," << result.rounding_bound << "," << result.miter_constraint_residual
+              << "\n";
+}
+
+TEST_CASE("Both saved curved-wall markings have disjoint geometry before nozzle reachability is considered", "[FormorixFoundations]")
+{
+    ScopedSlic3rTemporaryDir temporary("formorix-miter-saved-regions");
+    DynamicPrintConfig config;
+    ConfigSubstitutionContext substitutions(ForwardCompatibilitySubstitutionRule::Disable);
+    Model model = Model::read_from_file(std::string(TEST_DATA_DIR) + "/../../docs/formorix/examples/curved-wall.3mf", &config,
+                                        &substitutions,
+                                        LoadStrategy::LoadModel | LoadStrategy::LoadConfig | LoadStrategy::AddDefaultInstances);
+    std::string error;
+    auto project = FS::Project::decode(model.formorix_surfaces, error);
+    INFO(error);
+    REQUIRE(project);
+    REQUIRE_FALSE(model.objects.empty());
+    const auto input = FormorixHybrid::extract(*model.objects.front(), 0, *project, {profile(0), profile(1), profile(2)});
+    REQUIRE(input.regions.size() == 2);
+    std::vector<FG::ShellRequest> requests;
+    for (const auto& region : input.regions) {
+        REQUIRE(region.settings.shell_mode == FS::ShellMode::Layers);
+        REQUIRE(region.settings.fine_final_layers == 0);
+        auto r = request(region.surface, region.settings.layers * region.settings.layer_height, region.id);
+        r.outward_normals.assign(r.surface.vertices.size(), Vec3d::Zero());
+        for (const auto& f : r.surface.faces) {
+            const Vec3d n = (r.surface.vertices[f[1]] - r.surface.vertices[f[0]]).cross(r.surface.vertices[f[2]] - r.surface.vertices[f[0]]);
+            for (int k = 0; k < 3; ++k)
+                r.outward_normals[f[k]] += n;
+        }
+        for (auto& n : r.outward_normals)
+            n.normalize();
+        requests.push_back(std::move(r));
+    }
+    const auto result = FG::partition_clipped(input.solid, requests, FG::SharedBoundaryPolicy::MiterAdjacentEdges);
+    INFO(result.error);
+    REQUIRE(result.ok());
+    REQUIRE(result.parts.size() == 3);
+    CHECK(result.mitered_edges > 0);
+    CHECK(result.miter_constraint_residual < 1e-8);
+    CHECK_THAT(result.volume_residual, WithinAbs(0., 1e-5));
+    CHECK(std::any_of(result.interfaces.begin(), result.interfaces.end(), [](const auto& x) { return x.first == 1 && x.second == 2; }));
+    for (const auto& part : result.parts)
+        CHECK(FG::valid_solid(part.mesh));
+    std::reverse(requests.begin(), requests.end());
+    const auto reversed = FG::partition_clipped(input.solid, requests, FG::SharedBoundaryPolicy::MiterAdjacentEdges);
+    INFO(reversed.error);
+    REQUIRE(reversed.ok());
+    for (const auto& part : result.parts) {
+        const auto match = std::find_if(reversed.parts.begin(), reversed.parts.end(),
+                                        [&](const auto& p) { return p.region == part.region; });
+        REQUIRE(match != reversed.parts.end());
+        CHECK_THAT(match->volume, WithinAbs(part.volume, 1e-5));
+    }
+    std::cout << "MITER original_curved_wall_both_regions," << std::setprecision(17) << result.input_volume << "," << result.volume_residual
+              << "," << result.rounding_bound << "," << result.miter_constraint_residual << "," << result.mitered_edges << "\n";
+}
+
 TEST_CASE("Variable wall and shell thickness produce a closed core", "[FormorixFoundations]")
 {
     auto solid            = box();
@@ -587,4 +820,160 @@ TEST_CASE("Parameterized nozzle envelopes retain placeholder status and respect 
     CHECK_THROWS(FP::forward_envelope(machine, 1, {100., 100., 101.}, 0., 0., 0.));
     CHECK_THROWS(FP::forward_envelope(machine, 1, {100., 100., 80.}, 0., 76., 0.));
     CHECK_THROWS(FP::forward_envelope(machine, 1, {100., 100., 80.}, 0., 0., 351.));
+}
+
+TEST_CASE("Compacted nominal ribbons retain Orca supplied volume and independent head dimensions", "[FormorixFoundations][RibbonModel]")
+{
+    const int head                = GENERATE(0, 1, 2);
+    const double flow             = GENERATE(.85, 1., 1.15);
+    auto p                        = profile(head);
+    p.flow_ratio                  = flow;
+    const nlohmann::json original = p;
+    const auto section            = FP::ribbon_section(p);
+    const Flow orca(float(p.line_width), float(p.layer_height), float(p.nozzle_diameter));
+    CHECK(section.model_version == 1);
+    CHECK_THAT(section.requested_width, WithinAbs(p.line_width, 1e-14));
+    CHECK_THAT(section.height, WithinAbs(p.layer_height, 1e-14));
+    // Orca Flow deliberately stores these dimensions/results in float; the
+    // new nominal model must agree without inheriting that precision loss.
+    CHECK_THAT(section.area_before_flow, WithinAbs(orca.mm3_per_mm(), 2e-7 * orca.mm3_per_mm()));
+    CHECK_THAT(section.supplied_area, WithinAbs(orca.mm3_per_mm() * flow, 2e-7 * orca.mm3_per_mm() * flow));
+    CHECK_THAT(section.compacted_width * section.height, WithinAbs(section.supplied_area, 1e-14));
+    CHECK(section.area_before_flow > FP::section_area(p));
+    CHECK(nlohmann::json(p) == original);
+}
+
+TEST_CASE("Ribbon speed respects supplied stadium volume without changing the flow setting", "[FormorixFoundations][RibbonModel]")
+{
+    auto p             = profile(1);
+    p.speed            = 500.;
+    p.volumetric_limit = 2.;
+    p.flow_ratio       = 1.12;
+    const auto section = FP::ribbon_section(p);
+    const double speed = FP::ribbon_speed(p);
+    CHECK_THAT(speed * section.supplied_area, WithinAbs(p.volumetric_limit, 1e-12));
+    CHECK(speed < FP::effective_speed(p)); // the legacy ellipse has a smaller section
+    CHECK_THAT(p.flow_ratio, WithinAbs(1.12, 1e-14));
+    p.speed = 1.;
+    CHECK_THAT(FP::ribbon_speed(p), WithinAbs(1., 1e-14));
+}
+
+TEST_CASE("Ribbon sections expose calibrated dimensions and reject inverted or invalid geometry", "[FormorixFoundations][RibbonModel]")
+{
+    auto p            = profile(1);
+    p.line_width      = .2;
+    p.layer_height    = .2;
+    const auto circle = FP::ribbon_section(p);
+    CHECK_THAT(circle.area_before_flow, WithinAbs(pi * .1 * .1, 1e-14));
+    CHECK_THAT(circle.compacted_width, WithinAbs(pi * .05, 1e-14));
+    p                     = profile(1);
+    p.width_correction    = 1.2;
+    p.height_correction   = 1.1;
+    const auto calibrated = FP::ribbon_section(p);
+    const Flow orca(float(p.line_width * p.width_correction), float(p.layer_height * p.height_correction), float(p.nozzle_diameter));
+    CHECK_THAT(calibrated.requested_width, WithinAbs(p.line_width, 1e-14));
+    CHECK_THAT(calibrated.height, WithinAbs(p.layer_height * p.height_correction, 1e-14));
+    CHECK_THAT(calibrated.area_before_flow, WithinAbs(orca.mm3_per_mm(), 2e-7 * orca.mm3_per_mm()));
+    p.width_correction  = .5;
+    p.height_correction = 2.;
+    REQUIRE(FP::valid(p));
+    CHECK_THROWS(FP::ribbon_section(p));
+    p            = profile(1);
+    p.flow_ratio = std::numeric_limits<double>::quiet_NaN();
+    CHECK_THROWS(FP::ribbon_section(p));
+    CHECK_THROWS(FP::ribbon_speed(p));
+    p              = profile(1);
+    p.layer_height = 0.;
+    CHECK_THROWS(FP::ribbon_section(p));
+}
+
+TEST_CASE("Finite mitered ribbon turns preserve a rectangular footprint and its supplied volume", "[FormorixFoundations][RibbonModel]")
+{
+    const int rows     = GENERATE(1, 2, 5);
+    auto p             = profile(GENERATE(0, 1, 2));
+    p.flow_ratio       = 1.08;
+    const auto section = FP::ribbon_section(p);
+    const double width = 8., pitch = section.compacted_width, depth = rows * pitch;
+    std::vector<Vec2d> centers{{0., pitch / 2.}};
+    for (int row = 0; row < rows; ++row) {
+        const bool right = row % 2 == 0;
+        const double end = row == rows - 1 ? (right ? width : 0.) : (right ? width - pitch / 2. : pitch / 2.);
+        centers.emplace_back(end, (row + .5) * pitch);
+        if (row < rows - 1)
+            centers.emplace_back(end, (row + 1.5) * pitch);
+    }
+    double length = 0.;
+    Polyline line;
+    for (std::size_t i = 0; i < centers.size(); ++i) {
+        line.points.emplace_back(Point::new_scale(centers[i].x(), centers[i].y()));
+        if (i)
+            length += (centers[i] - centers[i - 1]).norm();
+    }
+    // This finite reference includes every U-turn. Its connector length is
+    // balanced geometrically by shorter straight rows, without changing flow.
+    CHECK_THAT(length, WithinAbs(rows * width, 1e-12));
+    CHECK_THAT(length * section.supplied_area, WithinAbs(width * depth * section.height, 1e-12));
+    const Polygons target{Polygon::new_scale({{0., 0.}, {width, 0.}, {width, depth}, {0., depth}})};
+    const auto swept = offset(line, float(scale_(pitch / 2.)), jtMiter, 2., etOpenButt);
+    const auto area  = [](const Polygons& polygons) {
+        double sum = 0.;
+        for (const auto& polygon : polygons)
+            sum += polygon.area();
+        return std::abs(sum) * SCALING_FACTOR * SCALING_FACTOR;
+    };
+    // Clipper's scaled integer vertices/float radius are independently audited;
+    // the tolerance is an area allowance for their micrometre-scale rounding.
+    const double rounding_area = width * rows * 1e-5;
+    CHECK_THAT(area(diff(target, swept)), WithinAbs(0., rounding_area));
+    CHECK_THAT(area(diff(swept, target)), WithinAbs(0., rounding_area));
+    CHECK_THAT(area(swept) * section.height, WithinAbs(length * section.supplied_area, rounding_area * section.height));
+}
+
+TEST_CASE("Ribbon volume ledgers distinguish numerical residue from inadmissible and gross material excess",
+          "[FormorixFoundations][RibbonModel]")
+{
+    const auto original_ellipse = FP::ribbon_balance(4642.359, 1000.);
+    CHECK_THAT(original_ellipse.excess_volume, WithinAbs(3642.359, 1e-9));
+    CHECK(original_ellipse.inadmissible);
+    CHECK(original_ellipse.gross_oversupply);
+    const auto small_excess = FP::ribbon_balance(1002., 1000.);
+    CHECK_THAT(small_excess.excess_volume, WithinAbs(2., 1e-12));
+    CHECK(small_excess.inadmissible);
+    CHECK_FALSE(small_excess.gross_oversupply);
+    const auto gross = FP::ribbon_balance(1100.1, 1000.);
+    CHECK(gross.gross_oversupply);
+    const auto deficient = FP::ribbon_balance(900., 1000.);
+    CHECK_THAT(deficient.excess_volume, WithinAbs(0., 1e-12));
+    CHECK_FALSE(deficient.inadmissible);
+    CHECK_FALSE(deficient.gross_oversupply);
+    // No positive-overflow classification is a proof of coverage or sufficient supply.
+}
+
+TEST_CASE("Ribbon numerical allowances are explicit signed residuals and never alter supplied material",
+          "[FormorixFoundations][RibbonModel]")
+{
+    const double supplied = 10. + .5e-6, target = 10.;
+    const auto positive = FP::ribbon_balance(supplied, target, 1e-6);
+    const auto negative = FP::ribbon_balance(supplied, target, -1e-6);
+    CHECK_THAT(positive.numerical_tolerance, WithinAbs(1.1e-6, 1e-16));
+    CHECK_THAT(negative.numerical_tolerance, WithinAbs(positive.numerical_tolerance, 1e-16));
+    CHECK_THAT(positive.excess_volume, WithinAbs(supplied - target, 1e-16));
+    CHECK_FALSE(positive.inadmissible);
+    CHECK_FALSE(negative.inadmissible);
+    CHECK(FP::ribbon_balance(supplied, target).inadmissible);
+    CHECK(FP::ribbon_balance(10. + 2e-6, target, 1e-6).inadmissible);
+    CHECK_FALSE(FP::ribbon_balance(target, target).inadmissible);
+}
+
+TEST_CASE("Ribbon volume ledgers reject invalid quantities and nonfinite uncertainty", "[FormorixFoundations][RibbonModel]")
+{
+    CHECK_THROWS(FP::ribbon_balance(-1., 1.));
+    CHECK_THROWS(FP::ribbon_balance(1., 0.));
+    CHECK_THROWS(FP::ribbon_balance(1., -1.));
+    const double invalid = GENERATE(std::numeric_limits<double>::infinity(), std::numeric_limits<double>::quiet_NaN());
+    CHECK_THROWS(FP::ribbon_balance(invalid, 1.));
+    CHECK_THROWS(FP::ribbon_balance(1., invalid));
+    CHECK_THROWS(FP::ribbon_balance(1., 1., invalid));
+    const double maximum = std::numeric_limits<double>::max();
+    CHECK_THROWS(FP::ribbon_balance(maximum, maximum, maximum));
 }

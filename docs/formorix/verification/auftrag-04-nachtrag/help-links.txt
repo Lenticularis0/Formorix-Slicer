@@ -1,0 +1,16 @@
+{
+  "documentation_commit": "0e7bba2d317ec671bcf75ad6944cee795ccab359",
+  "mapping_matches_commit": true,
+  "gui_topics": 12,
+  "gui_targets_valid": 12,
+  "explicit_gui_fragments": 4,
+  "help_pages_checked": 12,
+  "relative_link_occurrences": 26,
+  "static_errors": 0,
+  "static_pass": true,
+  "http_requested": true,
+  "http_unique_targets": 21,
+  "http_ok": 21,
+  "http_failures": 0,
+  "http_note": "Remote failures can reflect a not-yet-published commit; they do not override local commit/anchor validity."
+}

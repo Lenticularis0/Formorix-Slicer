@@ -7,7 +7,7 @@ Formorix ergänzt OrcaSlicer um projektbezogene Oberflächenmarkierungen und ein
 3. **5D-Vorschau berechnen** anklicken. Das Ergebnis erscheint im vorhandenen Tab **Vorschau**.
 4. [Zeitschieber und Wiedergabe](preview.md) verwenden. Änderungen am Modell oder an relevanten Einstellungen erfordern eine neue Berechnung.
 
-Weitere Themen: [Stützstrukturen](supports.md), [durchgehende Bahnen](continuous-paths.md), [Kopfübergänge](transitions.md), [High-Speed-Modus](high-speed.md).
+Weitere Themen: [Hybrid-Vorschau mit Orca-Kernbahnen](hybrid.md), [Stützstrukturen](supports.md), [durchgehende Bahnen](continuous-paths.md), [Kopfübergänge](transitions.md), [High-Speed-Modus](high-speed.md).
 
 Die Markierungen und Einstellungen werden in der 3MF-Projektdatei gespeichert. Vorschaugeometrie und Zeiten sind abgeleitete Daten und werden nach dem Laden erneut berechnet. Es entstehen keine ausführbaren 5D-Dateien.
 

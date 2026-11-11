@@ -1,0 +1,80 @@
+[
+  {
+    "enabled": true,
+    "material_preset": "Generic ABS @Prusa",
+    "nozzle_index": 0,
+    "printer_preset": "MyKlipper 0.8 nozzle",
+    "process": {
+      "contact_to_tcp": 0.0,
+      "flow_ratio": 0.926,
+      "height_correction": 1.0,
+      "layer_height": 0.2,
+      "line_width": 0.8400000000000001,
+      "material_id": "OFY9muEs",
+      "nozzle_diameter": 0.8,
+      "nozzle_profile": "MyKlipper 0.8 nozzle / 0",
+      "shrink_compensation": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "speed": 60.0,
+      "temperature": 260.0,
+      "volumetric_limit": 11.0,
+      "width_correction": 1.0
+    },
+    "tasks": 16
+  },
+  {
+    "enabled": true,
+    "material_preset": "",
+    "nozzle_index": 0,
+    "printer_preset": "",
+    "process": {
+      "contact_to_tcp": 0.0,
+      "flow_ratio": 0.98,
+      "height_correction": 1.0,
+      "layer_height": 0.2,
+      "line_width": 0.42000000000000004,
+      "material_id": "OFDSrzZ8",
+      "nozzle_diameter": 0.4,
+      "nozzle_profile": "Formorix 5D 0.4 nozzle / 0",
+      "shrink_compensation": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "speed": 60.0,
+      "temperature": 220.0,
+      "volumetric_limit": 12.0,
+      "width_correction": 1.0
+    },
+    "tasks": 16
+  },
+  {
+    "enabled": true,
+    "material_preset": "",
+    "nozzle_index": 0,
+    "printer_preset": "MyKlipper 0.6 nozzle",
+    "process": {
+      "contact_to_tcp": 0.0,
+      "flow_ratio": 0.98,
+      "height_correction": 1.0,
+      "layer_height": 0.2,
+      "line_width": 0.63,
+      "material_id": "OFDSrzZ8",
+      "nozzle_diameter": 0.6,
+      "nozzle_profile": "MyKlipper 0.6 nozzle / 0",
+      "shrink_compensation": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "speed": 60.0,
+      "temperature": 220.0,
+      "volumetric_limit": 12.0,
+      "width_correction": 1.0
+    },
+    "tasks": 16
+  }
+]

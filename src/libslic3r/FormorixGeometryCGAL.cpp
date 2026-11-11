@@ -136,7 +136,7 @@ double volume(const Mesh& m)
         throw std::invalid_argument("Invalid solid");
     return CGAL::to_double(PMP::volume(e));
 }
-Partition partition_meshes(const Mesh& solid, const std::vector<std::pair<int, Mesh>>& requests)
+Partition partition_meshes(const Mesh& solid, const std::vector<std::pair<int, Mesh>>& requests, bool clip)
 {
     Partition out;
     try {
@@ -146,6 +146,7 @@ Partition partition_meshes(const Mesh& solid, const std::vector<std::pair<int, M
         if (!valid(remaining))
             throw std::invalid_argument("Source is not a valid oriented solid");
         const auto original_volume = PMP::volume(remaining);
+        const ExactMesh original = remaining;
         out.input_volume           = CGAL::to_double(original_volume);
         std::vector<ExactMesh> solids;
         std::vector<int> regions;
@@ -156,6 +157,12 @@ Partition partition_meshes(const Mesh& solid, const std::vector<std::pair<int, M
             ExactMesh cutter = exact(request.second);
             if (!valid(cutter))
                 throw std::invalid_argument("Offset is self-intersecting or not a valid volume");
+            if (clip) {
+                ExactMesh source = original, clipped;
+                if (!PMP::corefine_and_compute_intersection(source, cutter, clipped) || !valid(clipped))
+                    throw std::invalid_argument("Clipped shell is not a valid volume");
+                cutter = std::move(clipped);
+            }
             const auto cutter_volume = PMP::volume(cutter);
             ExactMesh skin, core, outside;
             std::array<std::optional<ExactMesh*>, 4> outputs{};

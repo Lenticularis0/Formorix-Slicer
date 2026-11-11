@@ -14,6 +14,18 @@ Before materialization, the union preserves the supplied solid exactly and the p
 
 CAD error and offset approximation error remain separate questions. Full-wall consumption is possible when a valid cutter exactly consumes a solid. General variable-thickness full-wall offsetting, automatic patch extraction from the GUI, arbitrary self-intersection repair and generation of load-bearing supports are not part of this module. A failed request returns no partial accepted parts. Patches must match the source surface: a slightly displaced coplanar patch is not silently projected back onto it.
 
+### Explicit miter boundaries
+
+`partition_clipped(..., SharedBoundaryPolicy::MiterAdjacentEdges)` clips to the original solid and constructs a symmetric junction between adjacent offset shells. It requires exactly matching boundary-edge coordinates with opposite winding. It does not weld nearby surfaces or infer adjacency from intersecting volumes. The default policy remains `RejectOverlap`.
+
+At an outer seam vertex `p`, each incident region contributes its **own** outward normal `n_i` and requested depth `d_i`. The common inner point is `q = p - v`, where `v` is the minimum-norm solution of `n_i · v = d_i`. Constraints are geometrically sorted, so region IDs and input ordering do not choose a preferred material. Normals are not averaged across the sharp corner. Parallel neighbouring sheets retain their ordinary depth-step boundary. Inconsistent constraints and miters longer than four times the largest incident depth are rejected explicitly.
+
+Both cutters use the same inner seam points and the same canonical diagonal for each seam quadrilateral. This matters on curved common edges: independent normals produce nonplanar quads, for which opposite diagonal choices would create a gap or overlap. The original outer vertices and triangles are retained. Existing exact CGAL clipping, disjointness and total-volume checks still apply; mitering is not permission to resolve residual overlaps by region priority. A shared material interface remains explicit even for incompatible materials. No blending, bond strength or continuous extrusion across different heads is inferred.
+
+This construction retains the existing inner-sheet triangulation. If moving a boundary point past a neighbouring inner row folds a cell, the request is rejected. In particular, very fine boundary tessellations can require local retriangulation or Boolean wedge clipping even when a continuous geometric miter would exist. Neither operation is silently approximated here.
+
+`mitered_edges`, `mitered_vertices` and `miter_constraint_residual` record construction diagnostics. The residual checks normal depth at seam vertices; it is not a bound on an arbitrary curved CAD offset or on deposited material. Miter points are computed in double precision and the resulting polyhedra are processed exactly from those binary values. The existing measured CGAL-to-double rounding bound still applies, and imported CAD, interpolation and nominal deposition errors remain separate.
+
 CGAL's existing LSCM unwrap targets disk-like patches; isotropic remeshing improves triangle distribution but cannot recover a lost CAD surface. Neither is a substitute for CAD error control. See the [CGAL Boolean documentation](https://doc.cgal.org/latest/Polygon_mesh_processing/group__PMP__corefinement__grp.html) and [parameterization documentation](https://doc.cgal.org/latest/Surface_mesh_parameterization/index.html).
 
 ## Accuracy evidence
@@ -28,7 +40,7 @@ This is not a symmetric Hausdorff/coverage certificate: missing CAD regions, ope
 
 ## Nominal deposition
 
-`FormorixProcess::Profile` owns a material ID and nozzle-profile ID, diameter, actual line width, layer height, temperature, volumetric ceiling, speed, flow ratio, three shrink-compensation ratios and width/height calibration factors. Every head and motion can carry a different profile. The Orca adapter resolves explicit nozzle and filament indices; it does not default to nozzle zero. Material preset names remain the existing `FormorixSurfaces::Head::material_preset` reference. Optional resolved process values are persisted in surface schema 2. Schema 1 migrates without inventing process/material data; unknown future schemas retain the existing opaque preservation behavior.
+`FormorixProcess::Profile` owns a material ID and nozzle-profile ID, diameter, actual line width, layer height, temperature, volumetric ceiling, speed, flow ratio, three shrink-compensation ratios and width/height calibration factors. Every head and motion can carry a different profile. The Orca adapter resolves explicit nozzle and filament indices; it does not default to nozzle zero. Material preset names remain the existing `FormorixSurfaces::Head::material_preset` reference. Optional resolved process values and explicit nozzle bindings are persisted in surface schema 3. Schemas 1 and 2 migrate without inventing material data; unknown future schemas retain the existing opaque preservation behavior.
 
 The nominal cross-section is an ellipse normal to the travel tangent. Its half-axes are a = corrected line width / 2 and b = corrected layer height / 2. The height axis is the nozzle axis projected into that plane, so cross-track tilt changes the deposited ellipse. Longitudinal tilt deformation, die swell, wetting and rheology are not simulated. Diameter constrains the allowed layer height but is not substituted for the actual line width.
 
@@ -42,7 +54,7 @@ These cross-sections do not constitute a volume-conserving fluid simulation. Int
 
 Shrinkage compensation is metadata; it is not automatically applied as three conflicting global scales to one shared CAD model. Material-pair compatibility has its own Unknown/Compatible/Incompatible state. Geometrically coincident materials can still be incompatible.
 
-Resolved process data are snapshots. Changing the assigned Orca material name clears them; changing values inside an existing Orca preset does not automatically resolve a fresh snapshot yet. A future hybrid consumer must resolve/revalidate these values against the active configuration. The legacy GUI preview does not consume the new snapshots.
+Resolved process data are snapshots. The [profile resolver](FormorixProfiles.md) invalidates them when current source contents change, including edits under the same preset name, and resolves them again before hybrid calculation. Persisted process snapshots are never authoritative inputs. Changing a head's material or nozzle binding also clears the snapshot immediately.
 
 ## Complex surfaces and continuity
 

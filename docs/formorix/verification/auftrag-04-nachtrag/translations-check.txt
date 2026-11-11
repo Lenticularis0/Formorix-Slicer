@@ -1,0 +1,133 @@
+de line 293: E3D High Flow
+    warn  identical to the English
+de line 3442: Load Modifier
+    warn  glossary: expected 'Modifizierer' (Modifier)
+de line 3823: desc
+    warn  ending punctuation: source has none, translation ends with '.'
+de line 5513: Brim ear radius
+    warn  glossary: expected 'Rand' (Brim)
+de line 5524: Use painted brim ears or set brim width above zero to edit this settin
+    warn  glossary: expected 'Brim-Ohren / Mausohren ⚠' (Brim ears)
+de line 5593: Set top or bottom support interface layers above zero to edit this set
+    warn  glossary: expected 'Stützstruktur-Schnittstelle' (Support interface)
+de line 5605: Set top or bottom support interface layers above zero to edit interfac
+    warn  glossary: expected 'Stützstruktur-Schnittstelle' (Support interface)
+de line 6478: Extrude
+    warn  glossary: expected 'Extrudieren' (Extrude)
+de line 10950: Use normal infill as underlay
+    warn  glossary: expected 'Füllung' (Infill)
+de line 10954: Inherit Infill first
+    warn  glossary: expected 'Füllung' (Infill)
+de line 11056: Request 5D ironing (future function)
+    warn  glossary: expected 'Glätten' (Ironing)
+de line 11209: %1% · %2%
+    warn  identical to the English
+de line 11476: Layer-change travel: collision check pending.
+    warn  glossary: expected 'Eilgang' (Travel)
+de line 12091: How brightly the dimmed layers are rendered when "Dim lower layers" is
+    warn  printf placeholders ['% i'] -> ['% i', '% s', '% d'] (order must match)
+de line 14036: ver
+    warn  ending punctuation: source has none, translation ends with '.'
+de line 14245: This is the bed temperature when the Cool Plate is installed. A value
+    warn  glossary: expected 'Druckbett' (Bed / Build plate)
+de line 14261: This is the bed temperature when the Smooth PEI Plate/High Temperature
+    warn  glossary: expected 'Druckbett' (Bed / Build plate)
+de line 14384: The selected printer does not support chamber temperature control.
+    warn  glossary: expected 'Druckraum Temperatur' (Chamber temperature)
+de line 15915: Filament Track Switch
+    warn  identical to the English
+de line 17105: This is the bed temperature of the first layer. A value of 0 means the
+    warn  glossary: expected 'Druckbett' (Bed / Build plate)
+de line 17291: Controls the density (spacing) of external bridge lines.\nTheoretically
+    warn  printf placeholders ['% d', '% d'] -> ['% e'] (order must match)
+de line 17318: Controls the density (spacing) of internal bridge lines.\nInternal brid
+    warn  printf placeholders ['% d', '% d'] -> [] (order must match)
+de line 18273: Small support perimeters
+    warn  glossary: expected 'Umfang' (Perimeter)
+de line 18281: Small support perimeters threshold
+    warn  glossary: expected 'Umfang' (Perimeter)
+de line 18538: Enabling this setting means that part cooling fan will never stop enti
+    warn  ending punctuation: source ends with '.', translation has none
+de line 18909: Start and end ratios for the first component in gradient mode. Comma-s
+    warn  printf placeholders ['% to'] -> [] (order must match)
+de line 19192: Controls how strongly sparse infill corners are rounded. 0% keeps the
+    warn  printf placeholders ['% p'] -> ['% d'] (order must match)
+de line 20524: This parameter smooths out sudden extrusion rate changes that happen w
+    warn  glossary: expected 'Als Bogen drucken' (Arc fitting)
+de line 20861: Retract amount after wipe
+    warn  glossary: expected 'Reinigen' (Wipe)
+de line 21174: Role based wipe speed
+    warn  glossary: expected 'Reinigen' (Wipe)
+de line 22501: Fillet wall
+    warn  glossary: expected 'Abrunden' (Fillet)
+de line 23841: Extruder type and nozzle volume type of the outgoing extruder, such as
+    warn  glossary: expected 'Direktantrieb' (Direct Drive)
+de line 23850: Extruder type and nozzle volume type of the incoming extruder, such as
+    warn  glossary: expected 'Direktantrieb' (Direct Drive)
+de line 24193: The new extrusion role/type that is going to be used\nPossible values:\n
+    warn  glossary: expected 'Rand' (Brim)
+    warn  glossary: expected 'Umrandung' (Skirt)
+    warn  glossary: expected 'Glätten' (Ironing)
+    warn  glossary: expected 'Umfang' (Perimeter)
+de line 24208: The previously used extrusion role/type\nPossible values:\n["Perimeter",
+    warn  glossary: expected 'Rand' (Brim)
+    warn  glossary: expected 'Umrandung' (Skirt)
+    warn  glossary: expected 'Glätten' (Ironing)
+    warn  glossary: expected 'Umfang' (Perimeter)
+de line 25402: Auto-adjust to max volumetric speed
+    warn  glossary: expected 'Volumetrische Geschwindigkeit' (Volumetric Speed)
+de line 25406: If the end speed would exceed the filament's maximum volumetric speed,
+    warn  glossary: expected 'Volumetrische Geschwindigkeit' (Volumetric Speed)
+de line 25421: The end speed (%.0f mm/s) exceeds the filament's maximum volumetric sp
+    warn  glossary: expected 'Volumetrische Geschwindigkeit' (Volumetric Speed)
+de line 25434: The end speed (%.0f mm/s) exceeds the filament's maximum volumetric sp
+    warn  glossary: expected 'Volumetrische Geschwindigkeit' (Volumetric Speed)
+de line 25445: Even at the smallest layer height used by this printer's profiles (%.2
+    warn  glossary: expected 'Volumetrische Geschwindigkeit' (Volumetric Speed)
+de line 25783: Ext - %s
+    warn  identical to the English
+de line 27082: (Std: %d, HF: %d)
+    warn  identical to the English
+de line 27266: %d invalid brim ear
+    warn  [0] glossary: expected 'Rand' (Brim)
+de line 27575: %1% → %2%
+    warn  identical to the English
+de line 28316: Surface Loft
+    warn  glossary: expected 'Ausformen' (Loft)
+de line 29058: Extrude dist
+    warn  glossary: expected 'Extrudieren' (Extrude)
+de line 29659: Expr
+    warn  ending punctuation: source has none, translation ends with '.'
+de line 30169: %s ↔ %s %.2f mm³
+    warn  identical to the English
+de line 31108: Fillet radius
+    warn  glossary: expected 'Abrunden' (Fillet)
+de line 31196: Total sweep (deg)
+    warn  glossary: expected 'Austragen' (Sweep)
+de line 31701: [Design] Surface Loft
+    warn  glossary: expected 'Ausformen' (Loft)
+de line 32377: Gizmo FDM paint-on supports
+    warn  glossary: expected 'Gizmo' (Gizmo)
+de line 32387: Gizmo multi-material painting
+    warn  glossary: expected 'Gizmo' (Gizmo)
+de line 32970: delete_face needs a body
+    warn  snake_case kept? ['delete_face']
+de line 32974: delete_face needs at least one face
+    warn  snake_case kept? ['delete_face']
+de line 32978: delete_face: face not found
+    warn  snake_case kept? ['delete_face']
+de line 32982: delete_face failed
+    warn  snake_case kept? ['delete_face']
+de line 32986: delete_face produced no geometry
+    warn  snake_case kept? ['delete_face']
+de line 34003: Sea shell
+    warn  glossary: expected 'Schale' (Shell) or 'Aushöhlen' (Shell (Design))
+de line 35429: • %1%: %2%
+    warn  identical to the English
+de line 36581: %d k (auto)
+    warn  identical to the English
+de line 36594: %.2f mm (auto)
+    warn  identical to the English
+de line 39111: extrude depth is zero
+    warn  glossary: expected 'Extrudieren' (Extrude)
+de: 0 entries with errors, 63 with warnings (scope: ai)

@@ -9,6 +9,7 @@
 #include <functional>
 #include <limits>
 #include <map>
+#include <set>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -16,7 +17,7 @@
 namespace Slic3r::FormorixGeometry {
 // Keep the CGAL archive independent of libslic3r to avoid a static-library
 // link cycle on platforms with order-sensitive archive resolution.
-Partition partition_meshes(const Mesh&, const std::vector<std::pair<int, Mesh>>&);
+Partition partition_meshes(const Mesh&, const std::vector<std::pair<int, Mesh>>&, bool clip);
 namespace {
 void check_mesh(const Mesh& m)
 {
@@ -59,7 +60,10 @@ double segment_distance(const Vec3d& p, const Vec3d& a, const Vec3d& b)
 }
 } // namespace
 
-Mesh shell_cutter(const ShellRequest& r)
+namespace {
+using VertexKey = std::array<double, 3>;
+VertexKey vertex_key(const Vec3d& p) { return {p.x(), p.y(), p.z()}; }
+Mesh shell_cutter_impl(const ShellRequest& r, const std::vector<Vec3d>* inner = nullptr)
 {
     const auto boundary = edges(r.surface);
     const std::size_t n = r.surface.vertices.size();
@@ -70,7 +74,7 @@ Mesh shell_cutter(const ShellRequest& r)
         if (!std::isfinite(r.depths[i]) || r.depths[i] <= 0. || r.depths[i] > 10000. || !r.outward_normals[i].allFinite() ||
             std::abs(r.outward_normals[i].norm() - 1.) > 1e-8)
             throw std::invalid_argument("Invalid shell depth/normal");
-        out.vertices.push_back(r.surface.vertices[i] - r.depths[i] * r.outward_normals[i]);
+        out.vertices.push_back(inner ? inner->at(i) : r.surface.vertices[i] - r.depths[i] * r.outward_normals[i]);
     }
     for (const auto& f : r.surface.faces) {
         const Vec3d original = (out.vertices[f[1]] - out.vertices[f[0]]).cross(out.vertices[f[2]] - out.vertices[f[0]]);
@@ -82,11 +86,123 @@ Mesh shell_cutter(const ShellRequest& r)
     for (const auto& entry : boundary)
         if (entry.second.size() == 1) {
             const auto& e = entry.second.front();
-            out.faces.emplace_back(e.to, e.from, e.from + int(n));
-            out.faces.emplace_back(e.to, e.from + int(n), e.to + int(n));
+            // Both regions must choose the SAME diagonal on a nonplanar
+            // miter quad, despite traversing the shared edge oppositely.
+            if (!inner || vertex_key(out.vertices[e.from]) < vertex_key(out.vertices[e.to])) {
+                out.faces.emplace_back(e.to, e.from, e.from + int(n));
+                out.faces.emplace_back(e.to, e.from + int(n), e.to + int(n));
+            } else {
+                out.faces.emplace_back(e.to, e.from, e.to + int(n));
+                out.faces.emplace_back(e.from, e.from + int(n), e.to + int(n));
+            }
         }
     return out;
 }
+
+struct SeamUse
+{
+    std::size_t region;
+    int from, to;
+};
+struct MiteredOffsets
+{
+    std::vector<std::vector<Vec3d>> inner;
+    std::size_t edges = 0, vertices = 0;
+    double residual = 0.;
+};
+// Inputs have already passed shell_cutter's shape/normal/depth validation.
+MiteredOffsets miter_offsets(const std::vector<ShellRequest>& requests)
+{
+    MiteredOffsets out;
+    std::map<std::pair<VertexKey, VertexKey>, std::vector<SeamUse>> boundary;
+    for (std::size_t region = 0; region < requests.size(); ++region) {
+        const auto& r = requests[region];
+        out.inner.emplace_back();
+        for (std::size_t i = 0; i < r.surface.vertices.size(); ++i)
+            out.inner.back().push_back(r.surface.vertices[i] - r.depths[i] * r.outward_normals[i]);
+        for (const auto& entry : edges(r.surface))
+            if (entry.second.size() == 1) {
+                const auto& e = entry.second.front();
+                const auto a = vertex_key(r.surface.vertices[e.from]), b = vertex_key(r.surface.vertices[e.to]);
+                boundary[std::minmax(a, b)].push_back({region, e.from, e.to});
+            }
+    }
+    std::map<VertexKey, std::set<std::pair<std::size_t, int>>> junctions;
+    for (const auto& entry : boundary) {
+        const auto& uses = entry.second;
+        if (uses.size() < 2)
+            continue;
+        if (uses.size() != 2 || uses[0].region == uses[1].region)
+            throw std::invalid_argument("Shared shell edge is not a two-region boundary");
+        const auto& a = requests[uses[0].region];
+        const auto& b = requests[uses[1].region];
+        // Adjacent outward-oriented patches traverse a common edge oppositely.
+        if (vertex_key(a.surface.vertices[uses[0].from]) != vertex_key(b.surface.vertices[uses[1].to]))
+            throw std::invalid_argument("Shared shell boundary has inconsistent surface orientation");
+        const bool parallel = (a.outward_normals[uses[0].from] - b.outward_normals[uses[1].to]).norm() < 1e-8 &&
+                              (a.outward_normals[uses[0].to] - b.outward_normals[uses[1].from]).norm() < 1e-8;
+        // Different depths on a flat surface form a step, not a miter.
+        if (parallel)
+            continue;
+        ++out.edges;
+        for (const auto& use : uses)
+            for (int vertex : {use.from, use.to})
+                junctions[vertex_key(requests[use.region].surface.vertices[vertex])].insert({use.region, vertex});
+    }
+    for (const auto& junction : junctions) {
+        struct Constraint
+        {
+            Vec3d normal;
+            double depth;
+        };
+        std::vector<Constraint> constraints;
+        double maximum_depth = 0.;
+        for (const auto& use : junction.second) {
+            const auto& r = requests[use.first];
+            constraints.push_back({r.outward_normals[use.second], r.depths[use.second]});
+            maximum_depth = std::max(maximum_depth, r.depths[use.second]);
+        }
+        // Geometric ordering makes the construction independent of region IDs
+        // and request order, including corners shared by three regions.
+        std::sort(constraints.begin(), constraints.end(), [](const auto& a, const auto& b) {
+            return std::array<double, 4>{a.normal.x(), a.normal.y(), a.normal.z(), a.depth} <
+                   std::array<double, 4>{b.normal.x(), b.normal.y(), b.normal.z(), b.depth};
+        });
+        std::vector<Vec3d> basis;
+        Vec3d offset = Vec3d::Zero();
+        for (const auto& constraint : constraints) {
+            Vec3d direction = constraint.normal;
+            for (const auto& axis : basis)
+                direction -= direction.dot(axis) * axis;
+            const double rhs = constraint.depth - constraint.normal.dot(offset);
+            if (direction.squaredNorm() < 1e-16) {
+                if (std::abs(rhs) > 1e-8 * std::max(1., maximum_depth))
+                    throw std::invalid_argument("Incompatible offset planes at shared shell junction");
+            } else {
+                direction.normalize();
+                offset += direction * (rhs / constraint.normal.dot(direction));
+                basis.push_back(direction);
+            }
+        }
+        if (!offset.allFinite() || offset.norm() > 4. * maximum_depth)
+            throw std::invalid_argument("Shared shell junction exceeds the geometric miter limit");
+        const Vec3d p(junction.first[0], junction.first[1], junction.first[2]);
+        const Vec3d inner = p - offset;
+        for (const auto& constraint : constraints) {
+            const double residual = std::abs(constraint.normal.dot(p - inner) - constraint.depth);
+            out.residual          = std::max(out.residual, residual);
+            if (residual > 1e-8 * std::max(1., maximum_depth))
+                throw std::invalid_argument("Shared shell offset constraint could not be resolved");
+        }
+        for (const auto& use : junction.second)
+            out.inner[use.first][use.second] = inner;
+        ++out.vertices;
+    }
+    return out;
+}
+} // namespace
+
+Mesh shell_cutter(const ShellRequest& r) { return shell_cutter_impl(r); }
 
 Partition partition(const Mesh& solid, const std::vector<ShellRequest>& requests)
 {
@@ -96,7 +212,33 @@ Partition partition(const Mesh& solid, const std::vector<ShellRequest>& requests
         std::vector<std::pair<int, Mesh>> cutters;
         for (const auto& request : requests)
             cutters.emplace_back(request.region, shell_cutter(request));
-        return partition_meshes(solid, cutters);
+        return partition_meshes(solid, cutters, false);
+    } catch (const std::exception& e) {
+        Partition out;
+        out.error = e.what();
+        return out;
+    }
+}
+
+Partition partition_clipped(const Mesh& solid, const std::vector<ShellRequest>& requests, SharedBoundaryPolicy policy)
+{
+    try {
+        if (requests.empty() || requests.size() > 32)
+            throw std::invalid_argument("Invalid region count");
+        std::vector<std::pair<int, Mesh>> cutters;
+        for (const auto& request : requests)
+            cutters.emplace_back(request.region, shell_cutter(request));
+        MiteredOffsets miter;
+        if (policy == SharedBoundaryPolicy::MiterAdjacentEdges) {
+            miter = miter_offsets(requests);
+            for (std::size_t i = 0; i < requests.size(); ++i)
+                cutters[i].second = shell_cutter_impl(requests[i], &miter.inner[i]);
+        }
+        auto out                      = partition_meshes(solid, cutters, true);
+        out.mitered_edges             = miter.edges;
+        out.mitered_vertices          = miter.vertices;
+        out.miter_constraint_residual = miter.residual;
+        return out;
     } catch (const std::exception& e) {
         Partition out;
         out.error = e.what();

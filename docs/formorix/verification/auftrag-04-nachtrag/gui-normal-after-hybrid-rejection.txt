@@ -1,0 +1,103 @@
+Window: "cube-planar - Formorix Slicer", App: orca-slicer.exe.
+	0 window cube-planar - Formorix Slicer Secondary Actions: Raise
+		19 pane control ID: 3200
+			20 pane control ID: -31990
+		21 pane ID: -31965
+			22 pane panel ID: -31950
+				957 pane panel ID: -31949
+					958 pane panel ID: -31948
+						959 pane ID: -31961
+							960 pane panel ID: -31951
+								961 pane Layer height ID: -31550
+								962 pane ID: -31549
+									963 pane mm ID: -31548
+										964 edit (settable, string) Value: 0.2 ID: -31547
+									965 pane mm ID: -31546
+										966 edit (settable, string) Value: 0.2 ID: -31545
+									967 button ID: -31544
+								968 pane Seam ID: -31523
+								969 pane ID: -31522
+									970 pane Aligned ID: -31521
+								971 pane Precision ID: -31483
+								972 pane ID: -31482
+									973 button ID: -31462
+								974 pane Walls and surfaces ID: -31400
+								975 pane ID: -31399
+									976 button ID: -31366
+									977 button ID: -31365
+								978 scroll bar (settable, float) Vertical Value: 0 ID: NonClientVerticalScrollBar
+									979 button Line up ID: UpButton
+									980 thumb Position ID: ScrollbarThumb
+									981 button Page down ID: DownPageButton
+									982 button Line down ID: DownButton
+							983 pane panel ID: -31780
+								984 pane panel ID: -31776
+									985 pane 0.20mm Standard @MK4(cube-planar.3mf) ID: -31779
+									986 button ID: -31775
+									987 button ID: -31774
+									988 button ID: -31773
+									989 button ID: -31772
+								990 pane panel ID: -31767
+									991 button Quality ID: -31761
+									992 button Strength ID: -31760
+									993 button Support ID: -31759
+									994 button Multimaterial ID: -31758
+									995 button Others ID: -31757
+						996 pane panel ID: -31960
+							997 button ID: -31959
+							998 text Process ID: -31958
+							999 button ID: -31957
+							1000 button ID: -31955
+							1001 pane panel ID: -31954
+							1002 button ID: -31953
+							1003 button ID: -31952
+						1004 pane panel ID: -31947
+							1005 button ID: -31946
+							1006 text Printer ID: -31945
+							1007 button ID: -31944
+							1008 button ID: -31942
+						1009 pane panel ID: -31941
+						1010 pane panel ID: -31940
+							1011 pane panel ID: -31939
+								1012 image ID: -31937
+								1013 pane Prusa MK4 0.4 nozzle(cube-planar.3mf) ID: -31936
+							1014 pane panel ID: -31932
+								1015 text Variant ID: -31931
+								1016 pane 0.4 ID: -31930
+								1017 text Hardened Steel ID: -31927
+						1018 pane panel ID: -31846
+							1019 button ID: -31845
+							1020 text Filament ID: -31844
+							1021 button ID: -31839
+							1022 button ID: -31836
+						1023 pane panel ID: -31842
+						1024 pane panel ID: -31835
+							1025 pane panel ID: -31834
+								1026 pane Generic PLA @Prusa MK4(cube-planar.3mf) ID: -31833
+								1027 button 1 ID: -31830
+								1028 button ID: -31829
+								1029 scroll bar (settable, float) Vertical Value: 0 ID: NonClientVerticalScrollBar
+									1030 button Line up ID: UpButton
+									1031 thumb Position ID: ScrollbarThumb
+									1032 button Page down ID: DownPageButton
+									1033 button Line down ID: DownButton
+				99 pane panel ID: -31798
+					1040 pane panel ID: -31793
+						1041 pane OrcaSceneCanvas ID: -31792
+			102 pane control ID: -31964
+				1034 pane panel ID: -31988
+					1035 pane Export G-code file ID: -31985
+					1036 pane ID: -31984
+				1037 pane panel ID: -31989
+					1038 pane (disabled) Slice plate ID: -31987
+					1039 pane ID: -31986
+				109 button ID: -31962
+				110 button ID: -31612
+				111 button Prepare ID: -31601
+				112 button Preview ID: -31600
+				113 button ID: -31599
+				114 button ID: -31591
+
+The focused UI element is 1041 pane OrcaSceneCanvas ID: -31792.
+
+Focused element: 1041 pane OrcaSceneCanvas ID: -31792

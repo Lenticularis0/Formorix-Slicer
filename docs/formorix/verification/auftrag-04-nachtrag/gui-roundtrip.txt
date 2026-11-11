@@ -1,0 +1,55 @@
+Window: "*hybrid-verified - Formorix Slicer", App: orca-slicer.exe.
+	0 window *hybrid-verified - Formorix Slicer Secondary Actions: Raise
+		26 pane control ID: 3200
+			27 pane control ID: -31990
+		28 pane ID: -31965
+			29 pane panel ID: -31950
+				96 pane panel ID: -31798
+					97 pane panel ID: -31797
+						98 pane OrcaSceneCanvas ID: -31795
+				851 pane panel ID: -31181
+					852 button Start ID: -31180
+					853 button Pause ID: -31179
+					854 button |< ID: -31178
+					855 button -1 s ID: -31177
+					856 button +1 s ID: -31176
+					857 pane 4x ID: -31175
+					858 text 5D: 0.0 / 222.7 s (estimate) ID: -31172
+					859 button ? ID: -31171
+					860 slider (settable, float) 5D: 0.0 / 222.7 s (estimate) Value: 0 ID: -31170
+						861 thumb Position
+						862 button Page right
+					863 pane All 5D layers ID: -31169
+					864 button ID: -31166
+					865 text Original model ID: -31165
+					866 button ID: -31164
+					867 text Remaining core ID: -31163
+					868 button ID: -31162
+					869 text Orca core paths ID: -31161
+					870 button ID: -31160
+					871 text 5D shell ID: -31159
+					872 button ID: -31158
+					873 text 5D paths ID: -31157
+					874 button ID: -31156
+					875 text Shared interfaces ID: -31155
+					876 button ID: -31154
+					877 text Missing underlay ID: -31153
+					878 button ID: -31152
+					879 text Unverified regions ID: -31151
+					880 button Orca preview ID: -31150
+					881 button Geometry report ID: -31149
+					882 text Nominal material volume plausible. CAD accuracy and full surface coverage: see geometry report. Geometric underlay is missing at sampled points. ID: -31148
+					883 text Head 1: Working | Head 2: Unassigned | Head 3: Unassigned ID: -31147
+					884 text Time: 5D part only. Orca core paths are not synchronized; supports and waiting times are excluded. ID: -31146
+					885 text Layer-change travel: collision check pending. ID: -31145
+			99 pane control ID: -31964
+				106 button ID: -31962
+				107 button Project ID: -31612
+				108 button Prepare ID: -31601
+				109 button Preview ID: -31600
+				110 button 5D Surfaces ID: -31599
+				111 button Device ID: -31591
+
+The focused UI element is 98 pane OrcaSceneCanvas ID: -31795.
+
+Focused element: 98 pane OrcaSceneCanvas ID: -31795

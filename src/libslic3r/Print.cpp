@@ -2154,7 +2154,7 @@ bool Print::wipe_tower_certain_before_slicing() const
 
 StringObjectException Print::validate(std::vector<StringObjectException> *warnings, Polygons* collison_polygons, std::vector<std::pair<Polygon, float>>* height_polygons) const
 {
-    if (Formorix5D::enabled(m_config)) {
+    if (Formorix5D::enabled(m_config) && !hybrid_preview_only()) {
         StringObjectException error;
         try {
             error.string = Formorix5D::validate(Formorix5D::from_config(m_config));
@@ -2893,7 +2893,10 @@ StringObjectException Print::validate(std::vector<StringObjectException> *warnin
     const bool layer_has_g92_any  = boost::regex_search(
         m_config.layer_change_gcode.value, regex_g92e0);
 
-    if (m_config.use_relative_e_distances) {
+    // An immutable hybrid preview has no G-code stream or E addressing. Only
+    // these export-macro requirements are inapplicable; geometry/profile
+    // validation above and below remains identical to ordinary Print.
+    if (!hybrid_preview_only() && m_config.use_relative_e_distances) {
         // Relative mode: "G92 E0" is required to reset extruder position.
         const bool before_has_g92_exact = boost::regex_search(
             m_config.before_layer_change_gcode.value, regex_g92e0_correct);
@@ -2917,7 +2920,7 @@ StringObjectException Print::validate(std::vector<StringObjectException> *warnin
             return {L("Relative extruder addressing requires resetting the extruder position at each layer to "
                       "prevent loss of floating point accuracy. Add \"G92 E0\" to layer_gcode."),
                     nullptr, "before_layer_change_gcode"};
-    } else {
+    } else if (!hybrid_preview_only()) {
         // Absolute mode: any occurrence of "G92 E0" is incompatible.
         if (before_has_g92_any)
             return {L("\"G92 E0\" was found in before_layer_change_gcode, which is incompatible with absolute extruder "
@@ -3417,10 +3420,18 @@ std::map<ObjectID, unsigned int> getObjectExtruderMap(const Print& print) {
     return objectExtruderMap;
 }
 
+void Print::require_executable() const
+{
+    if (hybrid_preview_only())
+        throw std::runtime_error("Formorix hybrid preview data cannot be exported as machine instructions or cached print jobs.");
+    Formorix5D::require_planar_mode(m_config);
+}
+
 // Slicing process, running at a background thread.
 void Print::process(long long *time_cost_with_cache, bool use_cache)
 {
-    Formorix5D::require_planar_mode(m_config);
+    if (!hybrid_preview_only())
+        Formorix5D::require_planar_mode(m_config);
     long long start_time = 0, end_time = 0;
     if (time_cost_with_cache)
         *time_cost_with_cache = 0;
@@ -4154,7 +4165,7 @@ void Print::process(long long *time_cost_with_cache, bool use_cache)
 // It is up to the caller to show an error message.
 std::string Print::export_gcode(const std::string& path_template, GCodeProcessorResult* result, ThumbnailsGeneratorCallback thumbnail_cb)
 {
-    Formorix5D::require_planar_mode(m_config);
+    require_executable();
     // output everything to a G-code file
     // The following call may die if the filename_format template substitution fails.
     std::string path = this->output_filepath(path_template);
@@ -5898,7 +5909,7 @@ void Print::set_gcode_file_invalidated()
 //BBS: add gcode file preload logic
 void Print::export_gcode_from_previous_file(const std::string& file, GCodeProcessorResult* result, ThumbnailsGeneratorCallback thumbnail_cb)
 {
-    Formorix5D::require_planar_mode(m_config);
+    require_executable();
     {
         LifecycleEventContext ctx;
         ctx.id = std::to_string(m_model.id().id);
@@ -6825,6 +6836,7 @@ static void from_json(const json& j, groupedVolumeSlices& firstlayer_group)
 
 int Print::export_cached_data(const std::string& directory, bool with_space)
 {
+    require_executable();
     int ret = 0;
     boost::filesystem::path directory_path(directory);
 

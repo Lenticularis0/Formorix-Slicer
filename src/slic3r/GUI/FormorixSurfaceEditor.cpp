@@ -5,6 +5,12 @@
 #include "Jobs/Worker.hpp"
 #include "Jobs/Job.hpp"
 #include "libslic3r/FormorixPreview.hpp"
+#include "libslic3r/FormorixHybrid.hpp"
+#include "libslic3r/FormorixCorePreview.hpp"
+#include "libslic3r/ExtrusionEntity.hpp"
+#include "libslic3r/FormorixProcess.hpp"
+#include "libslic3r/Utils.hpp"
+#include "libslic3r/FormorixProfiles.hpp"
 #include "I18N.hpp"
 #include "format.hpp"
 #include <cstddef>
@@ -62,6 +68,9 @@
 namespace Slic3r::GUI {
 namespace FS = FormorixSurfaces;
 namespace FP = FormorixPreview;
+namespace FH = FormorixHybrid;
+namespace FC = FormorixCorePreview;
+namespace FR = FormorixProfiles;
 
 struct FormorixSurfaceEditor::Impl : wxEvtHandler {
     Plater &plater;
@@ -77,7 +86,10 @@ struct FormorixSurfaceEditor::Impl : wxEvtHandler {
     wxStaticText *edge_status = nullptr;
     std::array<wxStaticText *, 3> assignments{};
     std::array<::ComboBox *, 3> materials{};
+    std::array<::ComboBox *, 3> nozzle_presets{};
     std::vector<std::string> material_names;
+    std::vector<std::string> printer_names;
+    std::array<std::string, 3> source_signatures;
     std::vector<std::function<void()>> refreshers;
     std::vector<wxWindow *> region_controls;
     std::vector<wxWindow *> project_controls;
@@ -303,6 +315,7 @@ struct FormorixSurfaceEditor::Impl : wxEvtHandler {
     void select_object(int index);
     void sync();
     void calculate();
+    void calculate_hybrid();
     std::string fingerprint() const;
     bool validate_preview();
     void theme()
@@ -327,6 +340,7 @@ void FormorixSurfaceEditor::Impl::build_left()
     button(left, _L("Add model…"), [this] { plater.add_model(); sync(); });
     project_controls.pop_back(); region_controls.pop_back();
     button(left,_L("Calculate 5D preview"),[this]{calculate();});
+    button(left,_L("Calculate hybrid preview"),[this]{calculate_hybrid();});
     regions = new wxListBox(left, wxID_ANY, wxDefaultPosition, left->FromDIP(wxSize(235, 150)), 0, nullptr, wxLB_EXTENDED);
     regions->SetName(_L("5D surface regions"));
     left->GetSizer()->Add(regions, 0, wxEXPAND | wxALL, left->FromDIP(5));
@@ -542,6 +556,16 @@ void FormorixSurfaceEditor::Impl::build_heads(wxWindow *parent)
         }, [this, i](int value) {
             if (value >= 0 && value < int(material_names.size())) edit([&](auto &p) { p.heads[i].assign_material(material_names[value]); });
         }, false);
+        nozzle_presets[i] = choice(parent, _L("Nozzle preset (Orca printer)"), {}, [this, i] {
+            const auto it = std::find(printer_names.begin(), printer_names.end(), project.heads[i].printer_preset);
+            return it == printer_names.end() ? 0 : int(it - printer_names.begin());
+        }, [this, i](int value) {
+            if (value >= 0 && value < int(printer_names.size()))
+                edit([&](auto& p) { p.heads[i].assign_nozzle(printer_names[value], 0); });
+        }, false);
+        number(parent, _L("Nozzle slot"), [this, i] { return project.heads[i].nozzle_index + 1.; },
+            [this, i](double value) { edit([&](auto& p) { p.heads[i].assign_nozzle(p.heads[i].printer_preset, unsigned(value) - 1); }); },
+            1., 32., true, false);
         for (int role = 0; role < 5; ++role)
             check(parent, tasks[role], [this, i, role] { return (project.heads[i].tasks & (1u << role)) != 0; }, [this, i, role](bool v) {
                 edit([i, role, v](auto &p) {
@@ -669,6 +693,7 @@ void FormorixSurfaceEditor::Impl::sync()
         auto data = FS::Project::decode(cached_json, error);
         writable = bool(data);
         project = data ? std::move(*data) : FS::Project{};
+        source_signatures = {};
         if (!region()) { active = project.regions.empty() ? 0 : project.regions.front().id; selected = active ? std::vector<int>{active} : std::vector<int>{}; }
         refresh_list(); refresh_values();
         if (!writable) message(_L("This project's 5D data is unsupported or invalid. It is preserved unchanged; editing is disabled."));
@@ -691,10 +716,28 @@ void FormorixSurfaceEditor::Impl::sync()
     if (available != material_names) {
         material_names = std::move(available);
         for (auto *box : materials) {
-            box->Clear(); box->Append(_L("Not assigned"));
+            box->Clear(); box->Append(_L("Current Orca material"));
             for (size_t i = 1; i < material_names.size(); ++i) box->Append(from_u8(material_names[i]));
         }
         refresh_values();
+    }
+    std::vector<std::string> printers{std::string{}};
+    for (const auto& preset : wxGetApp().preset_bundle->printers.get_presets())
+        if (!preset.is_default) printers.push_back(preset.name);
+    for (const auto& head : project.heads)
+        if (!head.printer_preset.empty() && std::find(printers.begin(), printers.end(), head.printer_preset) == printers.end())
+            printers.push_back(head.printer_preset);
+    if (printers != printer_names) {
+        printer_names = std::move(printers);
+        for (auto* box : nozzle_presets) {
+            box->Clear(); box->Append(_L("Current Orca printer"));
+            for (std::size_t i = 1; i < printer_names.size(); ++i) box->Append(from_u8(printer_names[i]));
+        }
+        refresh_values();
+    }
+    if (writable && FR::invalidate_changed(project, *wxGetApp().preset_bundle, source_signatures)) {
+        store();
+        message(_L("Orca profile changed. Derived head values were invalidated and will be refreshed before calculation."));
     }
     const auto &config = wxGetApp().preset_bundle->prints.get_edited_preset().config;
     std::string signature;
@@ -715,17 +758,26 @@ std::string FormorixSurfaceEditor::Impl::fingerprint() const
     const auto*model=plater.model().objects[object];out<<'|'<<model->id().id;
     if(instance<0||instance>=int(model->instances.size()))return out.str();
     out<<model->instances[instance]->get_matrix().matrix();
+    auto config=[&](const DynamicPrintConfig&c){for(const auto&key:c.keys())out<<key<<'='<<c.opt_serialize(key)<<';';};
+    config(model->config.get());
+    for (const auto& range : model->layer_config_ranges) {
+        out << range.first.first << ':' << range.first.second;
+        config(range.second.get());
+    }
+    for (double height : model->layer_height_profile.get()) out << ':' << height;
     std::uint64_t hash=14695981039346656037ull;
     auto bytes=[&](const void*data,std::size_t count){auto*p=static_cast<const unsigned char*>(data);while(count--){hash^=*p++;hash*=1099511628211ull;}};
-    for(const auto*v:model->volumes)if(v->is_model_part()){
-        out<<v->id().id<<':'<<v->formorix_facets.timestamp()<<':'<<v->get_matrix().matrix();
+    for(const auto*v:model->volumes){
+        out<<v->id().id<<':'<<int(v->type())<<':'<<v->formorix_facets.timestamp()<<':'<<v->get_matrix().matrix();
+        config(v->config.get());
         const auto&mesh=v->mesh().its;for(const auto&p:mesh.vertices)bytes(p.data(),sizeof(float)*3);for(const auto&t:mesh.indices)bytes(t.data(),sizeof(int)*3);
     }
     out<<hash;
     const auto*bundle=wxGetApp().preset_bundle;
-    auto config=[&](const DynamicPrintConfig&c){for(const auto&key:c.keys())out<<key<<'='<<c.opt_serialize(key)<<';';};
     config(bundle->prints.get_edited_preset().config);config(bundle->printers.get_edited_preset().config);config(bundle->filaments.get_edited_preset().config);
     for(const auto&head:project.heads)if(const auto*preset=bundle->filaments.find_preset(head.material_preset))config(preset->config);
+    for(const auto&head:project.heads)if(const auto*preset=bundle->printers.find_preset(head.printer_preset))config(preset->config);
+    config(bundle->project_config);
     return out.str();
 }
 bool FormorixSurfaceEditor::Impl::validate_preview()
@@ -760,21 +812,13 @@ void FormorixSurfaceEditor::Impl::calculate()
         auto settings_copy=settings();
         if(settings_copy.direction==FS::Direction::Edge){const auto d=FP::reference_direction(*model,instance,settings_copy);settings_copy.custom_direction={d.x(),d.y(),d.z()};settings_copy.direction=FS::Direction::Custom;}
         auto input=FP::extract(*model,instance,active);
-        const auto*bundle=wxGetApp().preset_bundle;const auto config=bundle->full_config();
-        const auto&name=project.heads[options.head].material_preset;
-        const auto*material=name.empty()?&bundle->filaments.get_edited_preset():bundle->filaments.find_preset(name);
-        if(!material)throw FP::Issue::ProfileMissing;
-        if(material->name==bundle->filaments.get_edited_preset().name)material=&bundle->filaments.get_edited_preset();
-        const double nozzle=config.opt_float("nozzle_diameter",0);
-        options.line_width=config.get_abs_value("outer_wall_line_width",nozzle);
-        if(options.line_width==0.)options.line_width=config.get_abs_value("line_width",nozzle);
-        if(options.line_width==0.)options.line_width=nozzle*1.05;
-        options.speed=config.opt_float("outer_wall_speed",0);options.travel_speed=config.opt_float("travel_speed",0);
+        const auto*bundle=wxGetApp().preset_bundle;
+        const auto resolved=FR::resolve(FR::source(*bundle,project.heads[options.head],settings_copy.layer_height));
+        const auto&config=resolved.config;
+        options.line_width=resolved.process.line_width;
+        options.speed=FormorixProcess::effective_speed(resolved.process);
+        options.travel_speed=config.opt_float("travel_speed",resolved.nozzle_index);
         if(const auto*tilt=config.option<ConfigOptionFloat>("formorix_5d_max_tilt"))options.max_tilt=tilt->value;
-        if(material->config.has("filament_max_volumetric_speed")){
-            const double flow=material->config.opt_float("filament_max_volumetric_speed",0);
-            if(flow>0.)options.speed=std::min(options.speed,flow/(options.line_width*settings_copy.layer_height));
-        }
         const std::string signature=fingerprint();auto result=std::make_shared<FP::Result>();auto life=alive;
         message(_L("Calculating 5D preview…"));
         const bool queued=queue_job(plater.get_ui_job_worker(),[input=std::move(input),settings_copy,options,result](Job::Ctl&ctl){
@@ -793,7 +837,103 @@ void FormorixSurfaceEditor::Impl::calculate()
         });
         if(!queued)message(_L("Preview could not be queued. Try again."));
     }catch(FP::Issue issue){message(formorix_preview_error(issue));}
-    catch(const std::exception&){message(formorix_preview_error(FP::Issue::InvalidMesh));}
+    catch(const std::exception& e){message(format_wxstr(_L("5D preview failed: %1%"),from_u8(e.what())));}
+}
+
+void FormorixSurfaceEditor::Impl::calculate_hybrid()
+{
+    wxWindow* focused = wxWindow::FindFocus();
+    for (const auto& input : pending_edits) if (input.first == focused && !input.second()) return;
+    if (!region() || !writable) return;
+    if (!plater.get_ui_job_worker().is_idle()) { message(_L("Wait for the current operation to finish.")); return; }
+    preview->pause();
+    try {
+        sync();
+        const auto& selection = plater.get_view3D_canvas3D()->get_selection();
+        const int object = selection.get_object_idx(), instance = selection.get_instance_idx();
+        if (object < 0 || object >= int(plater.model().objects.size()) || instance < 0) throw FP::Issue::Empty;
+        const auto* model = plater.model().objects[object];
+        std::size_t face_count = 0;
+        for (const auto* volume : model->volumes) face_count += volume->mesh().its.indices.size();
+        if (face_count > 500000) throw FP::Issue::TooLarge;
+        const auto& bundle = *wxGetApp().preset_bundle;
+        std::array<FC::Source, 3> sources;
+        std::array<FormorixProcess::Profile, 3> profiles;
+        for (int head = 0; head < 3; ++head) if (project.heads[head].enabled) {
+            auto resolved = FR::resolve(FR::source(bundle, project.heads[head]));
+            profiles[head] = resolved.process;
+            sources[head] = {std::move(resolved.config), resolved.nozzle_index, resolved.material_index, resolved.process};
+            source_signatures[head] = std::move(resolved.source_signature);
+        }
+        edit([&](auto& candidate) {
+            for (int head = 0; head < 3; ++head)
+                if (candidate.heads[head].enabled) candidate.heads[head].process = profiles[head];
+                else candidate.heads[head].process.reset();
+        });
+        auto assigned = [&](unsigned role) {
+            for (int head = 0; head < 3; ++head)
+                if (project.heads[head].enabled && (project.heads[head].tasks & role)) return head;
+            for (int head = 0; head < 3; ++head)
+                if (project.heads[head].enabled && (project.heads[head].tasks & FS::Automatic)) return head;
+            return -1;
+        };
+        const int core_head = assigned(FS::Build);
+        if (core_head < 0) { message(_L("Assign an enabled head to normal construction or automatic tasks.")); return; }
+        const int support_head = assigned(FS::Support);
+        auto input = FH::extract(*model, instance, project, profiles);
+        const auto& machine = bundle.printers.get_edited_preset().config;
+        for (auto& region : input.regions)
+            if (const auto* tilt = machine.option<ConfigOptionFloat>("formorix_5d_max_tilt")) region.max_tilt = tilt->value;
+        const std::string signature = fingerprint();
+        auto hybrid = std::make_shared<FH::Result>();
+        auto conventional = std::make_shared<FC::Result>();
+        auto life = alive;
+        message(_L("Calculating hybrid geometry and Orca core paths…"));
+        const bool queued = queue_job(plater.get_ui_job_worker(),
+            [input = std::move(input), sources = std::move(sources), core_head, support_head, hybrid, conventional](Job::Ctl& ctl) {
+                ScopeGuard finish_status([&ctl] { ctl.update_status(100); });
+                auto canceled = [&ctl] { return ctl.was_canceled(); };
+                ctl.update_status(0, _u8L("Calculating hybrid geometry…"));
+                *hybrid = FH::generate(input, canceled);
+                if (!hybrid->ok() || canceled()) return;
+                ctl.update_status(35, _u8L("Calculating Orca core paths…"));
+                if (!hybrid->core.faces.empty()) {
+                    *conventional = FC::slice(hybrid->core, sources, core_head, support_head, canceled);
+                    if (!conventional->ok() || canceled()) return;
+                }
+                ctl.update_status(85, _u8L("Checking geometric underlay…"));
+                std::vector<FH::UnderlaySegment> underlay;
+                for (const auto& path : conventional->paths)
+                    for (std::size_t i = 1; i < path.points.size(); ++i)
+                        underlay.push_back({path.points[i - 1], path.points[i], path.width, path.height,
+                            path.head, path.process.material_id, path.support, path.role == erInternalInfill, is_bridge(path.role)});
+                for (auto& region : hybrid->regions)
+                    region.accuracy.bounds[2] += conventional->float_conversion_bound + conventional->coordinate_quantization_bound;
+                FH::audit_underlay(*hybrid, underlay, canceled);
+            },
+            [this, life, hybrid, conventional, signature](bool canceled, std::exception_ptr& error) {
+                wxString failure;
+                if (error) {
+                    try { std::rethrow_exception(error); }
+                    catch (const std::exception& e) { failure = from_u8(e.what()); }
+                    catch (...) { failure = _L("Hybrid preview calculation failed."); }
+                    error = nullptr;
+                }
+                if (!*life || wxGetApp().is_closing()) return;
+                if (canceled) { message(formorix_preview_error(FP::Issue::Canceled)); return; }
+                if (!failure.empty()) { message(format_wxstr(_L("Hybrid preview failed: %1%"), failure)); return; }
+                if (signature != fingerprint()) { message(_L("Model or settings changed. Calculate the preview again.")); return; }
+                preview_signature = signature;
+                preview->set_hybrid(hybrid, conventional);
+                if (!hybrid->error.empty()) message(format_wxstr(_L("Hybrid geometry failed: %1%"), from_u8(hybrid->error)));
+                else if (!conventional->error.empty()) message(format_wxstr(_L("Orca core preview failed: %1%"), from_u8(conventional->error)));
+                else message(_L("Hybrid preview ready. Review coverage, material volume and underlay; export remains blocked."));
+                plater.get_view3D_canvas3D()->zoom_to_selection();
+                wxGetApp().mainframe->request_select_tab(TAB_ID_PREVIEW);
+            });
+        if (!queued) message(_L("Preview could not be queued. Try again."));
+    } catch (FP::Issue issue) { message(formorix_preview_error(issue)); }
+    catch (const std::exception& e) { message(format_wxstr(_L("Hybrid preview failed: %1%"), from_u8(e.what()))); }
 }
 
 FormorixSurfaceEditor::FormorixSurfaceEditor(Plater &plater) : m_impl(std::make_unique<Impl>(plater)) {}

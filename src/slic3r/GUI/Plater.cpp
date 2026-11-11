@@ -19576,7 +19576,7 @@ void Plater::show_formorix_surfaces(bool show)
             p->formorix_editor = std::make_unique<FormorixSurfaceEditor>(*this);
             p->m_aui_mgr.AddPane(p->formorix_editor->bottom(),wxAuiPaneInfo().Name("formorix_timeline")
                 .Bottom().Layer(1).CaptionVisible(false).CloseButton(false).Floatable(false).Movable(false)
-                .BestSize(FromDIP(wxSize(700,165))).MinSize(FromDIP(wxSize(500,145))).Hide());
+                .BestSize(FromDIP(wxSize(700,250))).MinSize(FromDIP(wxSize(500,165))).Hide());
             p->m_aui_mgr.AddPane(p->formorix_editor->left(), wxAuiPaneInfo().Name("formorix_regions")
                 .Left().CaptionVisible(false).CloseButton(false).Floatable(false).Movable(false)
                 .BestSize(FromDIP(wxSize(260, 600))).MinSize(FromDIP(wxSize(220, 180))));

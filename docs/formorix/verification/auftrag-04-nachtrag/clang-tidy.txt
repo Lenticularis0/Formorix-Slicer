@@ -1,0 +1,4 @@
+Configuring C:\Formorix Slicer\Formorix-Slicer\build-tidy with cl
+Comparing against origin/main
+Checking 28 file(s) with C:\Formorix Slicer\Formorix-Slicer\build-tidy\clang-tidy-venv\Scripts\clang-tidy.exe
+clang-tidy passed.

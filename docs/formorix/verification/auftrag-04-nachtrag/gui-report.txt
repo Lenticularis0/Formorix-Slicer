@@ -1,0 +1,72 @@
+Window: "*hybrid-04-curved - Formorix Slicer", App: orca-slicer.exe.
+	0 window *hybrid-04-curved - Formorix Slicer Secondary Actions: Raise
+		26 pane control ID: 3200
+			27 pane control ID: -31990
+		28 pane ID: -31965
+			29 pane panel ID: -31950
+				96 pane panel ID: -31798
+					97 pane panel ID: -31797
+						98 pane OrcaSceneCanvas ID: -31795
+				223 pane panel ID: -31181
+					224 button (disabled) Start ID: -31180
+					225 button (disabled) Pause ID: -31179
+					226 button (disabled) |< ID: -31178
+					227 button (disabled) -1 s ID: -31177
+					228 button (disabled) +1 s ID: -31176
+					229 pane 1x ID: -31175
+					230 text 5D: 0.0 / 222.7 s (estimate) ID: -31172
+					231 button (disabled) ? ID: -31171
+					232 slider (settable, float) 5D: 0.0 / 222.7 s (estimate) Value: 0 ID: -31170
+						233 thumb Position
+						234 button Page right
+					235 pane All 5D layers ID: -31169
+					236 button ID: -31166
+					237 text Original model ID: -31165
+					238 button ID: -31164
+					239 text Remaining core ID: -31163
+					240 button ID: -31162
+					241 text Orca core paths ID: -31161
+					242 button ID: -31160
+					243 text 5D shell ID: -31159
+					244 button ID: -31158
+					245 text 5D paths ID: -31157
+					246 button ID: -31156
+					247 text Shared interfaces ID: -31155
+					248 button ID: -31154
+					249 text Missing underlay ID: -31153
+					250 button ID: -31152
+					251 text Unverified regions ID: -31151
+					252 button (disabled) Orca preview ID: -31150
+					253 button (disabled) Geometry report ID: -31149
+					254 text Nominal material volume plausible. CAD accuracy and full surface coverage: see geometry report. Geometric underlay is missing at sampled points. ID: -31148
+					255 text Head 1: Working | Head 2: Unassigned | Head 3: Unassigned ID: -31147
+					256 text Time: 5D part only. Orca core paths are not synchronized; supports and waiting times are excluded. ID: -31146
+					257 text Layer-change travel: collision check pending. ID: -31145
+					258 scroll bar (settable, float) Vertical Value: 0 ID: NonClientVerticalScrollBar
+						259 button Line up ID: UpButton
+						260 thumb Position ID: ScrollbarThumb
+						261 button Page down ID: DownPageButton
+						262 button Line down ID: DownButton
+			99 pane control ID: -31964
+				106 button (disabled) ID: -31962
+				107 button (disabled) Project ID: -31612
+				108 button (disabled) Prepare ID: -31601
+				109 button (disabled) Preview ID: -31600
+				110 button (disabled) 5D Surfaces ID: -31599
+				111 button (disabled) Device ID: -31591
+		263 dialog Formorix Slicer - Hybrid geometry report Secondary Actions: Raise
+			264 image ID: -30739
+			265 button OK ID: 5100
+			266 pane panel ID: -30737
+				267 text Numerical preview only. Physical accuracy, adhesion and collisions are unverified. Original volume: 18211.86 mm³; partition residual: 3.63797881e-12 mm³. Region 1, head 1: nominal volume / shell volume = 0.9973. Deposition model: CoalescedOrcaStadiumRibbon/v1. Derived compacted width: 0.369538 mm; supplied cross-section: 0.0739076 mm². Material deformation is not calibrated. Material OFDSrzZ8; nozzle 0.4 mm; line width 0.42 mm; layer height 0.2 mm; temperature 220 °C; volumetric limit 12 mm³/s; speed 60 mm/s. Coverage samples: 22400; uncovered fraction: 0.00261. Sample error max / mean / RMS: inf / inf / inf mm. Nominal footprint outside the selected region: 0.00103201; sampled overlap into the core: 0 mm. This may overlap conventional material. Projected ribbon volumes (mm³), union / uncovered / outside / overlap: 892.646 / 2.33176 / 0.922674 / 0.000227945. Curved 3D coverage requires separate verification. Error bounds (mm), CAD / shell / conversion / path / nominal material: inf / inf / 7.75173e-06 / inf / inf. Infinity means unverified. Underlay: 6006 missing samples of 22400; maximum gap: inf mm. Full footprint and material adhesion remain unverified. Underlay markers: red = no conventional core (0); orange = excluded infill (0); magenta = incomplete path coverage (6006); gray = unknown geometry (0). Largest observed contact gap: 0.494771 mm; samples without eligible contact within 0.5 mm: 54. This is not a global distance bound. Region 1: 0.01 mm whole-surface accuracy is not verified Region 1: underlay is sampled, not a full contact or material-adhesion certificate Region 1: automatic support-material selection and interface compatibility are unverified Orca conversion bound: 8.23523534e-07 mm; coordinate quantization: 6.92820323e-06 mm; volume residual: 0.000146663879 mm³. Conventional speeds are nominal role values; acceleration, cooling slowdown and common scheduling are not simulated. ID: -30736
+				268 scroll bar (settable, float) Vertical Value: 0 ID: NonClientVerticalScrollBar
+					269 button Line up ID: UpButton
+					270 thumb Position ID: ScrollbarThumb
+					271 button Page down ID: DownPageButton
+					272 button Line down ID: DownButton
+			273 title bar (settable, string) Value: Formorix Slicer - Hybrid geometry report
+				274 button Close
+
+The focused UI element is 263 dialog Formorix Slicer - Hybrid geometry report Secondary Actions: Raise.
+
+Focused element: 263 dialog Formorix Slicer - Hybrid geometry report Secondary Actions: Raise

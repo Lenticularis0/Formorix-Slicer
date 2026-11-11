@@ -2840,7 +2840,7 @@ static void set_mass_locator(GCodeProcessor &processor, const Print &print)
 
 void GCode::do_export(Print* print, const char* path, GCodeProcessorResult* result, ThumbnailsGeneratorCallback thumbnail_cb)
 {
-    Formorix5D::require_planar_mode(print->config());
+    print->require_executable();
     PROFILE_CLEAR();
 
     // BBS

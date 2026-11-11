@@ -27,6 +27,12 @@ if (SLIC3R_CAD)
 endif ()
 
 set(lisbslic3r_sources
+    FormorixCorePreview.cpp
+    FormorixCorePreview.hpp
+    FormorixHybrid.cpp
+    FormorixHybrid.hpp
+    FormorixProfiles.cpp
+    FormorixProfiles.hpp
     FormorixGeometry.cpp
     FormorixGeometry.hpp
     FormorixProcess.cpp

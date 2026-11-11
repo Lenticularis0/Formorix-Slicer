@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Orca Slicer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-10 09:03+0100\n"
+"POT-Creation-Date: 2026-11-11 09:15+0100\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Heiko Liebscher <hliebschergmail.com>\n"
 "Language-Team: \n"
@@ -10733,6 +10733,10 @@ msgid "Calculate 5D preview"
 msgstr "5D-Vorschau berechnen"
 
 # AI Translated
+msgid "Calculate hybrid preview"
+msgstr "Hybrid-Vorschau berechnen"
+
+# AI Translated
 msgid "Add region"
 msgstr "Bereich hinzufügen"
 
@@ -11191,6 +11195,14 @@ msgid "Orca material profile"
 msgstr "Orca-Materialprofil"
 
 # AI Translated
+msgid "Nozzle preset (Orca printer)"
+msgstr "Düsenprofil (Orca-Drucker)"
+
+# AI Translated
+msgid "Nozzle slot"
+msgstr "Düse im Profil"
+
+# AI Translated
 msgid "Material suitability: not checked."
 msgstr "Materialeignung: nicht geprüft."
 
@@ -11242,8 +11254,16 @@ msgid "This project's 5D data is unsupported or invalid. It is preserved unchang
 msgstr "Die 5D-Daten dieses Projekts werden nicht unterstützt oder sind ungültig. Sie bleiben unverändert erhalten; die Bearbeitung ist gesperrt."
 
 # AI Translated
-msgid "Not assigned"
-msgstr "Nicht zugewiesen"
+msgid "Current Orca material"
+msgstr "Aktuelles Orca-Material"
+
+# AI Translated
+msgid "Current Orca printer"
+msgstr "Aktueller Orca-Drucker"
+
+# AI Translated
+msgid "Orca profile changed. Derived head values were invalidated and will be refreshed before calculation."
+msgstr "Orca-Profil geändert. Abgeleitete Kopfwerte wurden verworfen und werden vor der Berechnung aktualisiert."
 
 # AI Translated
 msgid "Model or settings changed. Calculate the preview again."
@@ -11264,6 +11284,54 @@ msgstr "Vorschau bereit. Experimenteller Export bleibt gesperrt."
 # AI Translated
 msgid "Preview could not be queued. Try again."
 msgstr "Vorschau konnte nicht gestartet werden. Erneut versuchen."
+
+# AI Translated
+#, boost-format
+msgid "5D preview failed: %1%"
+msgstr "5D-Vorschau fehlgeschlagen: %1%"
+
+# AI Translated
+msgid "Assign an enabled head to normal construction or automatic tasks."
+msgstr "Weisen Sie einen aktivierten Kopf dem normalen Aufbau oder automatischen Aufgaben zu."
+
+# AI Translated
+msgid "Calculating hybrid geometry and Orca core paths…"
+msgstr "Hybridgeometrie und Orca-Kernbahnen werden berechnet…"
+
+# AI Translated
+msgid "Calculating hybrid geometry…"
+msgstr "Hybridgeometrie wird berechnet…"
+
+# AI Translated
+msgid "Calculating Orca core paths…"
+msgstr "Orca-Kernbahnen werden berechnet…"
+
+# AI Translated
+msgid "Checking geometric underlay…"
+msgstr "Geometrische Auflage wird geprüft…"
+
+# AI Translated
+msgid "Hybrid preview calculation failed."
+msgstr "Berechnung der Hybrid-Vorschau fehlgeschlagen."
+
+# AI Translated
+#, boost-format
+msgid "Hybrid preview failed: %1%"
+msgstr "Hybrid-Vorschau fehlgeschlagen: %1%"
+
+# AI Translated
+#, boost-format
+msgid "Hybrid geometry failed: %1%"
+msgstr "Hybridgeometrie fehlgeschlagen: %1%"
+
+# AI Translated
+#, boost-format
+msgid "Orca core preview failed: %1%"
+msgstr "Orca-Kernvorschau fehlgeschlagen: %1%"
+
+# AI Translated
+msgid "Hybrid preview ready. Review coverage, material volume and underlay; export remains blocked."
+msgstr "Hybrid-Vorschau bereit. Abdeckung, Materialvolumen und Auflage prüfen; Export bleibt gesperrt."
 
 # AI Translated
 msgid "Open Formorix help"
@@ -11362,24 +11430,125 @@ msgid "5D process time"
 msgstr "5D-Prozesszeit"
 
 # AI Translated
-msgid "5D shell"
-msgstr "5D-Schale"
+msgid "Original model"
+msgstr "Originalmodell"
 
 # AI Translated
 msgid "Remaining core"
 msgstr "Verbleibender Kern"
 
 # AI Translated
+msgid "Orca core paths"
+msgstr "Orca-Kernbahnen"
+
+# AI Translated
+msgid "5D shell"
+msgstr "5D-Schale"
+
+# AI Translated
+msgid "5D paths"
+msgstr "5D-Bahnen"
+
+# AI Translated
+msgid "Shared interfaces"
+msgstr "Gemeinsame Grenzflächen"
+
+# AI Translated
+msgid "Missing underlay"
+msgstr "Fehlende Auflage"
+
+# AI Translated
+msgid "Unverified regions"
+msgstr "Ungeprüfte Bereiche"
+
+# AI Translated
 msgid "Orca preview"
 msgstr "Orca-Vorschau"
 
 # AI Translated
-msgid "5D part only: excludes normal construction, supports and waiting times."
-msgstr "Nur 5D-Teil: ohne normalen Bauteilaufbau, Supports und Wartezeiten."
+msgid "Geometry report"
+msgstr "Geometriebericht"
+
+# AI Translated
+msgid "Time: 5D part only. Orca core paths are not synchronized; supports and waiting times are excluded."
+msgstr "Zeit: nur 5D-Teil. Orca-Kernbahnen sind nicht synchronisiert; Supports und Wartezeiten fehlen."
 
 # AI Translated
 msgid "Layer-change travel: collision check pending."
 msgstr "Verfahrbewegungen beim Lagenwechsel: Kollisionsprüfung ausstehend."
+
+# AI Translated
+msgid "Numerical preview only. Physical accuracy, adhesion and collisions are unverified."
+msgstr "Nur numerische Vorschau. Physikalische Genauigkeit, Haftung und Kollisionen sind ungeprüft."
+
+# AI Translated
+#, boost-format
+msgid "Original volume: %1% mm³; partition residual: %2% mm³."
+msgstr "Originalvolumen: %1% mm³; Restfehler der Aufteilung: %2% mm³."
+
+# AI Translated
+#, boost-format
+msgid "Region %1%, head %2%: nominal volume / shell volume = %3%."
+msgstr "Bereich %1%, Kopf %2%: nominales Materialvolumen / Schalenvolumen = %3%."
+
+# AI Translated
+#, boost-format
+msgid "Deposition model: %1%. Derived compacted width: %2% mm; supplied cross-section: %3% mm². Material deformation is not calibrated."
+msgstr "Ablagemodell: %1%. Abgeleitete verdichtete Linienbreite: %2% mm; zugeführter Querschnitt: %3% mm². Die Materialverformung ist nicht kalibriert."
+
+# AI Translated
+#, boost-format
+msgid "Inadmissible material excess: %1% mm³. This region is diagnostic only; flow was not corrected."
+msgstr "Unzulässiger Materialüberschuss: %1% mm³. Dieser Bereich dient nur der Diagnose; Flow wurde nicht korrigiert."
+
+# AI Translated
+#, boost-format
+msgid "Material %1%; nozzle %2% mm; line width %3% mm; layer height %4% mm; temperature %5% °C; volumetric limit %6% mm³/s; speed %7% mm/s."
+msgstr "Material %1%; Düse %2% mm; Linienbreite %3% mm; Schichtdicke %4% mm; Temperatur %5% °C; maximaler Volumenfluss %6% mm³/s; Geschwindigkeit %7% mm/s."
+
+# AI Translated
+#, boost-format
+msgid "Coverage samples: %1%; uncovered fraction: %2%. Sample error max / mean / RMS: %3% / %4% / %5% mm."
+msgstr "Abdeckungsproben: %1%; unbedeckter Anteil: %2%. Stichprobenfehler max. / Mittel / RMS: %3% / %4% / %5% mm."
+
+# AI Translated
+#, boost-format
+msgid "Nominal footprint outside the selected region: %1%; sampled overlap into the core: %2% mm. This may overlap conventional material."
+msgstr "Nominale Aufstandsfläche außerhalb des markierten Bereichs: %1%; gemessener Überstand in den Kern: %2% mm. Eine Überlagerung mit konventionellem Material ist möglich."
+
+# AI Translated
+#, boost-format
+msgid "Projected ribbon volumes (mm³), union / uncovered / outside / overlap: %1% / %2% / %3% / %4%. Curved 3D coverage requires separate verification."
+msgstr "Projizierte Bandvolumen (mm³), Vereinigung / unbedeckt / außerhalb / Überlagerung: %1% / %2% / %3% / %4%. Die räumliche Abdeckung gekrümmter Flächen muss gesondert geprüft werden."
+
+# AI Translated
+#, boost-format
+msgid "Error bounds (mm), CAD / shell / conversion / path / nominal material: %1% / %2% / %3% / %4% / %5%. Infinity means unverified."
+msgstr "Fehlergrenzen (mm), CAD / Schale / Konvertierung / Bahn / nominales Material: %1% / %2% / %3% / %4% / %5%. Unendlich bedeutet ungeprüft."
+
+# AI Translated
+#, boost-format
+msgid "Underlay: %1% missing samples of %2%; maximum gap: %3% mm. Full footprint and material adhesion remain unverified."
+msgstr "Auflage: %1% fehlende Proben von %2%; maximaler Abstand: %3% mm. Vollständiger Kontakt und Materialhaftung sind ungeprüft."
+
+# AI Translated
+#, boost-format
+msgid "Underlay markers: red = no conventional core (%1%); orange = excluded infill (%2%); magenta = incomplete path coverage (%3%); gray = unknown geometry (%4%)."
+msgstr "Auflagemarkierungen: Rot = kein konventioneller Kern (%1%); Orange = ausgeschlossene Füllung (%2%); Magenta = unvollständige Bahnabdeckung (%3%); Grau = unbekannte Geometrie (%4%)."
+
+# AI Translated
+#, boost-format
+msgid "Largest observed contact gap: %1% mm; samples without eligible contact within 0.5 mm: %2%. This is not a global distance bound."
+msgstr "Größter beobachteter Kontaktabstand: %1% mm; Proben ohne geeigneten Kontakt innerhalb von 0,5 mm: %2%. Dies ist keine globale Abstandsgrenze."
+
+# AI Translated
+#, boost-format
+msgid "Orca conversion bound: %1% mm; coordinate quantization: %2% mm; volume residual: %3% mm³."
+msgstr "Orca-Konvertierungsgrenze: %1% mm; Koordinatenraster: %2% mm; Volumenrestfehler: %3% mm³."
+
+# AI Translated
+msgid "Hybrid geometry report"
+msgstr "Hybrid-Geometriebericht"
 
 # AI Translated
 #, c-format, boost-format
@@ -11390,6 +11559,22 @@ msgstr "5D: %1$.1f / %2$.1f s (geschätzt)"
 #, boost-format
 msgid "Head %1%: %2%"
 msgstr "Kopf %1%: %2%"
+
+# AI Translated
+msgid "Material excess is inadmissible. Diagnostic preview only; flow unchanged."
+msgstr "Der Materialüberschuss ist unzulässig. Nur Diagnosevorschau; Flow unverändert."
+
+# AI Translated
+msgid "Nominal material volume plausible. CAD accuracy and full surface coverage: see geometry report."
+msgstr "Nominales Materialvolumen plausibel. CAD-Genauigkeit und vollständige Flächenabdeckung: siehe Geometriebericht."
+
+# AI Translated
+msgid "Nominal material volume implausible; flow unchanged. CAD accuracy and full surface coverage are unverified."
+msgstr "Nominales Materialvolumen unplausibel; Flow unverändert. CAD-Genauigkeit und vollständige Abdeckung sind ungeprüft."
+
+# AI Translated
+msgid "Geometric underlay is missing at sampled points."
+msgstr "An geprüften Punkten fehlt eine geometrische Auflage."
 
 # AI Translated
 msgid "All 5D layers"
@@ -39646,6 +39831,14 @@ msgid ""
 msgstr ""
 "Verwerfungen vermeiden\n"
 "Wussten Sie, dass beim Drucken von Materialien, die zu Verwerfungen neigen, wie z.B. ABS, durch eine entsprechende Erhöhung der Heizbetttemperatur die Wahrscheinlichkeit von Verwerfungen verringert werden kann?"
+
+# AI Translated
+#~ msgid "Not assigned"
+#~ msgstr "Nicht zugewiesen"
+
+# AI Translated
+#~ msgid "5D part only: excludes normal construction, supports and waiting times."
+#~ msgstr "Nur 5D-Teil: ohne normalen Bauteilaufbau, Supports und Wartezeiten."
 
 # AI Translated
 #~ msgid "Traveling"

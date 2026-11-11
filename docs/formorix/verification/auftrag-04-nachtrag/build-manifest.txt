@@ -1,0 +1,49 @@
+Formorix Auftrag 04 Nachtrag - Windows Release build manifest
+Manifest UTC: 2026-11-11T08:49:52.283063+00:00
+Verified source commit: 2d5db079508df40f68a20de83942221bb8a67524
+Configuration: Release; Windows x64
+CMake build directory: build
+Installed application directory: build/Formorix-Auftrag04-Nachtrag
+This manifest records existing binaries; the archival operation did not run a build.
+
+Build identity evidence:
+  Archived build.txt:19: -- Build commit: 2d5db07950
+  Generated header: build/src/slic3r/git_commit_hash.h
+    #define GIT_COMMIT_HASH "2d5db07950"
+    #define GIT_COMMIT_SUFFIX ""
+  Runtime log (first line, copied verbatim):
+    C:\Formorix Slicer\verification\gui-data-04-nachtrag-visible\log\debug_Wed_Nov_11_09_38_51_5656.log.0
+    [info]	2026-11-11 09:38:51.539727[Thread 0x0000b534]:gui mode, Current OrcaSlicer Version 2.6.0-dev build 2d5db07950
+  Runtime output uses 'build <hash>'; there is no literal gitBuildCommit JSON field in this log.
+
+Installed artifact hashes (SHA-256; size in bytes):
+  orca-slicer.exe | size=303616 | sha256=a0599ffed4d1bce55dc821b912727a06b6430ac562b07a8cddb8505b6548ef42
+  OrcaSlicer.dll | size=163679232 | sha256=6fa45ace6a29ed127a9938517db21a54df45613a1df42266ca9ec9c95d0947cb
+  orca.dll | NOT PRESENT in the installed package; no hash claimed.
+  resources/i18n/de/OrcaSlicer.mo | size=1368271 | sha256=ea52c11b5c78083920e61104c26858da3aab418dae5e0d820a5afdc231bb6a9f
+  orca.dll is not separately installed by this Windows package; the application DLL is OrcaSlicer.dll.
+
+Regression evidence:
+  regression.txt: 3168 selected; 3162 passed; 6 skipped; 0 failed; total real time 259.35 s.
+  Six skipped Windows symlink cases are named at the end of regression.txt.
+  core-tests.txt: focused FFF tests; see the archived log for counts.
+  geometry-tests-final.txt: final extra blank lines removed in archived copy; raw log retained.
+  geometry-tests-final.txt raw sha256=aeecaee8217c73791d098ca0afb563b0403f08a61b5e8064df71a78fd7b44e73
+  geometry-tests-final.txt archived size=5776; sha256=66d7282afbb8931e7787b54b4009960a37282ef2c0d562834609ff66ee1d5460
+  clang-tidy.txt: 28 files checked; clang-tidy passed.
+  translations-check.txt: 0 entries with errors; 63 with warnings (scope: ai).
+  gettext.txt retains the full catalog compile/merge output.
+  help-links.json contains the detailed immutable-commit/anchor/HTTP audit; help-links.txt is its summary.
+
+Archive provenance:
+  Raw evidence directory: C:\Formorix Slicer\verification\auftrag04-nachtrag
+  Only trailing ASCII spaces/tabs and final extra blank lines were removed in archived copies. Raw evidence was not modified.
+  Columns: raw filename -> archive filename | raw bytes | raw SHA-256 | archived bytes | archived SHA-256
+  build-verified-source.log -> build.txt | 10257 | c4b4605de7d784eb5d5e55972b60a01653b13fd28633472be6fff66f145c55ca | 10256 | 7340d3db57f818b7b2bdffe630f51291b05d991fe640bc5d2b61003a52089c83
+  regression-final.log -> regression.txt | 829703 | 65d3f265203e39ebba59254369a2b5d86a23c1ddef811297ebbaf539ff07b0c8 | 829703 | 65d3f265203e39ebba59254369a2b5d86a23c1ddef811297ebbaf539ff07b0c8
+  core-tests-final.log -> core-tests.txt | 684 | 15e6103e29cd84258c83332f788a1e603ffff529c1119e212ec7dcea9e48b844 | 669 | a0b42c3f890290b43f53f4db174bee97863042c988bdf50b3b9ab42c171a917d
+  clang-tidy-corrected.log -> clang-tidy.txt | 229 | 5aa7d277572567f0426c7aed6571afea11f2e1bc0e5c37ec30b416bcb98ec24a | 229 | 5aa7d277572567f0426c7aed6571afea11f2e1bc0e5c37ec30b416bcb98ec24a
+  gettext-final.log -> gettext.txt | 23656 | 097a323369e68728bb2e6e6f97c79f023da53d3d76e0e8d465eed9c6e343d593 | 23656 | 097a323369e68728bb2e6e6f97c79f023da53d3d76e0e8d465eed9c6e343d593
+  translations-check.log -> translations-check.txt | 7284 | 6b3648ebc6026cedcc13ea6f657790ac771401407ccc87639daa22037e6c98a9 | 7282 | 637f25b5d65fa821e28254fa348009be7141feccd25260be22247f3a556e66fb
+  help-links.json -> help-links.json | 26021 | dad31c87680a32aad53a7684e7730771c7e2b942442d6754e3a1f8b72a13fae0 | 26021 | dad31c87680a32aad53a7684e7730771c7e2b942442d6754e3a1f8b72a13fae0
+  help-links.log -> help-links.txt | 528 | 7fb72f08196520bcd5510d04758c46403f132fd496e9cef331c609e77395bba7 | 528 | 7fb72f08196520bcd5510d04758c46403f132fd496e9cef331c609e77395bba7

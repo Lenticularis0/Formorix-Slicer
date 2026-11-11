@@ -1066,7 +1066,11 @@ public:
     // layer registers a dispatcher; libslic3r stays free of any plugin/Python dependency.
     static void set_slicing_pipeline_hook_fn(SlicingPipelineHookFn fn) { s_slicing_pipeline_hook_fn = std::move(fn); }
 
-    Print() = default;
+    enum class Purpose { Standard, HybridPreview };
+    explicit Print(Purpose purpose = Purpose::Standard) : m_hybrid_preview(purpose == Purpose::HybridPreview) {}
+    bool hybrid_preview_only() const { return m_hybrid_preview; }
+    // Immutable purpose survives clear/apply. Every executable export checks this.
+    void require_executable() const;
 	virtual ~Print() { this->clear(); }
 
 	PrinterTechnology	technology() const noexcept override { return ptFFF; }
@@ -1419,6 +1423,9 @@ public:
     Vec3d shrinkage_compensation() const { return m_shrinkage_compensation; }
 
     std::tuple<float, float> object_skirt_offset(double margin_height = 0) const;
+
+private:
+    const bool m_hybrid_preview;
 
 protected:
     struct FilamentIndexKey
