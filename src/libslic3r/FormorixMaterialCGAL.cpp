@@ -1,6 +1,8 @@
 #include "FormorixMaterial.hpp"
 #include "FormorixMaterialInternal.hpp"
 #include "FormorixGeometry.hpp"
+#include "I18N.hpp"
+#include "format.hpp"
 #include "Point.hpp"
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/Surface_mesh.h>
@@ -16,6 +18,7 @@
 #include <CGAL/Polygon_mesh_processing/orientation.h>
 #include <CGAL/Polygon_mesh_processing/self_intersections.h>
 #include <CGAL/Polygon_mesh_processing/repair.h>
+#include <CGAL/Polygon_mesh_processing/remesh_planar_patches.h>
 #include <CGAL/number_utils.h>
 #include <CGAL/Lazy.h>
 #include <CGAL/Lazy_exact_nt.h>
@@ -32,6 +35,7 @@
 #include <map>
 #include <optional>
 #include <queue>
+#include <set>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -171,6 +175,12 @@ Point rounded(const Point& p, double& bound)
         bound = std::max(bound, std::nextafter(std::sqrt(std::max(0., interval.second)), INFINITY));
     return converted;
 }
+struct OutputTopology : Failure
+{
+    OutputTopology() : Failure(Status::InvalidSweep, _u8L("Double material output collapses topology")) {}
+};
+Exact boolean(Exact a, Exact b, int op, Control& control, const std::string& phase);
+
 Exact snap(const Exact& source, double& bound, Control& control)
 {
     Exact result = source;
@@ -178,16 +188,47 @@ Exact snap(const Exact& source, double& bound, Control& control)
         result.point(v) = rounded(source.point(v), bound);
     control.faces(result);
     if (!valid(result))
-        throw Failure(Status::InvalidSweep, "Double material output collapses topology");
+        throw OutputTopology();
     return result;
 }
-FormorixGeometry::Mesh materialize(const Exact& source, Control& control)
+FormorixGeometry::Mesh materialize(const Exact& source, Control& control, const std::string& context)
 {
     if (source.is_empty())
         return {};
-    // No topological repair: every output triangle has the same correspondence,
-    // hence the maximum vertex displacement bounds its entire triangle.
-    const Exact rounded_mesh = snap(source, control.out.exact_to_output_bound, control);
+    Exact rounded_mesh;
+    try {
+        try {
+            rounded_mesh = snap(source, control.out.exact_to_output_bound, control);
+        } catch (const OutputTopology&) {
+            // Boolean corefinement can introduce unrepresentably thin INTERNAL
+            // coplanar triangles. Retriangulate only exactly coplanar patches,
+            // without moving a point or altering the authoritative material.
+            control.check();
+            Exact planar;
+            PMP::remesh_planar_patches(source, planar, CGAL::parameters::cosine_of_maximum_angle(1.));
+            control.faces(planar);
+            if (!valid(planar) || volume(planar) != volume(source))
+                throw Failure(Status::InvalidSweep, _u8L("Exact planar material output retriangulation is invalid"));
+            std::set<Point, K::Less_xyz_3> original_points(K().less_xyz_3_object());
+            for (auto v : source.vertices()) original_points.insert(source.point(v));
+            for (auto v : planar.vertices())
+                if (original_points.count(planar.point(v)) == 0)
+                    throw Failure(Status::InvalidSweep, _u8L("Planar material output retriangulation introduced a new coordinate"));
+            // Volume equality alone cannot preserve a narrow gap or cavity.
+            // Both exact directed differences must be empty. boolean() takes
+            // copies, so its refinement cannot change the output candidate.
+            if (!boolean(source, planar, 2, control, "planar output removed volume").is_empty() ||
+                !boolean(planar, source, 2, control, "planar output added volume").is_empty())
+                throw Failure(Status::InvalidSweep, _u8L("Planar material output retriangulation changed the exact volume set"));
+            // Every candidate triangle retains correspondence during rounding.
+            // Exact set identity above transfers its whole-boundary bound back
+            // to the original material, including all internal cavities.
+            rounded_mesh = snap(planar, control.out.exact_to_output_bound, control);
+            ++control.out.output_retriangulations;
+        }
+    } catch (const Failure& e) {
+        throw Failure(e.status, format(_u8L("Material output conversion failed (%1%): %2%"), context, e.what()));
+    }
     FormorixGeometry::Mesh result;
     std::map<Exact::Vertex_index, int> indices;
     for (auto v : rounded_mesh.vertices()) {
@@ -665,12 +706,22 @@ void audit_exact(Result& out,
         region.core_overlap_volume         = number(volume(core_overlap));
         region.supply_geometry_residual    = number(supply_volumes.at(target.region) - cell_volumes.at(target.region));
         region.input_rounding_volume_bound = 0.;
+        // One difficult region must not consume every spatial query before the
+        // complete union gets a chance to inspect an internal cavity. Preserve
+        // the same total ceiling and reserve shares for remaining regions plus
+        // the global comparison; uncompleted regional bounds stay unknown.
+        const auto previous_ceiling = control.distance_ceiling;
+        const auto available_queries = previous_ceiling - std::min(out.distance_queries, previous_ceiling);
+        // A single target reuses this very distance as its global result.
+        const auto comparisons = targets.size() == 1 ? 1 : targets.size() - out.regions.size() + 1;
+        control.distance_ceiling = out.distance_queries + available_queries / comparisons;
         region.boundary_distance           = symmetric_distance(wanted, deposited, missing.is_empty() && outside.is_empty(), control);
         if (!target.outer_surface.faces.empty())
             region.nominal_outer_distance = symmetric_distance(sheet(target.outer_surface, control),
                                                                sheet(outer_sheets[target.region], control), false, control);
-        region.missing = materialize(missing, control);
-        region.outside = materialize(outside, control);
+        control.distance_ceiling = previous_ceiling;
+        region.missing = materialize(missing, control, format(_u8L("region %1%, missing material"), region.region));
+        region.outside = materialize(outside, control, format(_u8L("region %1%, excess material"), region.region));
         out.regions.push_back(std::move(region));
         add_exact(all_cells, cell_volumes.at(target.region));
         add_exact(all_supply, supply_volumes.at(target.region));
@@ -682,7 +733,8 @@ void audit_exact(Result& out,
         for (auto second = std::next(first); second != materials.end(); ++second) {
             const Exact overlap = boolean(first->second, second->second, 1, control, "cross-material overlap");
             if (!overlap.is_empty())
-                out.material_overlaps.push_back({first->first, second->first, number(volume(overlap)), materialize(overlap, control)});
+                out.material_overlaps.push_back({first->first, second->first, number(volume(overlap)),
+                    materialize(overlap, control, format(_u8L("overlap between materials %1% and %2%"), first->first, second->first))});
         }
     const Exact deposited = unite(std::move(deposited_regions), control, "complete deposited union");
     const Exact missing   = boolean(all_targets, deposited, 2, control, "complete missing");
@@ -718,10 +770,10 @@ void audit_exact(Result& out,
         out.nominal_outer_distance = targets.size() == 1 ? out.regions.front().nominal_outer_distance :
                                                            symmetric_distance(sheet(all_outer, control),
                                                                               sheet(out.nominal_outer_sheet, control), false, control);
-    out.deposited    = materialize(deposited, control);
-    out.missing      = materialize(missing, control);
-    out.outside      = materialize(outside, control);
-    out.core_overlap = materialize(overlap, control);
+    out.deposited    = materialize(deposited, control, _u8L("complete deposited union"));
+    out.missing      = materialize(missing, control, _u8L("complete missing material"));
+    out.outside      = materialize(outside, control, _u8L("complete excess material"));
+    out.core_overlap = materialize(overlap, control, _u8L("core overlap"));
     if (!deposited.is_empty())
         out.output_volume_residual = number(volume(exact(out.deposited, control)) - volume(deposited));
     out.rounding_bound = out.construction_rounding_bound + out.exact_to_output_bound;

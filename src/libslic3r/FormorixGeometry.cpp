@@ -1,4 +1,6 @@
 #include "FormorixGeometry.hpp"
+#include "FormorixGeometryInternal.hpp"
+#include "I18N.hpp"
 #include "Point.hpp"
 #include <Eigen/Geometry>
 #include <algorithm>
@@ -63,6 +65,10 @@ double segment_distance(const Vec3d& p, const Vec3d& a, const Vec3d& b)
 namespace {
 using VertexKey = std::array<double, 3>;
 VertexKey vertex_key(const Vec3d& p) { return {p.x(), p.y(), p.z()}; }
+struct FoldedOffset : std::invalid_argument
+{
+    FoldedOffset() : std::invalid_argument(_u8L("Folded offset or reversed normal")) {}
+};
 Mesh shell_cutter_impl(const ShellRequest& r, const std::vector<Vec3d>* inner = nullptr)
 {
     const auto boundary = edges(r.surface);
@@ -80,7 +86,7 @@ Mesh shell_cutter_impl(const ShellRequest& r, const std::vector<Vec3d>* inner = 
         const Vec3d original = (out.vertices[f[1]] - out.vertices[f[0]]).cross(out.vertices[f[2]] - out.vertices[f[0]]);
         const Vec3d inner    = (out.vertices[f[1] + n] - out.vertices[f[0] + n]).cross(out.vertices[f[2] + n] - out.vertices[f[0] + n]);
         if (original.dot(inner) <= 0. || original.dot(r.outward_normals[f[0]] + r.outward_normals[f[1]] + r.outward_normals[f[2]]) <= 0.)
-            throw std::invalid_argument("Folded offset or reversed normal");
+            throw FoldedOffset();
         out.faces.emplace_back(f[2] + int(n), f[1] + int(n), f[0] + int(n));
     }
     for (const auto& entry : boundary)
@@ -107,6 +113,7 @@ struct SeamUse
 struct MiteredOffsets
 {
     std::vector<std::vector<Vec3d>> inner;
+    std::vector<detail::PlanarMiterSeam> seams;
     std::size_t edges = 0, vertices = 0;
     double residual = 0.;
 };
@@ -144,6 +151,7 @@ MiteredOffsets miter_offsets(const std::vector<ShellRequest>& requests)
         // Different depths on a flat surface form a step, not a miter.
         if (parallel)
             continue;
+        out.seams.push_back({uses[0].region, uses[1].region, {uses[0].from, uses[0].to}, {}});
         ++out.edges;
         for (const auto& use : uses)
             for (int vertex : {use.from, use.to})
@@ -198,6 +206,8 @@ MiteredOffsets miter_offsets(const std::vector<ShellRequest>& requests)
             out.inner[use.first][use.second] = inner;
         ++out.vertices;
     }
+    for (auto& seam : out.seams)
+        seam.inner = {out.inner[seam.first][seam.vertices[0]], out.inner[seam.first][seam.vertices[1]]};
     return out;
 }
 } // namespace
@@ -229,12 +239,21 @@ Partition partition_clipped(const Mesh& solid, const std::vector<ShellRequest>& 
         for (const auto& request : requests)
             cutters.emplace_back(request.region, shell_cutter(request));
         MiteredOffsets miter;
+        Partition out;
         if (policy == SharedBoundaryPolicy::MiterAdjacentEdges) {
             miter = miter_offsets(requests);
-            for (std::size_t i = 0; i < requests.size(); ++i)
-                cutters[i].second = shell_cutter_impl(requests[i], &miter.inner[i]);
-        }
-        auto out                      = partition_meshes(solid, cutters, true);
+            auto mitered = cutters;
+            try {
+                for (std::size_t i = 0; i < requests.size(); ++i)
+                    mitered[i].second = shell_cutter_impl(requests[i], &miter.inner[i]);
+                out = partition_meshes(solid, mitered, true);
+            } catch (const FoldedOffset&) {
+                // A valid prism may have a finer first row than its tangential
+                // miter displacement. Do not move/flip that row or the CAD skin.
+                out = detail::partition_planar_miters(solid, requests, cutters, miter.seams);
+            }
+        } else
+            out = partition_meshes(solid, cutters, true);
         out.mitered_edges             = miter.edges;
         out.mitered_vertices          = miter.vertices;
         out.miter_constraint_residual = miter.residual;

@@ -1,4 +1,6 @@
 #include "FormorixGeometry.hpp"
+#include "FormorixGeometryInternal.hpp"
+#include "I18N.hpp"
 #include "Point.hpp"
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/squared_distance_3.h>
@@ -7,6 +9,7 @@
 #include <CGAL/Kernel/global_functions_3.h>
 #include <CGAL/boost/graph/helpers.h>
 #include <CGAL/Polygon_mesh_processing/corefinement.h>
+#include <CGAL/Polygon_mesh_processing/clip.h>
 #include <CGAL/Polygon_mesh_processing/measure.h>
 #include <CGAL/Polygon_mesh_processing/orientation.h>
 #include <CGAL/Polygon_mesh_processing/self_intersections.h>
@@ -136,7 +139,7 @@ double volume(const Mesh& m)
         throw std::invalid_argument("Invalid solid");
     return CGAL::to_double(PMP::volume(e));
 }
-Partition partition_meshes(const Mesh& solid, const std::vector<std::pair<int, Mesh>>& requests, bool clip)
+static Partition partition_exact(const Mesh& solid, const std::vector<std::pair<int, ExactMesh>>& requests, bool clip)
 {
     Partition out;
     try {
@@ -154,7 +157,7 @@ Partition partition_meshes(const Mesh& solid, const std::vector<std::pair<int, M
         for (const auto& request : requests) {
             if (!ids.insert(request.first).second)
                 throw std::invalid_argument("Duplicate shell region");
-            ExactMesh cutter = exact(request.second);
+            ExactMesh cutter = request.second;
             if (!valid(cutter))
                 throw std::invalid_argument("Offset is self-intersecting or not a valid volume");
             if (clip) {
@@ -268,6 +271,201 @@ Partition partition_meshes(const Mesh& solid, const std::vector<std::pair<int, M
         out.parts.clear();
         out.interfaces.clear();
         out.output_topology_preserved = false;
+        out.error = e.what();
+    }
+    return out;
+}
+
+Partition partition_meshes(const Mesh& solid, const std::vector<std::pair<int, Mesh>>& requests, bool clip)
+{
+    try {
+        std::vector<std::pair<int, ExactMesh>> inputs;
+        for (const auto& request : requests)
+            inputs.emplace_back(request.first, exact(request.second));
+        return partition_exact(solid, inputs, clip);
+    } catch (const std::exception& e) {
+        Partition out;
+        out.error = e.what();
+        return out;
+    }
+}
+
+namespace {
+using EdgeKey = std::array<K::Point_3, 2>;
+struct EdgeLess
+{
+    bool operator()(const EdgeKey& a, const EdgeKey& b) const
+    { return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end(), PointLess{}); }
+};
+K::Point_3 point(const Vec3d& p) { return {p.x(), p.y(), p.z()}; }
+EdgeKey edge_key(const K::Point_3& a, const K::Point_3& b)
+{ return PointLess{}(a, b) ? EdgeKey{a, b} : EdgeKey{b, a}; }
+struct PlanarSheet
+{
+    K::Plane_3 outer, inner;
+};
+PlanarSheet planar_sheet(const ShellRequest& request, const Mesh& prism)
+{
+    const auto& surface = request.surface;
+    const auto count = surface.vertices.size();
+    if (surface.faces.empty() || request.depths.size() != count || request.outward_normals.size() != count ||
+        prism.vertices.size() != 2 * count)
+        throw std::invalid_argument(_u8L("Invalid planar miter source"));
+    const auto& face = surface.faces.front();
+    PlanarSheet sheet{{point(surface.vertices[face[0]]), point(surface.vertices[face[1]]), point(surface.vertices[face[2]])},
+                      {point(prism.vertices[count + face[0]]), point(prism.vertices[count + face[1]]),
+                       point(prism.vertices[count + face[2]])}};
+    const auto& n = request.outward_normals.front();
+    const K::Vector_3 normal(n.x(), n.y(), n.z());
+    if (sheet.outer.is_degenerate() || sheet.inner.is_degenerate() ||
+        CGAL::cross_product(sheet.outer.orthogonal_vector(), normal).squared_length() != 0 ||
+        CGAL::cross_product(sheet.outer.orthogonal_vector(), sheet.inner.orthogonal_vector()).squared_length() != 0)
+        throw std::invalid_argument(_u8L("Planar miter retriangulation requires parallel planar sheets and a perpendicular normal"));
+    for (std::size_t i = 0; i < count; ++i)
+        if (request.depths[i] != request.depths.front() || !(request.outward_normals[i].array() == n.array()).all() ||
+            !sheet.outer.has_on(point(surface.vertices[i])) || !sheet.inner.has_on(point(prism.vertices[count + i])))
+            throw std::invalid_argument(_u8L("Planar miter retriangulation requires an exactly planar region with constant normal and depth"));
+    return sheet;
+}
+struct PlanarClip
+{
+    std::size_t first, second;
+    K::Plane_3 plane; // first region keeps negative, second keeps positive
+    std::set<EdgeKey, EdgeLess> edges;
+};
+void complete_boundary(const ShellRequest& request, const PlanarClip& cut)
+{
+    std::map<std::pair<int, int>, unsigned> counts;
+    for (const auto& face : request.surface.faces)
+        for (int k = 0; k < 3; ++k)
+            ++counts[std::minmax(face[k], face[(k + 1) % 3])];
+    std::set<EdgeKey, EdgeLess> boundary;
+    for (const auto& item : counts)
+        if (item.second == 1) {
+            const auto a = point(request.surface.vertices[item.first.first]);
+            const auto b = point(request.surface.vertices[item.first.second]);
+            if (cut.plane.has_on(a) && cut.plane.has_on(b))
+                boundary.insert(edge_key(a, b));
+        }
+    if (boundary != cut.edges)
+        throw std::invalid_argument(_u8L("Planar miter clipping requires a complete matching shared boundary, not a partial edge"));
+    // A plane must not silently act on a second disconnected boundary interval.
+    std::map<K::Point_3, unsigned, PointLess> degree;
+    for (const auto& edge : boundary) {
+        ++degree[edge[0]];
+        ++degree[edge[1]];
+    }
+    unsigned ends = 0;
+    for (const auto& entry : degree) {
+        ends += entry.second == 1;
+        if (entry.second > 2)
+            throw std::invalid_argument(_u8L("Planar miter boundary branches"));
+    }
+    if (ends != 2)
+        throw std::invalid_argument(_u8L("Planar miter requires one straight shared boundary chain"));
+    for (const auto& vertex : request.surface.vertices)
+        if (cut.plane.has_on(point(vertex)) && degree.count(point(vertex)) == 0)
+            throw std::invalid_argument(_u8L("Planar miter touches an unrelated source vertex"));
+}
+} // namespace
+
+Partition detail::partition_planar_miters(const Mesh& solid,
+                                         const std::vector<ShellRequest>& requests,
+                                         const std::vector<std::pair<int, Mesh>>& prisms,
+                                         const std::vector<PlanarMiterSeam>& seams)
+{
+    Partition out;
+    try {
+        if (requests.empty() || requests.size() != prisms.size() || seams.empty())
+            throw std::invalid_argument(_u8L("A folded miter has no validated planar shared boundary"));
+        std::vector<std::optional<PlanarSheet>> sheets(requests.size());
+        std::vector<std::pair<int, ExactMesh>> cutters;
+        for (const auto& prism : prisms) {
+            cutters.emplace_back(prism.first, exact(prism.second));
+            if (!valid(cutters.back().second))
+                throw std::invalid_argument(_u8L("The original shell prism is invalid before planar miter clipping"));
+        }
+        std::map<std::pair<std::size_t, std::size_t>, std::size_t> group_ids;
+        std::vector<PlanarClip> cuts;
+        for (const auto& seam : seams) {
+            if (seam.first >= requests.size() || seam.second >= requests.size() || seam.first == seam.second)
+                throw std::invalid_argument(_u8L("Invalid planar miter region index"));
+            for (const auto index : {seam.first, seam.second})
+                if (!sheets[index]) sheets[index] = planar_sheet(requests[index], prisms[index].second);
+            const auto& a = requests[seam.first];
+            for (int index : seam.vertices)
+                if (index < 0 || std::size_t(index) >= a.surface.vertices.size())
+                    throw std::invalid_argument(_u8L("Invalid planar miter boundary index"));
+            const auto p = point(a.surface.vertices[seam.vertices[0]]), q = point(a.surface.vertices[seam.vertices[1]]);
+            const auto inner = point(seam.inner[0]);
+            if (CGAL::collinear(p, q, inner))
+                throw std::invalid_argument(_u8L("The planar miter plane is degenerate"));
+            K::Plane_3 plane(p, q, inner);
+            for (const auto& vertex : seam.inner)
+                if (!plane.has_on(point(vertex)) || !sheets[seam.first]->inner.has_on(point(vertex)) ||
+                    !sheets[seam.second]->inner.has_on(point(vertex)))
+                    throw std::invalid_argument(_u8L("The common miter seam does not lie on both exact planar inner sheets"));
+            bool positive = false, negative = false;
+            for (const auto& vertex : a.surface.vertices) {
+                positive |= plane.has_on_positive_side(point(vertex));
+                negative |= plane.has_on_negative_side(point(vertex));
+            }
+            if (positive == negative)
+                throw std::invalid_argument(_u8L("The planar miter would cut the original outer contour"));
+            if (positive) plane = plane.opposite();
+            bool other_positive = false;
+            for (const auto& vertex : requests[seam.second].surface.vertices) {
+                if (plane.has_on_negative_side(point(vertex)))
+                    throw std::invalid_argument(_u8L("Adjacent planar regions are not on complementary sides of their miter"));
+                other_positive |= plane.has_on_positive_side(point(vertex));
+            }
+            if (!other_positive)
+                throw std::invalid_argument(_u8L("The planar miter does not separate adjacent outer regions"));
+            const auto key = std::make_pair(seam.first, seam.second);
+            const auto [group, added] = group_ids.emplace(key, cuts.size());
+            if (added) cuts.push_back({seam.first, seam.second, plane, {}});
+            else if (cuts[group->second].plane != plane)
+                throw std::invalid_argument(_u8L("The shared planar boundary does not define one exact miter plane"));
+            cuts[group->second].edges.insert(edge_key(p, q));
+        }
+        for (const auto& cut : cuts) {
+            complete_boundary(requests[cut.first], cut);
+            complete_boundary(requests[cut.second], cut);
+            for (const auto index : {cut.first, cut.second}) {
+                auto& cutter = cutters[index].second;
+                const auto plane = index == cut.first ? cut.plane : cut.plane.opposite();
+                if (!PMP::clip(cutter, plane, CGAL::parameters::clip_volume(true).do_not_triangulate_faces(false)) || !valid(cutter))
+                    throw std::invalid_argument(_u8L("Planar miter clipping did not produce a closed valid shell"));
+                if (cutter.number_of_vertices() > 200000 || cutter.number_of_faces() > 200000)
+                    throw std::invalid_argument(_u8L("Planar miter retriangulation exceeds the geometry budget"));
+            }
+        }
+        std::size_t retriangulated = 0;
+        for (std::size_t i = 0; i < cutters.size(); ++i) {
+            if (!sheets[i]) continue;
+            ++retriangulated;
+            std::set<FaceKey, FaceLess> faces;
+            bool inner_face = false;
+            for (const auto face : cutters[i].second.faces()) {
+                auto key = triangle(cutters[i].second, face);
+                inner_face |= sheets[i]->inner.has_on(key[0]) && sheets[i]->inner.has_on(key[1]) && sheets[i]->inner.has_on(key[2]);
+                std::sort(key.begin(), key.end(), PointLess{});
+                faces.insert(key);
+            }
+            if (!inner_face)
+                throw std::invalid_argument(_u8L("The planar miter consumes the entire inner face; a different wall strategy is required"));
+            for (const auto& face : requests[i].surface.faces) {
+                const auto& vertices = requests[i].surface.vertices;
+                FaceKey key{point(vertices[face[0]]), point(vertices[face[1]]), point(vertices[face[2]])};
+                std::sort(key.begin(), key.end(), PointLess{});
+                if (faces.count(key) == 0)
+                    throw std::invalid_argument(_u8L("Planar miter clipping changed an original outer triangle"));
+            }
+        }
+        out = partition_exact(solid, cutters, true);
+        if (out.ok()) out.planar_miter_regions = retriangulated;
+    } catch (const std::exception& e) {
+        out = {};
         out.error = e.what();
     }
     return out;

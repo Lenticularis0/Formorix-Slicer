@@ -76,3 +76,22 @@ Windows-Release-Build der beiden Testsuiten erfolgreich. Die gezielte Regression
 Die [Analyse des tatsächlichen Hydrofoil-Modells](formorix/verification/auftrag-05/hydrofoil-input.md) beschreibt Auswahl, Transformation, Hash und Importfehler getrennt. Seine vollständige markierte Negativfläche enthält Normale bis etwa 107°; daraus folgt keine Erreichbarkeit mit dem realen 75°-Kippbereich. Umlaufende geometrische Tests verwenden ausdrücklich analytische Winkelgrenzen und sind keine Maschinenfreigabe.
 
 Insgesamt besitzen nun **fünf regionale nominale Hybrid-Referenzen** einen vollständigen positiven Fehlerbudgetnachweis: eine kommensurable Ebene, zwei benachbarte Materialregionen, ein adaptiv gefülltes Rechteck und die Ebene mit Loch. Das zählt Regionen, nicht physische Druckversuche oder vollständig verifizierte konventionelle Bauteile.
+
+## Geprüfter Zwischenstand: drei Materialien und innere Gehrungen
+
+Drei unmittelbar benachbarte Bereiche eines Werkteils werden mit unabhängigen 0,8-/0,4-/0,6-mm-Düsen, Materialien A/B/C, Lagenhöhen, Tiefen, Temperaturen, TCP-Abständen, Volumenstromgrenzen und drei getrennten Flowfaktoren berechnet. Alle sechs Eingabereihenfolgen liefern dieselbe Materialaufteilung. Die [Prüfkonfiguration](formorix/verification/auftrag-05/multi-material-tests.md) nennt sämtliche Werte. Weder Flow noch Originalprofile werden auf das gewünschte Volumen normiert.
+
+Bei exakt planaren Nachbarflächen kann CGAL umklappende innere Feinreihen durch komplementäre Gehrungsschnitte neu triangulieren. Die ursprünglichen äußeren Dreiecke bleiben erhalten. Variable Normalen/Tiefen, nur teilweise passende gemeinsame Kanten und aufgebrauchte innere Flächen werden weiterhin abgewiesen. Zwei- und Dreiseiten-Ecken sowie geänderte Bereichsreihenfolgen sind geprüft. [Konstruktionsgrenzen](HLSD/FormorixFoundations.md#explicit-miter-boundaries).
+
+| Prüfung | Tatsächlich gemessen |
+| --- | --- |
+| Drei angrenzende Materialregionen, sämtliche Lagen | A/B/C: 12/9/18 mm³, zusammen 39 mm³; Kern 321 mm³. Fehlvolumen, Überstand, Mehrfachbelegung und Kerneingriff jeweils 0 mm³. |
+| Nominale Genauigkeit der drei Ebenen | Äußeres Maximum/Mittel/RMS jeweils 0 mm; größtes zusammengesetztes Fehlerbudget **3,8247032 × 10⁻⁷ mm**. Alle drei regionalen Gates positiv; Haftung und physischer Druck bleiben ungeprüft. |
+| Fehlende innere B-Lage | Exakt 3 mm³ Mangel trotz weiterhin passender äußerer Flächen. Globale beobachtete Abstandsunterschranke etwa 0,125 mm; vollständige obere Schranke bei erschöpftem Abstandsbudget unbekannt. Keine Genauigkeitsfreigabe. |
+| Zweifache scharfe Gehrung mit innerer Feinreihe 0,1 beziehungsweise 0,01 mm | Top/Front/Kern: 57/47/396 mm³; Volumenrest 0. Rundungsschranke ≤ 1,561 × 10⁻¹⁵ mm. Acht Varianten bestanden. |
+| Drei rechtwinklige Gehrungsregionen | 55,6/45,85/22,35 mm³; Kern 376,2 mm³; Volumenrest 0. Rundungsschranke ≤ 1,951 × 10⁻¹⁵ mm. Beide Reihenfolgen bestanden. |
+| Geneigte, unzulässig abgelegte Materialzelle | Fehlmenge 0,52 mm³, Überstand 0,12 mm³, Zufuhr-/Zellrest 0,4 mm³ bleiben auch in den ausgegebenen Körpern erhalten. Weiterhin keine vollständige Abdeckung oder Abstandsbestätigung. |
+
+Der Innenlagen-Negativtest deckte einen zusätzlichen Ausgabefehler auf: exakte Boolean-Hilfsdreiecke konnten beim Runden kollabieren. Der begrenzte [Material-Ausgabefallback](HLSD/FormorixMaterial.md) entfernt ausschließlich überflüssige koplanare Unterteilung. Beidseitig leere exakte Differenzen beweisen zuvor, dass sich der vollständige Volumenkörper einschließlich seiner Hohlräume nicht ändert. Die fehlende Lage und die unzulässige geneigte Ablage werden deshalb präziser diagnostiziert, nicht als zulässig umgedeutet. Das unveränderte Abstandsbudget reserviert jetzt bei mehreren Regionen einen Anteil für den globalen Vergleich.
+
+Der abschließende Windows-Release-Prüflauf besteht mit **139 Fällen / 433.016 Assertions**, zusätzlich **20 nativen Orca-/Ausgabesperrenfällen / 9.111 Assertions**, Seed 42. [Vollständige Geometrieergebnisse](formorix/verification/auftrag-05/package4-tests.txt), [native Regression](formorix/verification/auftrag-05/package4-core.txt). Frühere fehlgeschlagene Entwicklungsprüfungen zählen nicht als bestanden. Insgesamt bestehen jetzt **acht regionale positive nominale Hybrid-Nachweise**; die sechs Reihenfolgen werden dabei nicht mehrfach gezählt.

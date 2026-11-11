@@ -110,6 +110,7 @@ struct Result
     Distance boundary_distance;
     Distance nominal_outer_distance;
     std::size_t cells = 0, boolean_operations = 0, peak_boolean_faces = 0;
+    std::size_t output_retriangulations = 0; // exact set-preserving planar output only; input cells never change
     std::size_t distance_queries = 0;
     bool ok() const { return status == Status::Complete; }
 };

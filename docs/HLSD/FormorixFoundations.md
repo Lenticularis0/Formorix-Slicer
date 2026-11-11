@@ -24,9 +24,47 @@ At an outer seam vertex `p`, each incident region contributes its **own** outwar
 
 Both cutters use the same inner seam points and the same canonical diagonal for each seam quadrilateral. This matters on curved common edges: independent normals produce nonplanar quads, for which opposite diagonal choices would create a gap or overlap. The original outer vertices and triangles are retained. Existing exact CGAL clipping, disjointness and total-volume checks still apply; mitering is not permission to resolve residual overlaps by region priority. A shared material interface remains explicit even for incompatible materials. No blending, bond strength or continuous extrusion across different heads is inferred.
 
-This construction retains the existing inner-sheet triangulation. If moving a boundary point past a neighbouring inner row folds a cell, the request is rejected. In particular, very fine boundary tessellations can require local retriangulation or Boolean wedge clipping even when a continuous geometric miter would exist. Neither operation is silently approximated here.
+The ordinary construction retains the inner-sheet triangulation. A boundary point
+can move beyond a fine first inner row even though the continuous miter is valid.
+That specific folded-cell failure enables a conservative planar fallback; invalid
+original prisms, arbitrary Boolean errors and reversed initial normals do not.
 
-`mitered_edges`, `mitered_vertices` and `miter_constraint_residual` record construction diagnostics. The residual checks normal depth at seam vertices; it is not a bound on an arbitrary curved CAD offset or on deposited material. Miter points are computed in double precision and the resulting polyhedra are processed exactly from those binary values. The existing measured CGAL-to-double rounding bound still applies, and imported CAD, interpolation and nominal deposition errors remain separate.
+The fallback requires exactly planar outer and inner sheets, a constant perpendicular
+normal and a constant depth within every affected region. Both common inner seam
+points must lie on both exact inner planes. Each pair must share one complete,
+matching straight boundary chain; partial edges, unmatched subdivisions and unrelated
+contacts are rejected. The common seam plane must leave all original outer triangles
+on complementary retained sides. These are exact tests on the binary input values,
+not tolerance-based projection or snapping. A nearly planar imported region can
+therefore remain unsupported.
+
+The original valid prisms are converted to EPECK meshes once. CGAL's closed-volume
+plane clipping retains complementary halfspaces of the same canonical seam plane,
+triangulating the affected inner strip and side closures. It neither relocates the
+outer vertices nor copies folded interior connectivity. Every original outer triangle
+must remain present after all local cuts, and each affected region must retain a
+nonzero inner face. Several compatible planar neighbours may meet at a corner;
+clipping does not give an earlier region priority. For a 10 × 10 × 5 mm box with
+top/front depths 0.6/1 mm, the seam is `0.6*y + z - 5 = 0`, and the top/front/core
+volumes are 57/47/396 mm³ regardless of fine inner rows or request order.
+
+Clipped meshes stay exact through the common partition operation. There is no
+intermediate conversion to double between clipping and partitioning. Existing
+validation, mutual corefinement, disjointness, exact total volume conservation and
+final conversion checks still apply. The fallback does not repair arbitrary curved
+offsets, infer missing adjacency, average material depths or weaken an accuracy gate.
+The mesh budget is checked after each clipping operation. CGAL clipping itself has
+no intermediate cancellation or strict allocation cap; very large accepted inputs
+can still consume substantial time and memory inside one operation.
+
+`mitered_edges`, `mitered_vertices`, `planar_miter_regions` and
+`miter_constraint_residual` record construction diagnostics. The planar count is
+nonzero only after a successful fallback. The residual checks normal depth at seam
+vertices; it is not a bound on an arbitrary curved CAD offset or on deposited
+material. Miter points are computed in double precision and the resulting polyhedra
+are processed exactly from those binary values. The existing measured CGAL-to-double
+rounding bound still applies, and imported CAD, interpolation and nominal deposition
+errors remain separate.
 
 CGAL's existing LSCM unwrap targets disk-like patches; isotropic remeshing improves triangle distribution but cannot recover a lost CAD surface. Neither is a substitute for CAD error control. See the [CGAL Boolean documentation](https://doc.cgal.org/latest/Polygon_mesh_processing/group__PMP__corefinement__grp.html) and [parameterization documentation](https://doc.cgal.org/latest/Surface_mesh_parameterization/index.html).
 

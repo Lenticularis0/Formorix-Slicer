@@ -61,6 +61,26 @@ FG::ShellRequest request(FG::Mesh patch, double depth, int id = 1)
     r.depths.assign(r.surface.vertices.size(), depth);
     return r;
 }
+FG::Mesh plane_grid(const std::vector<double>& xs, const std::vector<double>& ys, double z)
+{
+    FG::Mesh mesh;
+    for (double y : ys)
+        for (double x : xs) mesh.vertices.emplace_back(x, y, z);
+    const int width = int(xs.size());
+    for (int y = 0; y + 1 < int(ys.size()); ++y)
+        for (int x = 0; x + 1 < width; ++x) {
+            const int a = y * width + x;
+            mesh.faces.emplace_back(a, a + 1, a + width);
+            mesh.faces.emplace_back(a + 1, a + width + 1, a + width);
+        }
+    return mesh;
+}
+double region_volume(const FG::Partition& partition, int region)
+{
+    for (const auto& part : partition.parts)
+        if (part.region == region) return part.volume;
+    return -1.;
+}
 FP::Profile profile(int head)
 {
     FP::Profile p;
@@ -264,27 +284,126 @@ TEST_CASE("Mitering preserves flat depth steps and refuses unconnected overlap",
     CHECK_FALSE(FG::partition_clipped(box(), {first, second}, FG::SharedBoundaryPolicy::MiterAdjacentEdges).ok());
 }
 
-TEST_CASE("A miter that crosses the first fine inner row is rejected without altering CAD input", "[FormorixFoundations]")
+TEST_CASE("Planar miters retriangulate fine inner rows while retaining the complete original contour", "[FormorixFoundations][PlanarMiter]")
 {
+    const double row = GENERATE(.1, .01);
+    const bool fine_front = GENERATE(false, true);
+    const bool reverse = GENERATE(false, true);
     const auto solid          = box();
     const auto original       = solid;
-    FG::Mesh fine             = {{{0., 0., 5.}, {10., 0., 5.}, {0., .1, 5.}, {10., .1, 5.}, {0., 10., 5.}, {10., 10., 5.}},
-                                 {{0, 1, 2}, {1, 3, 2}, {2, 3, 4}, {3, 5, 4}}};
+    FG::Mesh fine             = plane_grid({0., 10.}, {0., row, 10.}, 5.);
     const auto surface_before = fine;
-    auto top                  = request(fine, .6, 1);
-    auto front                = request({{{0., 0., 0.}, {10., 0., 0.}, {10., 0., 5.}, {0., 0., 5.}}, {{0, 1, 2}, {0, 2, 3}}}, 1., 2);
-    front.outward_normals.assign(4, -Vec3d::UnitY());
-    const auto result = FG::partition_clipped(solid, {top, front}, FG::SharedBoundaryPolicy::MiterAdjacentEdges);
-    REQUIRE_FALSE(result.ok());
-    CHECK(result.error.find("Folded offset") != std::string::npos);
-    CHECK(result.parts.empty());
-    CHECK(result.interfaces.empty());
+    const int top_id = reverse ? 19 : 7, front_id = reverse ? 3 : 11;
+    auto top = request(fine, .6, top_id);
+    auto front_mesh = plane_grid({0., 10.}, fine_front ? std::vector<double>{0., 5. - row, 5.} : std::vector<double>{0., 5.}, 0.);
+    for (auto& p : front_mesh.vertices) p = Vec3d(p.x(), 0., p.y());
+    auto front = request(front_mesh, 1., front_id);
+    front.outward_normals.assign(front_mesh.vertices.size(), -Vec3d::UnitY());
+    const std::vector<FG::ShellRequest> requests = reverse ? std::vector<FG::ShellRequest>{front, top} :
+                                                          std::vector<FG::ShellRequest>{top, front};
+    const auto result = FG::partition_clipped(solid, requests, FG::SharedBoundaryPolicy::MiterAdjacentEdges);
+    INFO(result.error);
+    REQUIRE(result.ok());
+    CHECK(result.planar_miter_regions == 2);
+    CHECK(result.output_topology_preserved);
+    CHECK_THAT(region_volume(result, top_id), WithinAbs(57., 1e-9));
+    CHECK_THAT(region_volume(result, front_id), WithinAbs(47., 1e-9));
+    CHECK_THAT(region_volume(result, 0), WithinAbs(396., 1e-9));
+    CHECK_THAT(result.volume_residual, WithinAbs(0., 1e-9));
+    for (const auto& part : result.parts) CHECK(FG::valid_solid(part.mesh));
+    bool shared = false;
+    for (const auto& interface : result.interfaces)
+        if (interface.first == std::min(top_id, front_id) && interface.second == std::max(top_id, front_id)) {
+            shared = true;
+            const auto error = FG::measure(interface.mesh, FG::plane({0., 0., 5.}, {0., .6, 1.}));
+            CHECK(error.within(1e-10));
+        }
+    CHECK(shared);
+    for (const auto& source : requests) {
+        const auto part = std::find_if(result.parts.begin(), result.parts.end(), [&](const auto& p) { return p.region == source.region; });
+        REQUIRE(part != result.parts.end());
+        for (const auto& vertex : source.surface.vertices)
+            CHECK(std::find(part->mesh.vertices.begin(), part->mesh.vertices.end(), vertex) != part->mesh.vertices.end());
+    }
+    for (int axis = 0; axis < 3; ++axis)
+        for (int side = 0; side < 2; ++side) {
+            const double coordinate = side ? (axis == 2 ? 5. : 10.) : 0.;
+            double area = 0.;
+            for (const auto& part : result.parts)
+                for (const auto& face : part.mesh.faces) {
+                    const auto& a = part.mesh.vertices[face[0]];
+                    const auto& b = part.mesh.vertices[face[1]];
+                    const auto& c = part.mesh.vertices[face[2]];
+                    if (a[axis] == coordinate && b[axis] == coordinate && c[axis] == coordinate)
+                        area += (b - a).cross(c - a).norm() / 2.;
+                }
+            CHECK_THAT(area, WithinAbs(axis == 2 ? 100. : 50., 1e-9));
+        }
     CHECK(solid.vertices == original.vertices);
     CHECK(solid.faces == original.faces);
     CHECK(top.surface.vertices == surface_before.vertices);
     CHECK(top.surface.faces == surface_before.faces);
-    // The continuous miter exists, but relocating its inner boundary past
-    // y=.1 would invert the fixed triangulation. No silent CAD simplification.
+    std::cout << "MITER planar_fine_rows," << row << "," << fine_front << "," << reverse << ","
+              << result.volume_residual << "," << result.rounding_bound << "\n";
+}
+
+TEST_CASE("Three fine planar neighbors share symmetric miter volumes without priority", "[FormorixFoundations][PlanarMiter]")
+{
+    const bool reverse = GENERATE(false, true);
+    auto top = request(plane_grid({0., .1, 10.}, {0., .1, 10.}, 5.), .6, 17);
+    auto front_mesh = plane_grid({0., .1, 10.}, {0., 4.9, 5.}, 0.);
+    for (auto& p : front_mesh.vertices) p = Vec3d(p.x(), 0., p.y());
+    auto front = request(front_mesh, 1., 29);
+    front.outward_normals.assign(front_mesh.vertices.size(), -Vec3d::UnitY());
+    auto left_mesh = plane_grid({0., .1, 10.}, {0., 4.9, 5.}, 0.);
+    for (auto& p : left_mesh.vertices) p = Vec3d(0., p.x(), p.y());
+    for (auto& face : left_mesh.faces) std::swap(face[1], face[2]);
+    auto left = request(left_mesh, .5, 41);
+    left.outward_normals.assign(left_mesh.vertices.size(), -Vec3d::UnitX());
+    std::vector<FG::ShellRequest> requests{top, front, left};
+    if (reverse) std::reverse(requests.begin(), requests.end());
+    const auto result = FG::partition_clipped(box(), requests, FG::SharedBoundaryPolicy::MiterAdjacentEdges);
+    INFO(result.error);
+    REQUIRE(result.ok());
+    CHECK(result.planar_miter_regions == 3);
+    CHECK(result.output_topology_preserved);
+    // Integrate each normal depth s against the two remaining side lengths:
+    // e.g. top integral_0^.6 (10-.5*s/.6)*(10-1*s/.6) ds.
+    CHECK_THAT(region_volume(result, 17), WithinAbs(55.6, 1e-9));
+    CHECK_THAT(region_volume(result, 29), WithinAbs(45.85, 1e-9));
+    CHECK_THAT(region_volume(result, 41), WithinAbs(22.35, 1e-9));
+    CHECK_THAT(region_volume(result, 0), WithinAbs(376.2, 1e-9));
+    CHECK_THAT(result.volume_residual, WithinAbs(0., 1e-9));
+    for (const auto& part : result.parts) CHECK(FG::valid_solid(part.mesh));
+    CHECK(result.interfaces.size() == 6);
+    std::cout << "MITER planar_three_regions," << reverse << "," << result.volume_residual << "," << result.rounding_bound << "\n";
+}
+
+TEST_CASE("Planar miter repair refuses variable sheets incomplete seams and consumed inner faces", "[FormorixFoundations][PlanarMiter]")
+{
+    const int invalid = GENERATE(0, 1, 2, 3, 4);
+    auto top = request(plane_grid(invalid == 2 ? std::vector<double>{0., 5., 10.} : std::vector<double>{0., 10.},
+                                  {0., .1, 10.}, 5.), .6, 1);
+    auto front_mesh = plane_grid({0., invalid == 2 ? 5. : 10.}, {0., 5.}, 0.);
+    for (auto& p : front_mesh.vertices) p = Vec3d(p.x(), 0., p.y());
+    auto front = request(front_mesh, invalid == 3 ? 10. : 1., 2);
+    front.outward_normals.assign(front_mesh.vertices.size(), -Vec3d::UnitY());
+    if (invalid == 0) top.depths[2] = .59;
+    if (invalid == 1) top.outward_normals[2] = Vec3d(.1, 0., 1.).normalized();
+    if (invalid == 4) front.outward_normals.assign(front_mesh.vertices.size(), Vec3d(0., -.01, -1.).normalized());
+    const auto saved = top.surface;
+    const auto result = FG::partition_clipped(box(), {top, front}, FG::SharedBoundaryPolicy::MiterAdjacentEdges);
+    INFO(result.error);
+    REQUIRE_FALSE(result.ok());
+    CHECK_FALSE(result.error.empty());
+    CHECK(result.parts.empty());
+    CHECK(result.interfaces.empty());
+    CHECK(result.planar_miter_regions == 0);
+    CHECK(top.surface.vertices == saved.vertices);
+    CHECK(top.surface.faces == saved.faces);
+    if (invalid == 2) CHECK(result.error.find("complete matching shared boundary") != std::string::npos);
+    if (invalid == 3) CHECK(result.error.find("entire inner face") != std::string::npos);
+    if (invalid == 4) CHECK(result.error.find("miter limit") != std::string::npos);
 }
 
 TEST_CASE("A curved common edge keeps one disjoint miter with independent varying normals", "[FormorixFoundations]")

@@ -43,6 +43,7 @@ set(lisbslic3r_sources
     FormorixProfiles.hpp
     FormorixGeometry.cpp
     FormorixGeometry.hpp
+    FormorixGeometryInternal.hpp
     FormorixProcess.cpp
     FormorixProcess.hpp
     FormorixDeposition.hpp

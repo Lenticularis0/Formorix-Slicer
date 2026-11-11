@@ -391,7 +391,10 @@ src/libslic3r/FormorixBoundary.cpp
 src/libslic3r/FormorixSurfacePaths.cpp
 src/libslic3r/FormorixSurfacePathsCGAL.cpp
 src/libslic3r/FormorixHybrid.cpp
+src/libslic3r/FormorixGeometry.cpp
+src/libslic3r/FormorixGeometryCGAL.cpp
 src/libslic3r/FormorixMaterial.cpp
+src/libslic3r/FormorixMaterialCGAL.cpp
 src/libslic3r/FormorixProcess.cpp
 src/libslic3r/FormorixProfiles.cpp
 src/libslic3r/FormorixSurfaces.cpp
