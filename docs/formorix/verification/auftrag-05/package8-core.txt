@@ -1,0 +1,7 @@
+Filters: [FormorixAcceptance]
+Randomness seeded to: 42
+ACCEPTANCE_NATIVE_1600,min_x=1595.0649989999999,max_x=1599.1850010000001,max_z=5,core_float_bound=7.9473011282971129e-08,native_grid_bound=6.9282032302755086e-06,core_volume_residual=0,shell_error_bounds=0/1.5158245029548808e-13/4.0690104015084216e-05/1.034103386781226e-09/4.9406564584124654e-324/,native_added_bound=7.0076762415584805e-06,composed_skin_total_bound=4.7698814511611955e-05,composed_skin_verified=1,whole_hybrid_verified=0,material_maximum=0,material_mean=0,material_rms=0,underlay_samples=272,underlay_missing=80
+0.093 s: A CAD shell near the sixteen hundred millimetre bed edge feeds its actual core to Orca
+===============================================================================
+All tests passed (689 assertions in 1 test case)
+
