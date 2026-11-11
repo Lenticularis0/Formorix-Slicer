@@ -24,6 +24,7 @@
 #include <vector>
 #include <slic3r/GUI/GLModel.hpp>
 #include <wx/event.h>
+#include <wx/defs.h>
 #include <wx/gdicmn.h>
 #include <wx/scrolwin.h>
 #include <wx/sizer.h>
