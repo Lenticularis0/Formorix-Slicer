@@ -2,6 +2,8 @@
 
 **5D-Vorschau berechnen** verarbeitet den aktiven markierten Bereich und öffnet den vorhandenen Tab **Vorschau**. Die horizontale Zeitleiste läuft von null bis zum Ende aller vorhandenen Kopfspuren. Sie ist zeitbasiert, nicht schichtbasiert.
 
+**Hybrid-Vorschau berechnen** verarbeitet dagegen alle markierten Bereiche der gewählten Instanz und ergänzt tatsächliche Orca-Kernbahnen. [Bedienung, Anzeigen und Prüfwerte der Hybrid-Vorschau](hybrid.md).
+
 | Bedienung | Wirkung |
 | --- | --- |
 | Start / Pause | Zeitabhängige Wiedergabe starten oder anhalten. |
@@ -10,7 +12,7 @@
 | 0,25× / 1× / 4× / 16× | Wiedergabegeschwindigkeit. |
 | Zeitschieber | Alle Kopfposen auf die gewählte Zeit setzen; Wiedergabe pausiert. |
 | Lagenwahl | Eine einzelne Lage oder alle Lagen anzeigen. Die Uhr bleibt unverändert. |
-| 5D-Schale / Verbleibender Kern | Näherungsflächen einblenden. |
+| 5D-Schale / Verbleibender Kern | In der einfachen 5D-Vorschau Näherungsflächen, in der Hybrid-Vorschau die tatsächlich berechneten Volumenkörper einblenden. |
 | Orca-Vorschau | Experimentellen Cache verwerfen und zur normalen Orca-Vorschau wechseln. |
 
 Goldene Linien sind zukünftige Bahnen, grüne Linien bereits abgearbeitete Bahnen. Weiss hebt den aktuellen Abschnitt hervor. Kleine Pfeile zeigen die Richtung, grüne und rote Punkte Anfang und Ende. Düsenspitzen und kurze Achsen zeigen die drei Kopfposen: grün arbeitet, orange fährt, grau wartet beziehungsweise ohne Aufgabe. Die Statuszeile unterscheidet die Zustände ausdrücklich. Nicht berechenbare ausgewählte Flächen erscheinen rot mit einer kurzen Fehlermeldung.
